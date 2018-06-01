@@ -3,6 +3,7 @@ package com.qubole.tenali.parse.parser;
 
 import antlr4.QDSCommandLexer;
 import com.qubole.tenali.parse.Parsers;
+import com.qubole.tenali.parse.QueryContext;
 import com.qubole.tenali.parse.TenaliParser;
 import com.qubole.tenali.parse.exception.CommandErrorListener;
 import com.qubole.tenali.parse.exception.CommandParseError;
@@ -46,5 +47,7 @@ public class TenaliSqlParser implements TenaliParser {
     System.out.println("---- command parsing ----");
     Parsers.CommandParser commandParser = new Parsers.CommandParser();
     commandParser.visit(tree);
+
+    QueryContext root = commandParser.getQC();
   }
 }

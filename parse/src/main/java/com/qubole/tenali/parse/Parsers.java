@@ -209,6 +209,10 @@ public abstract class Parsers {
         throw new IOException();
       }
     }
+
+    public QueryContext getQC() {
+      return root;
+    }
   }
 
 }
