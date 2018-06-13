@@ -4,15 +4,20 @@ package com.qubole.tenali.parse;
 import com.qubole.tenali.util.LexerTestHelper;
 import org.junit.Test;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-
-
 
 public class TenaliCommandLexerTest {
 
     @Test
     public void testNoQuery() throws Exception {
         String command = ";\n\r\n\r\n ; ";
+
+        LexerTestHelper.parse(command);
+        //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
+    }
+
+    @Test
+    public void testSimpleSqlQuery() throws Exception {
+        String command = "; \n\r\n\r\n ;SELECT tab.a1 AS a, a2 b from tab where a1>0";
 
         LexerTestHelper.parse(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
@@ -94,5 +99,67 @@ public class TenaliCommandLexerTest {
             "SELECT * FROM db_users u JOIN (SELECT * FROM table1) v on u.a=v.b;SELECT a,b, count(*) from ab where s='jrenv' GROUP BY a, b";
 
         LexerTestHelper.parse(command);
+    }
+
+    @Test
+    public void testValidCalciteLateral() throws Exception {
+        String command = "SELECT *\n\n FROM DEPT,\n\n LATERAL TABLE(RAMP(DEPT.DEPTNO)) adid";
+
+        LexerTestHelper.parse(command);
+        //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
+    }
+
+    @Test
+    public void testSimpleLateralViewExplode() throws Exception {
+       // String command = "SELECT pageid, adid FROM pageAds LATERAL table explode(adid_list) adTable AS adid\n\r\n\r\n ; ";
+
+        String command = "SELECT  ci.id AS cluster_instance_id, ci.cluster_id, unix_timestamp(ci.start_at) AS start_at, " +
+                " unix_timestamp(ci.down_at) AS down_at, _timestamp AS metric_time, _type AS metric_type,\n" +
+                "CASE _type\n" +
+                "   WHEN \"MEMORY_STATS\" THEN arr(total_available_memory, total_used_memory)\n" +
+                "   WHEN \"VCORES_STATS\" THEN arr(total_available_vcores, total_used_vcores)\n" +
+                "END AS total \n" +
+                "FROM (SELECT cluster_id, m.total_available_memory, m.total_used_memory, v.total_available_vcores, v.total_used_vcores, e._type, " +
+                "_int(e._timestamp/1000) AS _timestamp FROM processed.yarn \n" +
+                ",LATERAL Table( json_tuple(event_data, 'eventData', 'type', 'timestamp')) AS _eventData, _type, _timestamp \n" +
+                ",LATERAL Table( json_tuple(e._eventData, 'total_memory_mb', 'used_memory_mb'))  total_available_memory, total_used_memory\n" +
+                ",LATERAL Table( json_tuple(e._eventData, 'total_vcores', 'used_vcores'))  total_available_vcores, total_used_vcores\n" +
+                "WHERE event_date>=\"$start_date\" AND  event_date<\"$end_date\" AND _type in (\"MEMORY_STATS\", \"VCORES_STATS\")) s \n" +
+                "JOIN rstore.cluster_insts ci ON s.cluster_id=ci.cluster_id\n" +
+                "WHERE _timestamp BETWEEN unix_timestamp(ci.start_at) AND unix_timestamp(ci.down_at)";
+
+        LexerTestHelper.parse(command);
+        //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
+    }
+
+    @Test
+    public void testSqlDS() throws Exception {
+        String command = "WITH a AS (\n" +
+                "  SELECT substr(name, 1, 3) x FROM tab1 )\n" +
+                "SELECT *\n" +
+                "FROM a\n" +
+                "WHERE x = 'foo'";
+
+        LexerTestHelper.parse(command);
+        //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
+    }
+
+    @Test
+    public void testSqlCast() throws Exception {
+        String command = "SELECT IF(CARDINALITY(my_array) >= 3, my_array[3], NULL)\n FROM tab1";
+
+        LexerTestHelper.parse(command);
+        //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
+    }
+
+
+    @Test
+    public void testLateralViewSimple() throws Exception {
+        String command = "SELECT student, score\n" +
+                "FROM tests\n" +
+                "CROSS JOIN UNNEST(scores) AS t (score);";
+
+        LexerTestHelper.parse(command);
+        //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
     }
 }

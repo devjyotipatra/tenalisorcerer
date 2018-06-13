@@ -1,5 +1,7 @@
 package com.qubole.tenali.parse;
 
+import com.qubole.tenali.parse.parser.TenaliParser;
+
 import java.io.IOException;
 
 /**
@@ -25,28 +27,30 @@ public class TenaliCommandParser extends Parsers {
 
     try {
       switch (source) {
-        case "unknown-source":
         case "hive":
+          createSqlParser().parse(command, TenaliParser.QueryType.HIVE);
+          break;
+        case "unknown-source":
+        case "mysql":
         case "presto":
-          createSqlParser().parse(command);
+          createSqlParser().parse(command, TenaliParser.QueryType.ANSI_SQL);
           break;
         case "spark":
           switch (language) {
             case "sql":
-              createSqlParser().parse(command);
+              createSqlParser().parse(command, TenaliParser.QueryType.SPARK_SQL);
               break;
             case "scala":
-              //parseScalaCommand(command);
+              createSqlParser().parse(command, TenaliParser.QueryType.SPARK_SCALA);
               break;
             case "python":
-              //parsePythonCommand(command);
+              createSqlParser().parse(command, TenaliParser.QueryType.SPARK_PYTHON);
               break;
             case "command_line":
-              //parseCLICommand(command);
+              createSqlParser().parse(command, TenaliParser.QueryType.SPARK_CLI);
               break;
             case "r":
-              //parseRCommand(command);
-              break;
+              createSqlParser().parse(command, TenaliParser.QueryType.SPARK_R);
           }
       }
     } catch(IOException ex) {

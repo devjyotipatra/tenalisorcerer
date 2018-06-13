@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.qubole.tenali</groupId>
-  <artifactId>tenali-sorcerer</artifactId>
+  <artifactId>tenalisorcerer</artifactId>
   <version>1.0-SNAPSHOT</version>
 
   <modules>
@@ -12,7 +12,7 @@
 
   <packaging>pom</packaging>
 
-  <name>tenali-sorcerer</name>
+  <name>tenalisorcerer</name>
   <url>http://maven.apache.org</url>
 
   <properties>
@@ -24,8 +24,16 @@
     <slf4j.version>1.7.6</slf4j.version>
     <scala.version>2.11.1</scala.version>
     <calcite.version>1.15.0</calcite.version>
+    <hive.version>1.2.0-qds-1.0.0</hive.version>
+    <hadoop.version>2.6.0-qds-0.4.8</hadoop.version>
   </properties>
 
+  <repositories>
+    <repository>
+      <id>conjars.org</id>
+      <url>http://conjars.org/repo</url>
+    </repository>
+  </repositories>
 
   <dependencies>
       <dependency>
