@@ -2,32 +2,32 @@ package com.qubole.tenali.parse.parser.sql.datamodel;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qubole.tenali.parse.parser.sql.visitor.BaseASTNodeVisitor;
+import com.qubole.tenali.parse.parser.sql.visitor.BaseAstNodeVisitor;
 import org.apache.calcite.util.ImmutableNullableList;
 
 import java.util.List;
 
-public class SelectNode extends BaseASTNode {
-    public final BaseASTNode where;
-    public final BaseASTNodeList orderBy;
-    public final BaseASTNodeList groupBy;
-    public final BaseASTNode from;
-    public final BaseASTNodeList with;
-    public final BaseASTNodeList columns;
-    public final BaseASTNodeList keywords;
-    public final BaseASTNode having;
-    public final BaseASTNodeList windowDecls;
+public class SelectNode extends BaseAstNode {
+    public final BaseAstNode where;
+    public final BaseAstNodeList orderBy;
+    public final BaseAstNodeList groupBy;
+    public final BaseAstNode from;
+    public final BaseAstNodeList with;
+    public final BaseAstNodeList columns;
+    public final BaseAstNodeList keywords;
+    public final BaseAstNode having;
+    public final BaseAstNodeList windowDecls;
 
     @JsonCreator
-    SelectNode(@JsonProperty("where") BaseASTNode where,
-               @JsonProperty("orderBy") BaseASTNodeList orderBy,
-               @JsonProperty("groupBy") BaseASTNodeList groupBy,
-               @JsonProperty("from") BaseASTNode from,
-               @JsonProperty("with") BaseASTNodeList with,
-               @JsonProperty("columns") BaseASTNodeList columns,
-               @JsonProperty("keywords") BaseASTNodeList keywords,
-               @JsonProperty("having") BaseASTNode having,
-               @JsonProperty("window") BaseASTNodeList windowDecls) {
+    SelectNode(@JsonProperty("where") BaseAstNode where,
+               @JsonProperty("orderBy") BaseAstNodeList orderBy,
+               @JsonProperty("groupBy") BaseAstNodeList groupBy,
+               @JsonProperty("from") BaseAstNode from,
+               @JsonProperty("with") BaseAstNodeList with,
+               @JsonProperty("columns") BaseAstNodeList columns,
+               @JsonProperty("keywords") BaseAstNodeList keywords,
+               @JsonProperty("having") BaseAstNode having,
+               @JsonProperty("window") BaseAstNodeList windowDecls) {
         this.where = where;
         this.orderBy = orderBy;
         this.groupBy = groupBy;
@@ -40,13 +40,13 @@ public class SelectNode extends BaseASTNode {
     }
 
     @Override
-    public List<BaseASTNode> getOperandlist() {
+    public List<BaseAstNode> getOperandlist() {
         return ImmutableNullableList.of(where, orderBy, groupBy, from,
                 with, columns, keywords, having, windowDecls);
     }
 
     @Override
-    public void accept(BaseASTNodeVisitor visitor) {
+    public void accept(BaseAstNodeVisitor visitor) {
         visitor.visit(this);
     }
 
