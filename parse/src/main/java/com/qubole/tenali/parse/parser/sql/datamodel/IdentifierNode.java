@@ -4,11 +4,11 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qubole.tenali.parse.parser.sql.visitor.BaseAstNodeVisitor;
 
-public class LiteralNode extends BaseAstNode {
-    public Object value;
+public class IdentifierNode extends BaseAstNode {
+    public String name;
     @JsonCreator
-    public LiteralNode(@JsonProperty("value") Object value) {
-        this.value = value;
+    public IdentifierNode(@JsonProperty("name") String name) {
+        this.name = name;
     }
 
     @Override
@@ -18,6 +18,6 @@ public class LiteralNode extends BaseAstNode {
 
     @Override
     public String toString() {
-        return value.toString();
+        return name;
     }
 }

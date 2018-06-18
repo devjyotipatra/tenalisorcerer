@@ -5,9 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qubole.tenali.parse.parser.sql.visitor.BaseAstNodeVisitor;
 
 public class ColumnNode extends BaseAstNode {
-    public final String schemaName;
-    public final String tableName;
-    public final String columnName;
+    public String schemaName;
+    public String tableName;
+    public String columnName;
     @JsonCreator
     public ColumnNode(@JsonProperty("schemaName") String schemaName,
                      @JsonProperty("tableName") String tableName,
@@ -20,5 +20,15 @@ public class ColumnNode extends BaseAstNode {
     @Override
     public void accept(BaseAstNodeVisitor visitor) {
         return;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("schemaName: ").append(schemaName).append(", ")
+                .append("tableName: ").append(tableName).append(", ")
+                .append("columnName: ").append(columnName);
+
+        return sb.toString();
     }
 }

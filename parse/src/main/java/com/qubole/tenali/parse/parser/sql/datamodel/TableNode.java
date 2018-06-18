@@ -7,8 +7,8 @@ import com.qubole.tenali.parse.parser.sql.visitor.BaseAstNodeVisitor;
 
 
 public class TableNode extends BaseAstNode {
-    public final String schemaName;
-    public final String tableName;
+    public String schemaName;
+    public String tableName;
     @JsonCreator
     public TableNode(@JsonProperty("schemaName") String schemaName,
                      @JsonProperty("tableName") String tableName) {

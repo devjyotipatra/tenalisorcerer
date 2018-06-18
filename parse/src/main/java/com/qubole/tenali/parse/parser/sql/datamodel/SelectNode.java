@@ -73,5 +73,146 @@ public class SelectNode extends BaseAstNode {
     public boolean hasHaving() {
         return having != null;
     }
+
+
+    @Override
+    public String toString() {
+        StringBuilder sb  = new StringBuilder();
+
+        if(where != null) {
+            sb.append("where: ").append(where.toString()).append("\n");
+        }
+
+        if(orderBy != null) {
+            sb.append("orderBy: ").append(orderBy.toString()).append("\n");
+        }
+
+        if(groupBy != null) {
+            sb.append("groupBy: ").append(groupBy.toString()).append("\n");
+        }
+
+        if(from != null) {
+            sb.append("from: ").append(from.toString()).append("\n");
+        }
+
+        if(with != null) {
+            sb.append("with: ").append(with.toString()).append("\n");
+        }
+
+        if(columns != null) {
+            sb.append("columns: ").append(columns.toString()).append("\n");
+        }
+
+        if(keywords != null) {
+            sb.append("keywords: ").append(keywords.toString()).append("\n");
+        }
+
+        if(having != null) {
+            sb.append("having: ").append(having.toString()).append("\n");
+        }
+
+        if(windowDecls != null) {
+            sb.append("windowDecls: ").append(windowDecls.toString());
+        }
+
+        return sb.toString();
+    }
+
+
+    public static class SelectBuilder implements Builder {
+        BaseAstNode where;
+        BaseAstNodeList orderBy;
+        BaseAstNodeList groupBy;
+        BaseAstNode from;
+        BaseAstNodeList with;
+        BaseAstNodeList columns;
+        BaseAstNodeList keywords;
+        BaseAstNode having;
+        BaseAstNodeList windowDecls;
+        @Override
+        public BaseAstNode build() {
+            return new SelectNode(where,
+                    orderBy,
+                    groupBy,
+                    from,
+                    with,
+                    columns,
+                    keywords,
+                    having,
+                    windowDecls);
+        }
+
+        public BaseAstNode getWhere() {
+            return where;
+        }
+
+        public void setWhere(BaseAstNode where) {
+            this.where = where;
+        }
+
+        public BaseAstNodeList getOrderBy() {
+            return orderBy;
+        }
+
+        public void setOrderBy(BaseAstNodeList orderBy) {
+            this.orderBy = orderBy;
+        }
+
+        public BaseAstNodeList getGroupBy() {
+            return groupBy;
+        }
+
+        public void setGroupBy(BaseAstNodeList groupBy) {
+            this.groupBy = groupBy;
+        }
+
+        public BaseAstNode getFrom() {
+            return from;
+        }
+
+        public void setFrom(BaseAstNode from) {
+            this.from = from;
+        }
+
+        public BaseAstNodeList getWith() {
+            return with;
+        }
+
+        public void setWith(BaseAstNodeList with) {
+            this.with = with;
+        }
+
+        public BaseAstNodeList getColumns() {
+            return columns;
+        }
+
+        public void setColumns(BaseAstNodeList columns) {
+            this.columns = columns;
+        }
+
+        public BaseAstNodeList getKeywords() {
+            return keywords;
+        }
+
+        public void setKeywords(BaseAstNodeList keywords) {
+            this.keywords = keywords;
+        }
+
+        public BaseAstNode getHaving() {
+            return having;
+        }
+
+        public void setHaving(BaseAstNode having) {
+            this.having = having;
+        }
+
+        public BaseAstNodeList getWindowDecls() {
+            return windowDecls;
+        }
+
+        public void setWindowDecls(BaseAstNodeList windowDecls) {
+            this.windowDecls = windowDecls;
+        }
+    }
 }
 

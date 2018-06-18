@@ -17,7 +17,7 @@ public class TenaliCommandLexerTest {
 
     @Test
     public void testSimpleSqlQuery() throws Exception {
-        String command = "; \n\r\n\r\n ;SELECT tab.a1 AS a, a2 b from tab where a1>0";
+        String command = "; \n\r\n\r\n ;SELECT distinct tab.a1 AS a, a2 b from tab where a1>0 and a2!=0 and a3=9";
 
         LexerTestHelper.parse(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);

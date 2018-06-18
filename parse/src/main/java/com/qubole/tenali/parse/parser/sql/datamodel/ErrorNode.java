@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qubole.tenali.parse.parser.sql.visitor.BaseAstNodeVisitor;
 
 public class ErrorNode extends BaseAstNode {
-    public final String error;
-    public final String unsupportedNodeType;
+    public String error;
+    public String unsupportedNodeType;
     @JsonCreator
     public ErrorNode(@JsonProperty("error") String error,
                      @JsonProperty("unsupportednode") String unsupportedNodeType) {

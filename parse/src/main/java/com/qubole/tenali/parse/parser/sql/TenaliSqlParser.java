@@ -2,6 +2,7 @@ package com.qubole.tenali.parse.parser.sql;
 
 
 import antlr4.QDSCommandLexer;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.qubole.tenali.parse.Parsers;
 import com.qubole.tenali.parse.QueryContext;
 import com.qubole.tenali.parse.parser.TenaliParser;
@@ -11,6 +12,7 @@ import com.qubole.tenali.parse.exception.SQLSyntaxError;
 
 import antlr4.QDSCommandParser;
 
+import com.qubole.tenali.parse.parser.sql.datamodel.BaseAstNode;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -86,17 +88,17 @@ public class TenaliSqlParser implements TenaliParser {
     switch(qt) {
       case HIVE:
       case SPARK_SQL:
-        parseWithHive(rootCtx);
+        parseHiveSql(rootCtx);
         break;
 
       case ANSI_SQL:
-        parseWithCalcite(rootCtx);
+        parseAnsiSql(rootCtx);
     }
   }
 
 
 
-  public void parseWithCalcite(QueryContext qctx) throws IOException {
+  public void parseAnsiSql(QueryContext qctx) throws IOException {
     while(qctx != null) {
       String sql = qctx.getQueryStmt();
       try {
@@ -105,9 +107,12 @@ public class TenaliSqlParser implements TenaliParser {
         SqlNode ast = parser.parseStmt();
 
         if(ast != null) {
-          SqlAstPrintVisitor printer = new SqlAstPrintVisitor();
-          ast.accept(printer);
-          System.out.println(printer.toString());
+          CalciteAstToBaseAstConverter visitor = new CalciteAstToBaseAstConverter();
+          BaseAstNode node = (BaseAstNode) ast.accept(visitor);
+
+          System.out.println(node.toString());
+
+          System.out.println(visitor.convertToString(node));
 
           qctx.setQueryAst(ast);
         }
@@ -120,6 +125,15 @@ public class TenaliSqlParser implements TenaliParser {
         }
         throw builder.build(logger);*/
         throw new IOException(e);
+      } catch (JsonProcessingException jpe) {
+        /*UserException.Builder builder = UserException
+            .parseError(e)
+            .addContext("SQL Query", formatSQLParsingError(sql, e.getPos()));
+        if (isInnerQuery) {
+          builder.message("Failure parsing a view your query is dependent upon.");
+        }
+        throw builder.build(logger);*/
+        throw new IOException(jpe);
       }
 
       qctx = qctx.getChild();
@@ -127,7 +141,7 @@ public class TenaliSqlParser implements TenaliParser {
   }
 
 
-  public void parseWithHive(QueryContext qctx) throws IOException {
+  public void parseHiveSql(QueryContext qctx) throws IOException {
     while(qctx != null) {
       String sql = qctx.getQueryStmt();
       try {

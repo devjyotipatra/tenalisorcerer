@@ -11,7 +11,7 @@ public class LexerTestHelper {
 
   public static void parse(String command) throws IOException {
     long commandId = 12345l;
-    String source = "hive";
+    String source = "mysql";
     TenaliCommandParser parser = new TenaliCommandParser(commandId);
     parser.submit(command, source);
   }

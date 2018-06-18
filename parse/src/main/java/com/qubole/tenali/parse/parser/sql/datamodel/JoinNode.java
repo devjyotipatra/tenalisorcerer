@@ -8,12 +8,12 @@ public class JoinNode extends BaseAstNode {
 
     public final BaseAstNode leftNode;
     public final BaseAstNode rightNode;
-    public final BaseAstNode joinCondition;
+    public final BaseAstNodeList joinCondition;
 
     @JsonCreator
     public JoinNode(@JsonProperty("left") BaseAstNode leftNode,
                     @JsonProperty("right") BaseAstNode rightNode,
-                    @JsonProperty("condition") BaseAstNode joinCondition) {
+                    @JsonProperty("condition") BaseAstNodeList joinCondition) {
         this.leftNode = leftNode;
         this.rightNode = rightNode;
         this.joinCondition = joinCondition;

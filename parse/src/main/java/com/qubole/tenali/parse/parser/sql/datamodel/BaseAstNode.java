@@ -15,7 +15,7 @@ import java.util.List;
 @JsonSubTypes({
         @JsonSubTypes.Type(value = SelectNode.class, name = "select"),
         @JsonSubTypes.Type(value = TableNode.class, name = "table"),
-        @JsonSubTypes.Type(value = DDLNode.class, name = "ddl"),
+        @JsonSubTypes.Type(value = DdlNode.class, name = "ddl"),
         @JsonSubTypes.Type(value = JoinNode.class, name = "join"),
         @JsonSubTypes.Type(value = OperatorNode.class, name = "expression"),
         @JsonSubTypes.Type(value = ColumnNode.class, name = "column"),
@@ -27,5 +27,11 @@ public abstract class BaseAstNode implements Cloneable {
 
     public List<BaseAstNode> getOperandlist() {
         return Collections.EMPTY_LIST;
+    }
+
+    public interface Builder {
+        public BaseAstNode build();
+
+        public String toString();
     }
 }

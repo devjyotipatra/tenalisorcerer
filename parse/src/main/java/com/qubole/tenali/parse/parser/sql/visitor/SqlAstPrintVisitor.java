@@ -1,4 +1,4 @@
-package com.qubole.tenali.parse.parser.sql;
+package com.qubole.tenali.parse.parser.sql.visitor;
 
 import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.pretty.SqlPrettyWriter;
