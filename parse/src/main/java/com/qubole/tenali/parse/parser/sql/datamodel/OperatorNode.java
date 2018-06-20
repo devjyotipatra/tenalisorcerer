@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qubole.tenali.parse.parser.sql.visitor.BaseAstNodeVisitor;
 
+
 public class OperatorNode extends BaseAstNode {
     public String operator;
     public final BaseAstNodeList operands;

@@ -18,12 +18,6 @@ public class SelectNodeVisitor extends BaseAstNodeVisitor {
             select.where.accept(this);
         }
 
-        if(select.hasOrderBy()) {
-            for (BaseAstNode n : select.orderBy.getOperandlist()) {
-                n.accept(this);
-            }
-        }
-
         if(select.hasGroupBy()) {
             for (BaseAstNode n : select.groupBy.getOperandlist()) {
                 n.accept(this);

@@ -20,4 +20,5 @@ public class LiteralNode extends BaseAstNode {
     public String toString() {
         return value.toString();
     }
+
 }

@@ -21,4 +21,29 @@ public class FunctionNode extends BaseAstNode {
     public void accept(BaseAstNodeVisitor visitor) {
         visitor.visit(this);
     }
+
+    public static class  FunctionBuilder implements Builder {
+        String functionName;
+        BaseAstNodeList arguments;
+
+        public BaseAstNode build() {
+            return new FunctionNode(functionName, arguments);
+        }
+
+        public String getFunctionName() {
+            return functionName;
+        }
+
+        public void setFunctionName(String functionName) {
+            this.functionName = functionName;
+        }
+
+        public BaseAstNodeList getArguments() {
+            return arguments;
+        }
+
+        public void setArguments(BaseAstNodeList arguments) {
+            this.arguments = arguments;
+        }
+    }
 }

@@ -3,13 +3,11 @@ package com.qubole.tenali.parse.parser.sql.datamodel;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qubole.tenali.parse.parser.sql.visitor.BaseAstNodeVisitor;
-import org.apache.calcite.util.ImmutableNullableList;
 
-import java.util.List;
 
 public class SelectNode extends BaseAstNode {
     public final BaseAstNode where;
-    public final BaseAstNodeList orderBy;
+    public final BaseAstNode orderBy;
     public final BaseAstNodeList groupBy;
     public final BaseAstNode from;
     public final BaseAstNodeList with;
@@ -20,7 +18,7 @@ public class SelectNode extends BaseAstNode {
 
     @JsonCreator
     SelectNode(@JsonProperty("where") BaseAstNode where,
-               @JsonProperty("orderBy") BaseAstNodeList orderBy,
+               @JsonProperty("orderBy") BaseAstNode orderBy,
                @JsonProperty("groupBy") BaseAstNodeList groupBy,
                @JsonProperty("from") BaseAstNode from,
                @JsonProperty("with") BaseAstNodeList with,
@@ -39,11 +37,10 @@ public class SelectNode extends BaseAstNode {
         this.windowDecls = windowDecls;
     }
 
-    @Override
-    public List<BaseAstNode> getOperandlist() {
+    /*public List<BaseAstNode> getOperandlist() {
         return ImmutableNullableList.of(where, orderBy, groupBy, from,
                 with, columns, keywords, having, windowDecls);
-    }
+    }*/
 
     @Override
     public void accept(BaseAstNodeVisitor visitor) {
@@ -51,7 +48,7 @@ public class SelectNode extends BaseAstNode {
     }
 
     public boolean hasOrderBy() {
-        return orderBy != null && orderBy.getOperandlist().size() != 0;
+        return orderBy != null;
     }
 
     public boolean hasGroupBy() {
@@ -119,9 +116,9 @@ public class SelectNode extends BaseAstNode {
     }
 
 
-    public static class SelectBuilder implements Builder {
+    public static class SelectBuilder implements Builder{
         BaseAstNode where;
-        BaseAstNodeList orderBy;
+        BaseAstNode orderBy;
         BaseAstNodeList groupBy;
         BaseAstNode from;
         BaseAstNodeList with;
@@ -129,6 +126,23 @@ public class SelectNode extends BaseAstNode {
         BaseAstNodeList keywords;
         BaseAstNode having;
         BaseAstNodeList windowDecls;
+
+        public SelectBuilder() {}
+
+        public SelectBuilder(SelectNode select) {
+            assert select != null;
+
+            setWhere(select.where);
+            setOrderBy(select.orderBy);
+            setGroupBy(select.groupBy);
+            setFrom(select.from);
+            setWith(select.with);
+            setColumns(select.columns);
+            setKeywords(select.keywords);
+            setHaving(select.having);
+            setWindowDecls(select.windowDecls);
+        }
+
         @Override
         public BaseAstNode build() {
             return new SelectNode(where,
@@ -150,11 +164,11 @@ public class SelectNode extends BaseAstNode {
             this.where = where;
         }
 
-        public BaseAstNodeList getOrderBy() {
+        public BaseAstNode getOrderBy() {
             return orderBy;
         }
 
-        public void setOrderBy(BaseAstNodeList orderBy) {
+        public void setOrderBy(BaseAstNode orderBy) {
             this.orderBy = orderBy;
         }
 

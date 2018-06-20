@@ -14,7 +14,7 @@ public class OperatorNodeVisitor extends BaseAstNodeVisitor {
 
         OperatorNode operator = (OperatorNode) node;
 
-        for (BaseAstNode o : operator.operands.getOperandlist()) {
+        for (BaseAstNode o : operator.operands) {
             o.accept(this);
         }
     }

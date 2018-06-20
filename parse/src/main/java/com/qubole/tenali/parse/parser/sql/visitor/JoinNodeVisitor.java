@@ -16,8 +16,6 @@ public class JoinNodeVisitor extends BaseAstNodeVisitor {
         join.leftNode.accept(this);
         join.rightNode.accept(this);
 
-        for(BaseAstNode j : join.joinCondition.getOperandlist()) {
-            j.accept(this);
-        }
+        join.joinCondition.accept(this);
     }
 }

@@ -8,16 +8,31 @@ import org.junit.Test;
 public class TenaliCommandLexerTest {
 
     @Test
-    public void testNoQuery() throws Exception {
-        String command = ";\n\r\n\r\n ; ";
+    public void testSimpleSelectQuery() throws Exception {
+        String command = "select to_date(qh.created_at) as dt,  count(qh.id) as num_queries " +
+                "from query_hists qh join user_info ui on qh.qbol_user_id = ui.qu_id " +
+                "join canonical_accounts externals on externals.id = ui.a_id " +
+                "where to_date(qh.created_at) >= date_sub(from_unixtime(unix_timestamp()),30) " +
+                "and command_type = 'HiveCommand' and qlog like '%\\\"EXECUTION_ENGINE\\\":\\\"tez\\\"%' " +
+                "and   customer_name like \"${customer=%}\" " +
+                "group by  to_date(qh.created_at) " +
+                "order by dt, mt asc";
 
         LexerTestHelper.parse(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
     }
 
     @Test
-    public void testSimpleSqlQuery() throws Exception {
-        String command = "; \n\r\n\r\n ;SELECT distinct tab.a1 AS a, a2 b from tab where a1>0 and a2!=0 and a3=9";
+    public void testSimpleSqlQuery1() throws Exception {
+        String command = "SELECT a, b, c, count(*) as cnt from tab where a>0 group by a, b, c order by a, b";
+
+        LexerTestHelper.parse(command);
+        //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
+    }
+
+    @Test
+    public void testSimpleSqlQuery2() throws Exception {
+        String command = "; \n\r\n\r\n ;SELECT distinct tab.X1 AS a, X2 b from tab where a1>0 and a2!=0 and a3=9";
 
         LexerTestHelper.parse(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
@@ -25,11 +40,10 @@ public class TenaliCommandLexerTest {
 
     @Test
     public void testNoCommentSingleQuery() throws Exception {
-        String command = "; ; SELECT logdate, site_key, survey_id, placement_key, question_id, answer_id, " +
-            "tm_client_id, auction_id, exposed, correct FROM marketing.stats_log_survey " +
+        String command = "; ; SELECT logdate, site_key, survey_id, placement_key, question_id" +
+                " FROM ( select count(*) from marketing.stats_log_survey " +
             "WHERE survey_id='ZmOwqVvLFKtWroPKX5VN' AND event IN ('svyresp','svystart','svycomp') " +
-            "AND logdate>'2015-09-01' GROUP BY logdate, site_key, survey_id, placement_key, " +
-            "question_id, answer_id, tm_client_id, auction_id, exposed, correct;";
+            "AND logdate>'2015-09-01') GROUP BY logdate, site_key, survey_id;";
 
         LexerTestHelper.parse(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
@@ -66,7 +80,6 @@ public class TenaliCommandLexerTest {
     @Test
     public void testBlockCommentMultipleQueries() throws Exception {
         String command = "/* some random comments \n\n here */" +
-            "add jar s3://something_here/some_more_thing.jar; " +
             "-- some random * comment here \n\r\n SELECT logdate, site_key, survey_id, placement_key, question_id, answer_id, " +
             "tm_client_id, auction_id, exposed, correct FROM marketing.stats_log_survey " +
             "WHERE survey_id='ZmOwqVvLFKtWroPKX5VN' AND event IN ('svyresp','svystart','svycomp') " +
@@ -102,8 +115,16 @@ public class TenaliCommandLexerTest {
     }
 
     @Test
-    public void testValidCalciteLateral() throws Exception {
+    public void testValidPrestoLateral() throws Exception {
         String command = "SELECT *\n\n FROM DEPT,\n\n LATERAL TABLE(RAMP(DEPT.DEPTNO)) adid";
+
+        LexerTestHelper.parse(command);
+        //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
+    }
+
+    @Test
+    public void testLateralSubquery() throws Exception {
+        String command = "SELECT * FROM foo, LATERAL (SELECT * FROM bar WHERE bar.id = foo.bar_id) ss;";
 
         LexerTestHelper.parse(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
@@ -158,6 +179,32 @@ public class TenaliCommandLexerTest {
         String command = "SELECT student, score\n" +
                 "FROM tests\n" +
                 "CROSS JOIN UNNEST(scores) AS t (score);";
+
+        LexerTestHelper.parse(command);
+        //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
+    }
+
+    @Test
+    public void testWindowFunction() throws Exception {
+        String command = "select id,ts,1+sum(col) over(partition by id order by ts) as rnk\n" +
+                "from (select id,ts\n" +
+                "      ,case when ts-lag(ts,1,ts) over(partition by id order by ts) > 3000 then 1 else 0 end as col\n" +
+                "      from tbl\n" +
+                "     ) t";
+
+        LexerTestHelper.parse(command);
+        //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
+    }
+
+    @Test
+    public void testWindowFunctionComplex() throws Exception {
+        String command = "select venuestate, venueseats, venuename,\n" +
+                "first_value(venuename)\n" +
+                "over(partition by venuestate\n" +
+                "order by venueseats desc\n" +
+                "rows between unbounded preceding and unbounded following)\n" +
+                "from (select * from venue where venueseats >0)\n" +
+                "group by venuestate order by venuestate";
 
         LexerTestHelper.parse(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);

@@ -7,17 +7,31 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+
 public class BaseAstNodeList extends BaseAstNode implements Iterable<BaseAstNode> {
-    private final List<BaseAstNode> list;
+    private final List<BaseAstNode> list = new ArrayList<>();
 
-    //public final BaseAstNodeList EMPTY = new BaseAstNodeList();
+    public BaseAstNodeList() { }
 
-    public BaseAstNodeList() {
-        list = new ArrayList<>();
+    public BaseAstNodeList(List<BaseAstNode> nodeList) {
+        assert nodeList != null;
+        this.list.addAll(nodeList);
+    }
+
+    public BaseAstNodeList(BaseAstNodeList nodeList) {
+        assert nodeList != null;
+        add(nodeList);
     }
 
     public void add(BaseAstNode node) {
         list.add(node);
+    }
+
+    public void add(BaseAstNodeList nodeList) {
+        assert list != null;
+        for(BaseAstNode node : nodeList) {
+            list.add(node);
+        }
     }
 
     public void add(List<BaseAstNode> nodeList) {
@@ -30,7 +44,6 @@ public class BaseAstNodeList extends BaseAstNode implements Iterable<BaseAstNode
         return list.iterator();
     }
 
-    @Override
     public List<BaseAstNode> getOperandlist() {
         return list;
     }
@@ -49,8 +62,6 @@ public class BaseAstNodeList extends BaseAstNode implements Iterable<BaseAstNode
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-
-        System.out.println("LIST LENGTH ==> " + list.size());
 
         if(list != null) {
             Iterator iter = iterator();
