@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qubole.tenali.parse.parser.sql.visitor.BaseAstNodeVisitor;
 
+import java.security.SecureRandom;
+import java.util.Random;
+
 
 public class SelectNode extends BaseAstNode {
     public final BaseAstNode where;
@@ -15,6 +18,10 @@ public class SelectNode extends BaseAstNode {
     public final BaseAstNodeList keywords;
     public final BaseAstNode having;
     public final BaseAstNodeList windowDecls;
+
+    public final int vid;
+
+    final RandomInt random = new RandomInt(8);
 
     @JsonCreator
     SelectNode(@JsonProperty("where") BaseAstNode where,
@@ -35,7 +42,10 @@ public class SelectNode extends BaseAstNode {
         this.keywords = keywords;
         this.having = having;
         this.windowDecls = windowDecls;
+
+        vid = random.nextInt();
     }
+
 
     /*public List<BaseAstNode> getOperandlist() {
         return ImmutableNullableList.of(where, orderBy, groupBy, from,
@@ -71,6 +81,16 @@ public class SelectNode extends BaseAstNode {
         return having != null;
     }
 
+
+    @Override
+    public boolean equals(Object obj) {
+        return vid == obj.hashCode();
+    }
+
+    @Override
+    public int hashCode() {
+        return vid;
+    }
 
     @Override
     public String toString() {
@@ -226,6 +246,27 @@ public class SelectNode extends BaseAstNode {
 
         public void setWindowDecls(BaseAstNodeList windowDecls) {
             this.windowDecls = windowDecls;
+        }
+    }
+
+    private class RandomInt {
+        final String digits = "1234567890987654321";
+
+        Random random = new SecureRandom();
+
+        final char[] symbols;
+
+        final char[] buf;
+
+        public RandomInt(int length) {
+            this.symbols = digits.toCharArray();
+            this.buf = new char[length];
+        }
+
+        public int nextInt() {
+            for (int idx = 0; idx < buf.length; ++idx)
+                buf[idx] = symbols[random.nextInt(symbols.length)];
+            return Integer.parseInt(new String(buf));
         }
     }
 }

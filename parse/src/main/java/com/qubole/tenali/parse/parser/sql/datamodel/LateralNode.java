@@ -10,6 +10,7 @@ public class LateralNode extends BaseAstNode {
 
     @JsonCreator
     public LateralNode(@JsonProperty("table") BaseAstNode table) {
+        super();
         this.table = table;
     }
 

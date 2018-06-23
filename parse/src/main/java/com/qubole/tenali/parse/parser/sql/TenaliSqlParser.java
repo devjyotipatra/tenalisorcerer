@@ -3,6 +3,7 @@ package com.qubole.tenali.parse.parser.sql;
 
 import antlr4.QDSCommandLexer;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qubole.tenali.parse.Parsers;
 import com.qubole.tenali.parse.QueryContext;
 import com.qubole.tenali.parse.parser.TenaliParser;
@@ -12,7 +13,9 @@ import com.qubole.tenali.parse.exception.SQLSyntaxError;
 
 import antlr4.QDSCommandParser;
 
+import com.qubole.tenali.parse.parser.config.TenaliConformance;
 import com.qubole.tenali.parse.parser.sql.datamodel.BaseAstNode;
+import com.qubole.tenali.parse.parser.sql.datamodel.SelectNode;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -49,11 +52,12 @@ public class TenaliSqlParser implements TenaliParser {
               .build();*/
 
     parserConfig = SqlParser.configBuilder()
-            .setLex(Lex.MYSQL_ANSI)
+            .setLex(Lex.MYSQL)
             .setUnquotedCasing(Casing.UNCHANGED)
             .setQuotedCasing(Casing.UNCHANGED)
             .setQuoting(Quoting.DOUBLE_QUOTE)
-            .setConformance(SqlConformanceEnum.MYSQL_5)
+            //.setConformance(SqlConformanceEnum.MYSQL_5)
+            //.setConformance(TenaliConformance.instance())
             .build();
   }
 
@@ -107,12 +111,19 @@ public class TenaliSqlParser implements TenaliParser {
         SqlNode ast = parser.parseStmt();
 
         if(ast != null) {
-          CalciteAstToBaseAstConverter visitor = new CalciteAstToBaseAstConverter();
-          BaseAstNode node = (BaseAstNode) ast.accept(visitor);
+          CalciteAstToBaseAstConverter converter = new CalciteAstToBaseAstConverter();
+          BaseAstNode root = ast.accept(converter);
 
-          System.out.println(node.toString());
+          String jsonAst = converter.convertToString(root);
+          System.out.println(jsonAst);
 
-          System.out.println(visitor.convertToString(node));
+          BaseAstNode cRoot = new ObjectMapper().readValue(jsonAst, BaseAstNode.class);
+
+          TenaliBaseAstAliasResolver visitor = new TenaliBaseAstAliasResolver();
+          visitor.dfsFindAlias(cRoot);
+
+          jsonAst = converter.convertToString(cRoot);
+          System.out.println(jsonAst);
 
           qctx.setQueryAst(ast);
         }

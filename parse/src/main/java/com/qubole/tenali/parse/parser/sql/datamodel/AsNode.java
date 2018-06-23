@@ -7,11 +7,12 @@ import com.qubole.tenali.parse.parser.sql.visitor.BaseAstNodeVisitor;
 public class AsNode extends BaseAstNode {
 
     public String aliasName;
-    public Object value;
+    public BaseAstNode value;
 
     @JsonCreator
     public AsNode(@JsonProperty("aliasName") String aliasName,
-                        @JsonProperty("value") Object value) {
+                        @JsonProperty("value") BaseAstNode value) {
+        super();
         this.aliasName = aliasName;
         this.value = value;
 
@@ -24,7 +25,7 @@ public class AsNode extends BaseAstNode {
 
     public static class AsBuilder implements Builder {
         public String aliasName;
-        public Object value;
+        public BaseAstNode value;
 
         public BaseAstNode build() {
             return new AsNode(aliasName, value);
@@ -38,11 +39,11 @@ public class AsNode extends BaseAstNode {
             this.aliasName = aliasName;
         }
 
-        public Object getValue() {
+        public BaseAstNode getValue() {
             return value;
         }
 
-        public void setValue(Object value) {
+        public void setValue(BaseAstNode value) {
             this.value = value;
         }
     }

@@ -120,16 +120,17 @@ public class CalciteAstToBaseAstConverter implements SqlVisitor<BaseAstNode> {
     }
 
 
-    private BaseAstNode extractOperator(SqlOperator parent, List<SqlNode> children) {
+    private BaseAstNode extractOperator(String operatorName, List<SqlNode> children) {
         OperatorNode.OperatorBuilder builder = new OperatorNode.OperatorBuilder();
-        System.out.println("  )))))) Operators  ,  _  Children _ " + children.size());
+        System.out.println("  )))))) Operators  ,  _  Children _  (((((( " + children.size());
 
-        builder.setOperator(parent.getKind().lowerName);
+        builder.setOperator(operatorName);
 
         BaseAstNodeList identifiers = new BaseAstNodeList();
 
         if (children.size() > 0) {
             for (SqlNode sqlNode : children) {
+                System.out.println("Operator Child  => " + sqlNode.getKind());
                 if (sqlNode == null) {
                     System.out.println("SQL Node is NULL..");
                 } else {
@@ -169,14 +170,19 @@ public class CalciteAstToBaseAstConverter implements SqlVisitor<BaseAstNode> {
 
     private BaseAstNode extractJoin(SqlJoin parent) {
         JoinNode.JoinBuilder builder = new JoinNode.JoinBuilder();
-        System.out.println(parent.getJoinType().lowerName + " ,  _  " + builder.toString() );
+        builder.setJoinType(parent.getJoinType().name());
+        System.out.println(parent.getJoinType().name() + " ,  _  " + builder.toString() );
 
-        BaseAstNode leftNode = parent.getLeft().accept(this);
-        builder.setLeftNode(leftNode);
+        SqlNode leftNode = parent.getLeft();
+        if(leftNode != null) {
+            BaseAstNode leftNodeAst = leftNode.accept(this);
+            builder.setLeftNode(leftNodeAst);
+        }
 
-        if(parent.getRight() != null) {
-            BaseAstNode rightNode = parent.getRight().accept(this);
-            builder.setRightNode(rightNode);
+        SqlNode rightNode = parent.getRight();
+        if(rightNode != null) {
+            BaseAstNode rightNodeAst = rightNode.accept(this);
+            builder.setRightNode(rightNodeAst);
         }
 
         if(parent.getCondition() != null) {
@@ -223,15 +229,17 @@ public class CalciteAstToBaseAstConverter implements SqlVisitor<BaseAstNode> {
     private BaseAstNode extractOrderby(SqlNode parent, List<SqlNode> children) {
         SelectNode.SelectBuilder selectBuilder = null;
 
+        //OrderBy wraps the SelectNode and we want it the other way round in our BaseAst.
+        //So, create a SelectNode first and then add the OrderBy columns.
         SqlNode selectChild = children.get(0);
         if (selectChild != null) {
             BaseAstNode node = selectChild.accept(this);
             selectBuilder = new SelectNode.SelectBuilder((SelectNode) node);
         }
 
-        SqlNode operChild = children.get(1);
-        if(operChild instanceof SqlNodeList) {
-            BaseAstNode node = operChild.accept(this);
+        SqlNode orderByCols = children.get(1);
+        if(orderByCols instanceof SqlNodeList) {
+            BaseAstNode node = orderByCols.accept(this);
             selectBuilder.setOrderBy(node);
         }
 
@@ -259,11 +267,12 @@ public class CalciteAstToBaseAstConverter implements SqlVisitor<BaseAstNode> {
     @Override public BaseAstNode visit(SqlCall call) {
         BaseAstNode node = null;
 
-        System.out.println("call ===== "+ call.getKind()  + "   " + call.getOperator());
+        System.out.println("call ===== "+ call.getKind()  + "   " + call.getOperator().getClass());
 
         if(call.getOperator() instanceof SqlFunction) {
             node = extractFunction(call, call.getOperandList());
         } else {
+            System.out.println("call switching===== ");
             switch (call.getKind()) {
                 case SELECT:
                     node = extractSelect(call, call.getOperandList());
@@ -283,11 +292,19 @@ public class CalciteAstToBaseAstConverter implements SqlVisitor<BaseAstNode> {
                 case ORDER_BY:
                     node = extractOrderby(call, call.getOperandList());
                     break;
-            /*default:
-                SqlOperator operator = call.getOperator();
-                node = extractOperator(operator, call.getOperandList());*/
+                case CASE:
+                case OVER:
+                case WINDOW:
+                    SqlOperator winOperator = call.getOperator();
+                    node = extractOperator(winOperator.getName(), call.getOperandList());
+                    break;
                 default:
-                    node = extract(call, call.getOperandList());
+                    SqlOperator operator = call.getOperator();
+                    if(operator instanceof SqlBinaryOperator) {
+                        node = extractOperator(operator.getName(), call.getOperandList());
+                    } else {
+                        node = extract(call, call.getOperandList());
+                    }
             }
         }
 
@@ -295,7 +312,7 @@ public class CalciteAstToBaseAstConverter implements SqlVisitor<BaseAstNode> {
     }
 
     @Override public BaseAstNode visit(SqlNodeList nodeList) {
-        System.out.println("SqlNodeList ---- " );
+        System.out.println("SqlNodeList ---- " + nodeList.getList());
         return extractList(nodeList, new BaseAstNodeList.NodeListBuilder(), nodeList.getList());
     }
 

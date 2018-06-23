@@ -12,6 +12,7 @@ public class DdlNode extends BaseAstNode {
     public DdlNode(@JsonProperty("table") BaseAstNode tableNode,
                    @JsonProperty("ctas") BaseAstNode ctasNode,
                    @JsonProperty("alter") BaseAstNode alterNode) {
+        super();
         this.tableNode = tableNode;
         this.ctasNode = ctasNode;
         this.alterNode = alterNode;

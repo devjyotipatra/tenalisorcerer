@@ -11,6 +11,7 @@ public class IdentifierNode extends BaseAstNode {
         this.name = name;
     }
 
+
     @Override
     public void accept(BaseAstNodeVisitor visitor) {
         return;

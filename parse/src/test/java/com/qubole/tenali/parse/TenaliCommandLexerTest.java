@@ -22,6 +22,28 @@ public class TenaliCommandLexerTest {
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
     }
 
+
+    @Test
+    public void testHavingQuery() throws Exception {
+        String command = "SELECT   JobTitle,\n" +
+                "         MaritalStatus,\n" +
+                "         AVG(VacationHours)\n" +
+                "FROM     HumanResources.Employee AS E\n" +
+                "GROUP BY JobTitle, MaritalStatus\n" +
+                "HAVING   x in (select x from tab1)";
+
+        LexerTestHelper.parse(command);
+        //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
+    }
+
+    @Test
+    public void testSimpleSqlQuery0() throws Exception {
+        String command = "SELECT a, b from tab where a>0 and b>0";
+
+        LexerTestHelper.parse(command);
+        //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
+    }
+
     @Test
     public void testSimpleSqlQuery1() throws Exception {
         String command = "SELECT a, b, c, count(*) as cnt from tab where a>0 group by a, b, c order by a, b";
@@ -166,7 +188,34 @@ public class TenaliCommandLexerTest {
     }
 
     @Test
-    public void testSqlCast() throws Exception {
+    public void testCtasQuery() throws Exception {
+        String command = "CREATE TABLE tabx AS " +
+                "SELECT a, count(s.b) as cnt from (select c as a, d as b from tab where c>0 and d<0)s";
+
+        LexerTestHelper.parse(command);
+        //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
+    }
+
+    @Test
+    public void testSimpleNestedSql1() throws Exception {
+        String command = "SELECT a, count(s.b) as cnt from (select c as a, d as b from tab where c>0 and d<0)s group by a order by cnt";
+
+        LexerTestHelper.parse(command);
+        //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
+    }
+
+    @Test
+    public void testSimpleNestedSql2() throws Exception {
+        String command = "SELECT s.a, b, e, count(s.b) as cnt from (select c as a, d as b from tab1 where c>0 and d<0)s join \n" +
+                "(select a, f from tab2)t on s.a=t.e \n" +
+                "group by s.a, b, e order by cnt";
+
+        LexerTestHelper.parse(command);
+        //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
+    }
+
+    @Test
+    public void testSqlIf() throws Exception {
         String command = "SELECT IF(CARDINALITY(my_array) >= 3, my_array[3], NULL)\n FROM tab1";
 
         LexerTestHelper.parse(command);
@@ -177,8 +226,17 @@ public class TenaliCommandLexerTest {
     @Test
     public void testLateralViewSimple() throws Exception {
         String command = "SELECT student, score\n" +
-                "FROM tests\n" +
-                "CROSS JOIN UNNEST(scores) AS t (score);";
+                "FROM tests CROSS JOIN UNNEST(scores) AS t (score);";
+
+        LexerTestHelper.parse(command);
+        //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
+    }
+
+    @Test
+    public void testWindowFunctionSimple() throws Exception {
+        String command = "select id, ts\n" +
+                "      ,case when ts-lag(ts,1,ts) over(partition by id order by ts) > 3000 then 1 else 0 end as col\n" +
+                "      from tbl\n";
 
         LexerTestHelper.parse(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
