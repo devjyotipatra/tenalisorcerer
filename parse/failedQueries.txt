@@ -1,0 +1,78 @@
+ALTER GROUP ADD TABLE t1 ( c1, c2 )     TO t2 
+ALTER GROUP ADD TABLE t1 ( c1, c2 )     TO t2 (a1, a2) 
+ ALTER GROUP DROP TABLE t1 
+alter server disconnect session all 
+ALTER SERVER INTERRUPT SESSION 42 
+ALTER SERVER KILL SESSION -1 
+ALTER SERVER SET cbo to default 
+ALTER SERVER SET instrumentation = 'true' 
+ALTER SERVER SHUTDOWN 
+ALTER SERVER SHUTDOWN IMMEDIATE 
+CLOSE curs 
+COPY t1 TO STDOUT 
+COPY t2(c1,c2) TO '/tmp/t2.csv' 
+COPY t1 FROM '/tmp/t1.csv' 
+COPY (SELECT * FROM t1,t2) TO '/tmp/t12.txt' 
+COPY t1 TO STDOUT (FORMAT CSV, DELIMITER '|', NULL 'null') 
+COPY t1 FROM 't1.csv' WITH (HEADER false, COMMIT 10000) 
+create index if not exists idx1 on table1 (z_order_lat_lon(c1, c2)) 
+create index if not exists idx1 on table1 (a, z_order_lat_lon(c1, c2)) 
+create index if not exists idx1 on table1 (z_order_lat_lon(c1, c2), b, c) 
+create index if not exists idx1 on table1 (a, b, z_order_lat_lon(c1, c2), d, e) 
+create index if not exists idx1 on table1(p.a, p.b, z_order_lat_lon(c.c1, c.c2), c.d, c.e) using left join 
+create index idx1 on table1 (c1) 
+CREATE INDEX group_index ON gct(p.c1, c.c2, c3) 
+create Unique index idx2 on table2 (c1 asc, c2 desc, c3 asc) 
+CREATE INDEX G1 ON group_table (schema1.t1.c1, t2.c2, c3) USING LEFT JOIN 
+create index if not exists idx1 on table1 (c1) 
+create index if not exists idx1 on table1 (c1) 
+create index if not exists idx1 on table1 (c1) AS BTREE 
+CREATE INDEX G1 ON group_table (schema1.t1.c1, t2.c2, c3) USING LEFT JOIN AS IN_MEMORY 
+create index if idx1 on table1 (c1) 
+CREATE PROCEDURE test.foo_bar(IN x INT, OUT y DOUBLE) LANGUAGE JAVA PARAMETER STYLE JAVA EXTERNAL NAME 'com.akiban.ProcTest.fooBar' 
+CREATE PROCEDURE test.foo_baz() LANGUAGE JAVA PARAMETER STYLE AKIBAN_LOADABLE_PLAN EXTERNAL NAME 'com.akiban.PlanTest' 
+CREATE PROCEDURE test.foo_too(IN x INT, OUT y DOUBLE) LANGUAGE SQL PARAMETER STYLE ROW AS 'SELECT $1 * 3.0' 
+create schema test 
+create schema authorization tjoneslo 
+CREATE SCHEMA stringy DEFAULT CHARACTER SET latin1 DEFAULT COLLATION "fr_FR" 
+create schema IF NOT EXISTS test 
+create schema if test 
+CREATE SEQUENCE newSequence    AS INTEGER    START WITH 1    INCREMENT BY 2    MAXVALUE 1000    MINVALUE 1    CYCLE 
+CREATE SEQUENCE test.new_sequence 
+DEALLOCATE ps 
+DECLARE pc CURSOR FOR SELECT * FROM t1 
+DECLARE pc CURSOR FOR EXECUTE ps 
+DELETE FROM t WHERE x in (1,2,3) 
+DELETE FROM t 
+delete from t1 where name = 'fred' returning id 
+delete from t1 returning * 
+DROP GROUP test.root_table_1 
+DROP GROUP IF EXISTS t2 
+DROP INDEX table1.bad_index 
+DROP INDEX schema1.table1.bad_index 
+DROP INDEX if EXISTS table1.bad_index 
+DROP PROCEDURE test.foo_bar 
+drop schema tjoneslo restrict 
+drop schema tjoneslo cascade 
+drop schema if not exists test 
+DROP SEQUENCE test.bad_sequence RESTRICT 
+DROP SEQUENCE IF EXISTS test.new_sequence RESTRICT 
+EXECUTE ps 
+EXECUTE ps(100,'Smith') 
+EXPLAIN SELECT x,y FROM t 
+EXPLAIN VERBOSE SELECT x,y FROM t 
+FETCH pc 
+FETCH 2 FROM pc 
+FETCH ALL FROM pc 
+total junk 
+PREPARE ps AS SELECT name FROM customers WHERE cid = $1 
+RENAME TABLE schema1.t1 to t2 
+RENAME INDEX index1 TO index2 
+RENAME INDEX x.iold TO inew 
+RENAME INDEX s.x.iold TO inew 
+RENAME TABLE x.told TO tnew 
+RENAME TABLE x.told TO y.tnew 
+UPDATE t SET f = f + 1, g = 2 WHERE x > 10 
+UPDATE customers SET name='new' WHERE CURRENT OF customer 
+UPDATE t1 SET id = next value for sequence1 where name = 'fred' returning id 
+update t1 set g = x * 2, f = 1 WHERE CURRENT OF t1 RETURNING g, f 
