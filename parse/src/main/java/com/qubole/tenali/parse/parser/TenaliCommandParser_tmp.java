@@ -1,17 +1,11 @@
-package com.qubole.tenali.parse;
-
-import com.qubole.tenali.parse.parser.TenaliParser;
+package com.qubole.tenali.parse.parser;
 
 import java.io.IOException;
 
 /**
  * Created by devjyotip on 5/28/18.
  */
-public class TenaliCommandParser extends Parsers {
-
-  public TenaliCommandParser(long queryId) {
-    super(queryId);
-  }
+public class TenaliCommandParser_tmp extends Parsers {
 
   public void submit(String command) {
     submit(command, "unknown-source", "sql");
@@ -41,16 +35,16 @@ public class TenaliCommandParser extends Parsers {
               createSqlParser().parse(command, TenaliParser.QueryType.SPARK_SQL);
               break;
             case "scala":
-              createSqlParser().parse(command, TenaliParser.QueryType.SPARK_SCALA);
+              //createSqlParser().parse(command, TenaliParser.QueryType.SPARK_SCALA);
               break;
             case "python":
-              createSqlParser().parse(command, TenaliParser.QueryType.SPARK_PYTHON);
+              //createSqlParser().parse(command, TenaliParser.QueryType.SPARK_PYTHON);
               break;
             case "command_line":
-              createSqlParser().parse(command, TenaliParser.QueryType.SPARK_CLI);
+              //createSqlParser().parse(command, TenaliParser.QueryType.SPARK_CLI);
               break;
             case "r":
-              createSqlParser().parse(command, TenaliParser.QueryType.SPARK_R);
+              //createSqlParser().parse(command, TenaliParser.QueryType.SPARK_R);
           }
       }
     } catch(IOException ex) {

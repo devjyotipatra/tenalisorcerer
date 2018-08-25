@@ -1,9 +1,10 @@
 package com.qubole.tenali.parse.parser.sql;
 
+import com.qubole.tenali.metastore.APIMetastoreClient;
 import com.qubole.tenali.metastore.CachingMetastoreClient;
 import com.qubole.tenali.parse.parser.sql.datamodel.*;
-import jdk.nashorn.internal.ir.BaseNode;
 import org.apache.calcite.util.Pair;
+import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import scala.collection.mutable.ArrayStack;
 
 import java.util.*;
@@ -15,21 +16,8 @@ public class TenaliBaseAstAliasResolver {
     Map<String, String> tableAlias = new HashMap<>();
     Map<String, String> subqueryAlias = new HashMap<>();
 
-    CachingMetastoreClient client = null;
 
-    public TenaliBaseAstAliasResolver() {
-        //cache ttl: 1 week.
-        int TTL_MINS = 10080;
-
-        //missingCache ttl: 1 day
-        int MISSINGTTL_MINS = 1440;
-
-        /*IMetaStoreClient apimetastoreClient =
-                new APIMetastoreClient(accountId, apiUrl, apiToken);
-        metastoreClient = new CachingMetastoreClient(
-                redisEndpoint, String.valueOf(accountId), TTL_MINS, apimetastoreClient,
-                MISSINGTTL_MINS, true);*/
-    }
+    public TenaliBaseAstAliasResolver() { }
 
 
     public void dfsFindAlias(BaseAstNode root) {
@@ -37,187 +25,183 @@ public class TenaliBaseAstAliasResolver {
         Set<BaseAstNode> visitedSubQueries = new HashSet<>();
 
         if (root instanceof SelectNode) {
-            dfs(root, visitedSubQueries);
+            dfsSelect(root, visitedSubQueries);
         }
     }
 
 
 
-    private void dfsSubQuery(BaseAstNode root, Set<BaseAstNode> visitedSubQueries) {
-        Stack<BaseAstNode> selectNodeStack = new Stack<>();
+    private void dfsSelect(BaseAstNode root, Set<BaseAstNode> visitedSubQueries) {
+        Stack<SelectNode> subQStack = new Stack<>();
 
         Stack<String> aliasStack = new Stack<>();
 
         Map<String, String> resolvedSubQColumns = new HashMap<>();
 
-        //BaseAstNode from = ((SelectNode) root).from;
-        selectNodeStack.push(root);
+        subQStack.push((SelectNode) root);
         aliasStack.push("#NONE");
 
 
-        while (!selectNodeStack.isEmpty()) {
-            BaseAstNode node = selectNodeStack.peek();
+        while (!subQStack.isEmpty()) {
+            BaseAstNode node = subQStack.peek();
 
             BaseAstNode from = ((SelectNode) node).from;
 
-            List<String> tables = getTables(from);
+            List<Pair<String, String>> tables = getTables(from);
 
-            if (tables.size() == 0) {
-                if (from instanceof AsNode) {
-                    AsNode asNode = (AsNode) from;
-                    String alias = asNode.aliasName;
-                    BaseAstNode valNode = asNode.value;
+            switch (tables.size()) {
+                case 0:
+                    if (from instanceof AsNode) {
+                        AsNode asNode = (AsNode) from;
 
-                    if (valNode instanceof SelectNode) {
-                        selectNodeStack.push(valNode);
-                        aliasStack.push(alias);
-                    } else {
-                        ////
+                        pushSubQAndAlias(asNode, subQStack, aliasStack);
+                    } else if (from instanceof JoinNode) {
+                        BaseAstNode leftChild = ((JoinNode) root).leftNode;
+                        BaseAstNode rightChild = ((JoinNode) root).rightNode;
+
+                        if (leftChild instanceof AsNode) {
+                            AsNode asNode = (AsNode) leftChild;
+                            pushSubQAndAlias(asNode, subQStack, aliasStack);
+                        } else {
+                            subQStack.push((SelectNode) leftChild);
+                            aliasStack.push("#NONE");
+                        }
+
+                        if (rightChild instanceof AsNode) {
+                            AsNode asNode = (AsNode) rightChild;
+                            pushSubQAndAlias(asNode, subQStack, aliasStack);
+                        } else {
+                            subQStack.push((SelectNode) rightChild);
+                            aliasStack.push("#NONE");
+                        }
+
+                    } else if (from instanceof SelectNode) {
+                        subQStack.push((SelectNode) from);
+                        aliasStack.push("#NONE");
                     }
-                } else if (from instanceof JoinNode) {
+                    break;
+                case 1:
+                case 2:
+                    System.out.println(tables);
+                    SelectNode select = subQStack.pop();
+                    String subQalias = aliasStack.pop();
+                    resolveAlias(select, subQalias, tables);
+                    break;
 
-                } else if (from instanceof SelectNode) {
-                    selectNodeStack.push(from);
-                    aliasStack.push("#NONE");
-                } else {
-                    ////
-                }
             }
         }
     }
 
+    private void pushSubQAndAlias(AsNode asNode, Stack subQStack, Stack aliasStack) {
+        String alias = asNode.aliasName;
+        BaseAstNode valNode = asNode.value;
 
-    private List<String> getTables(BaseAstNode root) {
-        List<String> tables = new ArrayList<>();
+        if (valNode instanceof SelectNode) {
+            subQStack.push((SelectNode) valNode);
+            aliasStack.push(alias);
+        }
+    }
+
+    private boolean isJoinTable(BaseAstNode child) {
+        if (child == null ) {
+            return false;
+        }
+
+        if(child instanceof AsNode) {
+            BaseAstNode node = ((AsNode) child).value;
+            if(node instanceof SelectNode) {
+                return false;
+            }
+        }
+        else if (child instanceof SelectNode) {
+            return false;
+        }
+
+        return true;
+    }
+
+
+    private List<Pair<String, String>> getTables(BaseAstNode root) {
+        List<Pair<String, String>> tables = new ArrayList<>();
 
         if(root instanceof JoinNode) {
             BaseAstNode leftChild = ((JoinNode) root).leftNode;
             BaseAstNode rightChild = ((JoinNode) root).rightNode;
 
+            if(!(isJoinTable(leftChild) && isJoinTable(rightChild))) {
+                return tables;
+            }
+
             if(leftChild instanceof IdentifierNode) {
-                tables.add(((IdentifierNode) leftChild).name);
+                tables.add(new Pair(null, ((IdentifierNode) leftChild).name));
             } else if (leftChild instanceof AsNode) {
-                tables.add(((IdentifierNode) ((AsNode) leftChild).value).name);
+                tables.add(new Pair(((AsNode) leftChild).aliasName,
+                        ((IdentifierNode) ((AsNode) leftChild).value).name));
             }
 
             if(rightChild instanceof IdentifierNode) {
-                tables.add(((IdentifierNode) rightChild).name);
-            } else if (rightChild instanceof AsNode) {
-                tables.add(((IdentifierNode) ((AsNode) rightChild).value).name);
+                tables.add(new Pair(null, ((IdentifierNode) rightChild).name));
+                tables.add(new Pair(((AsNode) rightChild).aliasName,
+                        ((IdentifierNode) ((AsNode) rightChild).value).name));
             }
         }
         else if (root instanceof AsNode) {
-            tables.add(((IdentifierNode) ((AsNode) root).value).name);
+            BaseAstNode valNode = ((AsNode) root).value;
+
+            if (valNode instanceof IdentifierNode) {
+                tables.add(new Pair(((AsNode) root).aliasName, ((IdentifierNode) valNode).name));
+            }
         }
         else if (root instanceof IdentifierNode) {
-            tables.add(((IdentifierNode) root).name);
+            tables.add(new Pair(null, ((IdentifierNode) root).name));
         }
         return tables;
     }
 
+    public void resolveAlias(SelectNode root, String innerQueryAlias,
+                             List<Pair<String, String>> tables) {
+        Deque<BaseAstNode> queue = new ArrayDeque<>();
+        queue.push(root.columns);
+        queue.push(root.groupBy);
+        queue.push(root.orderBy);
+        queue.push(root.having);
+        queue.push(root.keywords);
+        queue.push(root.where);
+        queue.push(root.windowDecls);
 
-    private Pair<String, String> getTableNameWithAlias(AsNode node) {
-        Pair<String, String> tableWithAlias = null;
-        if(node != null) {
-            String alias = node.aliasName;
-            String tableName = ((IdentifierNode) node.value).name;
-            tableWithAlias = new Pair(alias, tableName);
-        }
+        while(!queue.isEmpty()) {
+            BaseAstNode node = queue.pop();
 
-        return tableWithAlias;
-    }
-
-    private Map<String, String> alias(SelectNode select, String selectAlias,
-                                      String tableName, String tableAlias) {
-        Map<String, String> resolvedSubQColumns = new HashMap<>();
-
-        BaseAstNode from = ((SelectNode) select).from;
-
-
-        return resolvedSubQColumns;
-
-    }
-
-
-
-
-    private void dfs(BaseAstNode root, Set<BaseAstNode> visitedSubQueries) {
-        ArrayStack<BaseAstNode> stack = new ArrayStack<>();
-
-       // SelectNode select = (SelectNode) root;
-
-        String subQAlias = null;
-
-        String tableAlias = null;
-
-        Map<String, String> resolvedSubQColumns = new HashMap<>();
-
-        BaseAstNode from = ((SelectNode) root).from;
-        stack.push(from);
-
-        System.out.println("FROM =====>  " + from.getClass());
-
-        while (!stack.isEmpty()) {
-            BaseAstNode node = stack.pop();
-
-            //System.out.println(node.toString());
-
-            if (node instanceof SelectNode
-                    && !visitedSubQueries.contains(node)) {
-                //select = (SelectNode) node;
-                stack.push(node);
-            }
-            else if (node instanceof AsNode) {
-                AsNode asNode = (AsNode) node;
-
-                String alias = asNode.aliasName;
-                BaseAstNode value = asNode.value;
-
-                if(value instanceof SelectNode) {
-                    subQAlias = alias;
-                } else if(value instanceof IdentifierNode) {
-                    tableAlias = alias;
+            if(node != null) {
+                if (node instanceof IdentifierNode) {
+                    IdentifierNode id = (IdentifierNode) node;
+                    String name = id.name;
+                } else if(node instanceof AsNode) {
+                    BaseAstNode n = ((AsNode) node).value;
+                    queue.push(n);
+                } else if (node instanceof BaseAstNodeList) {
+                    for (BaseAstNode n : ((BaseAstNodeList) node).getOperandlist()) {
+                        if(n != null) {
+                            queue.push(node);
+                        }
+                    }
+                } else if(node instanceof OperatorNode) {
+                    BaseAstNode operands = ((OperatorNode) node).operands;
+                    queue.push(operands);
+                } else if(node instanceof FunctionNode) {
+                    BaseAstNode operands = ((FunctionNode) node).arguments;
+                    queue.push(operands);
                 }
-
-                stack.push(value);
-            }
-            else if (node instanceof JoinNode) {
-                JoinNode join = (JoinNode) node;
-
-                BaseAstNode leftNode = join.leftNode;
-                BaseAstNode rightNode = join.rightNode;
-
-                stack.push(leftNode);
-                stack.push(rightNode);
-            }
-            else if (node instanceof IdentifierNode) {
-                String tableName = ((IdentifierNode) node).name;
-                Map<String, String> resolvedSubQColumnsTemp = resolveColumnAlias(root, tableName,
-                        tableAlias, subQAlias);
-
-                if(tableAlias != null) {
-                    resolvedSubQColumns.put(tableAlias, tableName);
-                }
-
-                resolveAlias(((SelectNode) root).where, tableName, resolvedSubQColumns);
-                resolveAlias(((SelectNode) root).orderBy, tableName, resolvedSubQColumns);
-                resolveAlias(((SelectNode) root).groupBy, tableName, resolvedSubQColumns);
-                resolvedSubQColumns.putAll(resolvedSubQColumnsTemp);
             }
         }
     }
 
 
-    private String getUnQualifiedName(String name) {
-        if(name != null && name.contains(".")) {
-            name = name.split(".")[1];
-        }
-        return name;
+    public void findAlias(String columnName, List<Pair<String, String>> tables,
+                          String innerQueryAlias) {
+
     }
 
-    private String getFullyQualifiedName(IdentifierNode node, String tableName) {
-        return getFullyQualifiedName(node.name, tableName);
-    }
 
     private String getFullyQualifiedName(String columnName, String alias) {
         String name = columnName;
@@ -261,7 +245,7 @@ public class TenaliBaseAstAliasResolver {
     }
 
 
-    private Map<String, String> resolveColumnAlias(BaseAstNode root, String tableName,
+   /* private Map<String, String> resolveColumnAlias(BaseAstNode root, String tableName,
                               String tableAlias, String subQAlias) {
         Map<String, String> aliasResolvedColumns = new HashMap<>();
 
@@ -298,5 +282,5 @@ public class TenaliBaseAstAliasResolver {
         }
 
         return aliasResolvedColumns;
-    }
+    }*/
 }

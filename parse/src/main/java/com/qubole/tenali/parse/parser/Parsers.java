@@ -1,7 +1,8 @@
-package com.qubole.tenali.parse;
+package com.qubole.tenali.parse.parser;
 
 
 import antlr4.QDSCommandBaseVisitor;
+import com.qubole.tenali.parse.QueryContext;
 import com.qubole.tenali.parse.parser.TenaliParser;
 import com.qubole.tenali.parse.parser.sql.TenaliSqlParser;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -15,19 +16,10 @@ import static antlr4.QDSCommandLexer.*;
  */
 public abstract class Parsers {
 
-    final long queryId;
+    static TenaliParser parser = null;
 
-    private TenaliSqlParser sqlParser = null;
-
-    public Parsers(long queryId) {
-        this.queryId = queryId;
-    }
-
-    public TenaliParser createSqlParser() {
-        if (sqlParser == null) {
-            sqlParser = new TenaliSqlParser();
-        }
-        return sqlParser;
+    public Parsers(TenaliParser parser) {
+        this.parser = parser;
     }
 
 

@@ -4,7 +4,7 @@ package com.qubole.tenali.parse.parser.sql;
 import antlr4.QDSCommandLexer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.qubole.tenali.parse.Parsers;
+import com.qubole.tenali.parse.parser.Parsers;
 import com.qubole.tenali.parse.QueryContext;
 import com.qubole.tenali.parse.parser.TenaliParser;
 import com.qubole.tenali.parse.exception.CommandErrorListener;
@@ -13,9 +13,7 @@ import com.qubole.tenali.parse.exception.SQLSyntaxError;
 
 import antlr4.QDSCommandParser;
 
-import com.qubole.tenali.parse.parser.config.TenaliConformance;
 import com.qubole.tenali.parse.parser.sql.datamodel.BaseAstNode;
-import com.qubole.tenali.parse.parser.sql.datamodel.SelectNode;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -25,7 +23,6 @@ import org.apache.calcite.config.Lex;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
-import org.apache.calcite.sql.validate.SqlConformanceEnum;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.ParseDriver;
 
