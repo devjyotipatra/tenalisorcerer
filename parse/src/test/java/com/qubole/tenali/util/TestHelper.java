@@ -1,7 +1,5 @@
 package com.qubole.tenali.util;
 
-import com.qubole.tenali.parse.parser.TenaliCommandParser_tmp;
-
 import java.io.IOException;
 
 /**
