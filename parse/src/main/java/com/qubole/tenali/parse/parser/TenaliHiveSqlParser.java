@@ -6,11 +6,11 @@ import org.apache.hadoop.hive.ql.parse.ParseDriver;
 
 import java.io.IOException;
 
-public class TenaliHiveParser implements TenaliParser {
+public class TenaliHiveSqlParser implements TenaliParser {
 
     static final ParseDriver parseDriver = new ParseDriver();
 
-    public TenaliHiveParser() {}
+    public TenaliHiveSqlParser() {}
 
     public void parse(String sql) throws IOException {
         try {

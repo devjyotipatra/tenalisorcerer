@@ -5,29 +5,18 @@ public class Command {
     Type type = null;
 
     public enum Type {
-        BASH("bash"),
-        HIVE("hive"),
-        SPARK_SQL("spark_sql"),
-        SPARK_SCALA("spark_scala"),
-        SPARK_PYTHON("spark_python"),
-        SPARK_CLI("spark_cli"),
-        SPARK_R("spark_r"),
-        PRESTO("presto"),
-        ANSI_SQL("ansi_sql");
-
-        public Command value;
-
-        Type(String type) {
-            this(new Command(type.toLowerCase()));
-        }
-
-        Type(Command type) {
-            this.value = type;
-        }
+        HIVE,
+        PRESTO,
+        SQL,
+        BASH,
+        SPARK_SCALA,
+        SPARK_PYTHON,
+        SPARK_CLI,
+        SPARK_R
     }
 
-    public Command(String value) throws IllegalArgumentException {
-        this.type = Type.valueOf(value);
+    public Command(Type value) throws IllegalArgumentException {
+        this.type = value;
     }
 
     public Type getType() {

@@ -5,35 +5,25 @@ public class Query {
     Type type;
 
     public enum Type {
-        SET("set"),
-        ADD_JAR("add_jar"),
-        USE("use"),
-        CREATE_FUNCTION("create_function"),
-        INSERT_INTO("insert_into"),
-        INSERT_OVERWRITE("insert_overwrite"),
-        SELECT("select"),
-        DROP_TABLE("drop_table"),
-        DROP_VIEW("drop_view"),
-        ALTER_TABLE("alter_table"),
-        CREATE_TABLE("create_table"),
-        CTAS("ctas"),
-        CTE("cte"),
-        CREATE_VIEW("create_view"),
-        UNKNOWN("unknown");
-
-        public Query value;
-
-        Type(String type) {
-            this(new Query(type.toLowerCase()));
-        }
-
-        Type(Query type) {
-            this.value = type;
-        }
+        SET,
+        ADD_JAR,
+        USE,
+        CREATE_FUNCTION,
+        INSERT_INTO,
+        INSERT_OVERWRITE,
+        SELECT,
+        DROP_TABLE,
+        DROP_VIEW,
+        ALTER_TABLE,
+        CREATE_TABLE,
+        CTAS,
+        CTE,
+        CREATE_VIEW,
+        UNKNOWN;
     }
 
-    public Query(String value) throws IllegalArgumentException {
-        this.type = Type.valueOf(value);
+    public Query(Type value) throws IllegalArgumentException {
+        this.type = value;
     }
 
     public Type getType() {

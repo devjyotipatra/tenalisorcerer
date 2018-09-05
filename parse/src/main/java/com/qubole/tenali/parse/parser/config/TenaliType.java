@@ -23,15 +23,15 @@ public abstract class TenaliType<T> {
     public String toString() { return type.toString(); }
 
 
-    public static class CommandType extends TenaliType<Command> {
-        public CommandType(Command commandType) throws IllegalArgumentException {
+    public static class CommandType extends TenaliType<Command.Type> {
+        public CommandType(Command.Type commandType) throws IllegalArgumentException {
             super(commandType);
         }
     }
 
 
-    public static class QueryType extends TenaliType<Query> {
-        public QueryType(Query queryType) throws IllegalArgumentException {
+    public static class QueryType extends TenaliType<Query.Type> {
+        public QueryType(Query.Type queryType) throws IllegalArgumentException {
             super(queryType);
         }
     }

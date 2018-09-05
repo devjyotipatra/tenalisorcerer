@@ -44,7 +44,7 @@ public class TenaliAnsiSqlParser implements TenaliParser {
 
             SqlNode ast = parser.parseStmt();
 
-            if (ast != null) {
+            /*if (ast != null) {
                 CalciteAstToBaseAstConverter converter = new CalciteAstToBaseAstConverter();
                 BaseAstNode root = ast.accept(converter);
 
@@ -59,7 +59,7 @@ public class TenaliAnsiSqlParser implements TenaliParser {
                 jsonAst = converter.convertToString(cRoot);
                 System.out.println(jsonAst);
 
-            }
+            }*/
         } catch (SqlParseException e) {
         /*UserException.Builder builder = UserException
             .parseError(e)
@@ -69,7 +69,7 @@ public class TenaliAnsiSqlParser implements TenaliParser {
         }
         throw builder.build(logger);*/
             throw new IOException(e);
-        } catch (JsonProcessingException jpe) {
+        } //catch (JsonProcessingException jpe) {
         /*UserException.Builder builder = UserException
             .parseError(e)
             .addContext("SQL Query", formatSQLParsingError(sql, e.getPos()));
@@ -77,7 +77,7 @@ public class TenaliAnsiSqlParser implements TenaliParser {
           builder.message("Failure parsing a view your query is dependent upon.");
         }
         throw builder.build(logger);*/
-            throw new IOException(jpe);
-        }
+        //    throw new IOException(jpe);
+       // }
     }
 }
