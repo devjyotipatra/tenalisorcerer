@@ -1,8 +1,8 @@
 package com.qubole.tenali.parse.parser.config;
 
-public class Command {
+public final class CommandType extends TenaliType<CommandType.Type> {
 
-    Type type = null;
+    Type type;
 
     public enum Type {
         HIVE,
@@ -15,8 +15,8 @@ public class Command {
         SPARK_R
     }
 
-    public Command(Type value) throws IllegalArgumentException {
-        this.type = value;
+    public CommandType(Type value) throws IllegalArgumentException {
+        super(value);
     }
 
     public Type getType() {
@@ -24,7 +24,7 @@ public class Command {
     }
 
     @Override public boolean equals(Object other) {
-        Command o = (Command) other;
+        CommandType o = (CommandType) other;
         return o.type == this.type;
     }
 

@@ -1,10 +1,9 @@
 package com.qubole.tenali.parse.parser;
 
 import antlr4.QDSCommandBaseVisitor;
-import com.qubole.tenali.parse.parser.config.Command;
+import com.qubole.tenali.parse.parser.config.CommandType;
 import com.qubole.tenali.parse.parser.config.CommandContext;
 import com.qubole.tenali.parse.parser.config.Query;
-import com.qubole.tenali.parse.parser.config.TenaliType.*;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 
@@ -24,7 +23,7 @@ public class TenaliSqlCommandLexer extends QDSCommandBaseVisitor<CommandContext>
      * @param ctx: Sql statement context from Antlr
      */
 
-    final Command.Type commandType = Command.Type.SQL;
+    final CommandType.Type commandType = CommandType.Type.SQL;
 
     CommandContext root;
 
@@ -139,7 +138,7 @@ public class TenaliSqlCommandLexer extends QDSCommandBaseVisitor<CommandContext>
         return root;
     }
 
-    public Command.Type getLexerType() {
+    public CommandType.Type getLexerType() {
         return commandType;
     }
 

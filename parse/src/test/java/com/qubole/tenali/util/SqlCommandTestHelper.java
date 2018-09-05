@@ -4,7 +4,7 @@ import com.qubole.tenali.parse.parser.TenaliAnsiSqlParser;
 import com.qubole.tenali.parse.parser.TenaliHiveSqlParser;
 import com.qubole.tenali.parse.parser.TenaliSqlCommandHandler;
 import com.qubole.tenali.parse.parser.TenaliSqlCommandLexer;
-import com.qubole.tenali.parse.parser.config.Command;
+import com.qubole.tenali.parse.parser.config.CommandType;
 
 import java.io.IOException;
 
@@ -16,12 +16,12 @@ public class SqlCommandTestHelper {
   public static void parseHive(String command) throws IOException {
     TenaliSqlCommandHandler handler = new TenaliSqlCommandHandler(new TenaliSqlCommandLexer(),
             new TenaliHiveSqlParser());
-    handler.submit(Command.Type.SQL, command);
+    handler.submit(CommandType.Type.SQL, command);
   }
 
     public static void parseAnsiSql(String command) throws IOException {
         TenaliSqlCommandHandler handler = new TenaliSqlCommandHandler(new TenaliSqlCommandLexer(),
                 new TenaliAnsiSqlParser());
-        handler.submit(Command.Type.SQL, command);
+        handler.submit(CommandType.Type.SQL, command);
     }
 }

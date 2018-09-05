@@ -1,6 +1,6 @@
 package com.qubole.tenali.parse.parser;
 
-import com.qubole.tenali.parse.parser.config.Command;
+import com.qubole.tenali.parse.parser.config.CommandType;
 import com.qubole.tenali.parse.parser.config.CommandContext;
 
 import java.io.IOException;
@@ -25,7 +25,7 @@ public abstract class AbstractCommandHandler {
     protected abstract void prepareParser();
 
 
-    public void submit(Command.Type commandType, String command) throws IOException {
+    public void submit(CommandType.Type commandType, String command) throws IOException {
         CommandContext rootCtx = null;
         if(lexer !=  null && lexer.getLexerType() == commandType) {
             prepareLexer(command);

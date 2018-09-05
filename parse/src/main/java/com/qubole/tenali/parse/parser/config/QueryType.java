@@ -1,6 +1,6 @@
 package com.qubole.tenali.parse.parser.config;
 
-public class Query {
+public final class QueryType extends TenaliType<QueryType.Type>  {
 
     Type type;
 
@@ -22,8 +22,8 @@ public class Query {
         UNKNOWN;
     }
 
-    public Query(Type value) throws IllegalArgumentException {
-        this.type = value;
+    public QueryType(Type value) throws IllegalArgumentException {
+        super(value);
     }
 
     public Type getType() {
@@ -31,7 +31,7 @@ public class Query {
     }
 
     @Override public boolean equals(Object other) {
-        Query o = (Query) other;
+        QueryType o = (QueryType) other;
         return o.type == this.type;
     }
 
