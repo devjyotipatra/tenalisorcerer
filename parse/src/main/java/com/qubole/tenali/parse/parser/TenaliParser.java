@@ -10,4 +10,5 @@ import java.io.IOException;
 public interface TenaliParser {
 
     void parse(String command) throws IOException;
+
 }

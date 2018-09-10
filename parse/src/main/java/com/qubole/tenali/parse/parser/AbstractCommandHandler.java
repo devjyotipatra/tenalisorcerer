@@ -51,4 +51,11 @@ public abstract class AbstractCommandHandler {
     public TenaliParser getParser() {
         return parser;
     }
+
+    public static class TenaliParserBuilder {
+
+        public build() {
+
+        }
+    }
 }
