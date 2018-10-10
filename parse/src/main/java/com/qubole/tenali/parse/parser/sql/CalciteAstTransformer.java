@@ -2,52 +2,46 @@ package com.qubole.tenali.parse.parser.sql;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.qubole.tenali.parse.parser.AstTransformer;
 import com.qubole.tenali.parse.parser.sql.datamodel.*;
 import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.util.SqlVisitor;
 
 import java.util.List;
 
+public class CalciteAstTransformer implements AstTransformer<SqlNode>, SqlVisitor<TenaliAstNode> {
 
-public class CalciteAstToBaseAstConverter implements SqlVisitor<BaseAstNode> {
-
-    public  String convertToString(BaseAstNode node) throws JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.writeValueAsString(node);
+    public TenaliAstNode transform(SqlNode ast) {
+        System.out.println("AST   => "+ast);
+        return ast.accept(this);
     }
 
 
-    private BaseAstNodeList wrapInBaseAstNodeList(BaseAstNode node) {
-        BaseAstNodeList nodes = new BaseAstNodeList();
-        nodes.add(node);
-        return nodes;
-    }
-
-    private BaseAstNode extractSelect(SqlNode parent, List<SqlNode> children) {
+    private TenaliAstNode extractSelect(SqlNode parent, List<SqlNode> children) {
         SelectNode.SelectBuilder builder = new SelectNode.SelectBuilder();
-        BaseAstNode node = null;
+        TenaliAstNode node = null;
 
-        int i = 0;
         String label = null;
-        for (SqlNode sqlNode : children) {
+        for (int i = 0; i < children.size(); i++) {
+            SqlNode sqlNode = children.get(i);
+
             if(sqlNode != null) {
                 System.out.println(i + "    SELECTNODE   =>  " + sqlNode.getKind() + "   " + sqlNode.getClass());
                 node = sqlNode.accept(this);
+
                 switch (i) {
                     case 0:
                         label = "keywords";
-                        BaseAstNodeList kNodeList = (BaseAstNodeList) node;
-                        if(kNodeList.size() > 0) {
-                            builder.setKeywords(kNodeList);
-                        }
+                        TenaliAstNodeList kNodeList = (TenaliAstNodeList) node;
+                        builder.setKeywords(kNodeList);
                         break;
                     case 1:
                         label = "columns";
-                        BaseAstNodeList colNodeList = null;
-                        if(!(node instanceof BaseAstNodeList)) {
+                        TenaliAstNodeList colNodeList = null;
+                        if(!(node instanceof TenaliAstNodeList)) {
                             colNodeList = wrapInBaseAstNodeList(node);
                         } else {
-                            colNodeList = (BaseAstNodeList) node;
+                            colNodeList = (TenaliAstNodeList) node;
                         }
                         builder.setColumns(colNodeList);
                         break;
@@ -61,7 +55,7 @@ public class CalciteAstToBaseAstConverter implements SqlVisitor<BaseAstNode> {
                         break;
                     case 4:
                         label = "groupBy";
-                        BaseAstNodeList gNodeList = (BaseAstNodeList) node;
+                        TenaliAstNodeList gNodeList = (TenaliAstNodeList) node;
                         if(gNodeList.size() > 0) {
                             builder.setGroupBy(gNodeList);
                         }
@@ -72,7 +66,7 @@ public class CalciteAstToBaseAstConverter implements SqlVisitor<BaseAstNode> {
                         break;
                     case 6:
                         label = "windowDecls";
-                        BaseAstNodeList wNodeList = (BaseAstNodeList) node;
+                        TenaliAstNodeList wNodeList = (TenaliAstNodeList) node;
                         if(wNodeList.size() > 0) {
                             builder.setWindowDecls(wNodeList);
                         }
@@ -92,24 +86,21 @@ public class CalciteAstToBaseAstConverter implements SqlVisitor<BaseAstNode> {
             else {
                 System.out.println("SQL Node is NULL..");
             }
-
-            ++ i;
         }
 
         return builder.build();
     }
 
-
-    private BaseAstNode extractAs(SqlNode parent, List<SqlNode> children) {
+    private TenaliAstNode extractAs(SqlNode parent, List<SqlNode> children) {
         AsNode.AsBuilder builder = new AsNode.AsBuilder();
-        System.out.println(parent.getKind() + " ,  _  " + builder.toString()  + " ,  _  Children _ " + children.size());
+        System.out.println( "AS   ,  _  " + builder.toString()  + " ,  _  Children _ " + children.size());
 
         for (int i=0; i<children.size(); ++i) {
             SqlNode sqlNode = children.get(i);
             if (sqlNode == null) {
                 System.out.println("SQL Node is NULL..");
             } else if(i == 0) {
-                BaseAstNode node = sqlNode.accept(this);
+                TenaliAstNode node = sqlNode.accept(this);
                 builder.setValue(node);
             } else {
                 builder.setAliasName(sqlNode.accept(this).toString());
@@ -120,13 +111,13 @@ public class CalciteAstToBaseAstConverter implements SqlVisitor<BaseAstNode> {
     }
 
 
-    private BaseAstNode extractOperator(String operatorName, List<SqlNode> children) {
+    private TenaliAstNode extractOperator(String operatorName, List<SqlNode> children) {
         OperatorNode.OperatorBuilder builder = new OperatorNode.OperatorBuilder();
         System.out.println("  )))))) Operators  ,  _  Children _  (((((( " + children.size());
 
         builder.setOperator(operatorName);
 
-        BaseAstNodeList identifiers = new BaseAstNodeList();
+        TenaliAstNodeList identifiers = new TenaliAstNodeList();
 
         if (children.size() > 0) {
             for (SqlNode sqlNode : children) {
@@ -134,7 +125,7 @@ public class CalciteAstToBaseAstConverter implements SqlVisitor<BaseAstNode> {
                 if (sqlNode == null) {
                     System.out.println("SQL Node is NULL..");
                 } else {
-                    BaseAstNode node = sqlNode.accept(this);
+                    TenaliAstNode node = sqlNode.accept(this);
                     identifiers.add(node);
                 }
             }
@@ -145,76 +136,13 @@ public class CalciteAstToBaseAstConverter implements SqlVisitor<BaseAstNode> {
     }
 
 
-
-    private BaseAstNodeList extractList(SqlNode parent, BaseAstNode.Builder builder,
-                                List<SqlNode> children) {
-        System.out.println(parent.getKind() + " , list  _  " + parent.toString() + " ,  _  Children _ " + children.size());
-
-        BaseAstNodeList nodeList = new BaseAstNodeList();
-
-        if (children.size() > 0) {
-            for (SqlNode sqlNode : children) {
-                System.out.println("   list child  __" + sqlNode.getKind());
-                if (sqlNode == null) {
-                    System.out.println("SQL Node is NULL..");
-                } else {
-                    BaseAstNode node = sqlNode.accept(this);
-                    nodeList.add(node);
-                }
-            }
-        }
-
-        return nodeList;
-    }
-
-
-    private BaseAstNode extractJoin(SqlJoin parent) {
-        JoinNode.JoinBuilder builder = new JoinNode.JoinBuilder();
-        builder.setJoinType(parent.getJoinType().name());
-        System.out.println(parent.getJoinType().name() + " ,  _  " + builder.toString() );
-
-        SqlNode leftNode = parent.getLeft();
-        if(leftNode != null) {
-            BaseAstNode leftNodeAst = leftNode.accept(this);
-            builder.setLeftNode(leftNodeAst);
-        }
-
-        SqlNode rightNode = parent.getRight();
-        if(rightNode != null) {
-            BaseAstNode rightNodeAst = rightNode.accept(this);
-            builder.setRightNode(rightNodeAst);
-        }
-
-        if(parent.getCondition() != null) {
-            BaseAstNode joinCondition = parent.getCondition().accept(this);
-            builder.setJoinCondition(joinCondition);
-        }
-
-        return builder.build();
-    }
-
-
-    private BaseAstNode extractLateral(SqlNode parent, List<SqlNode> children) {
-        LateralNode.LateralBuilder builder = new LateralNode.LateralBuilder();
-
-        System.out.println("LATERAl 1 => " + children.get(0).getKind());
-        if(children.size() > 1) {
-            System.out.println("LATERAl 2 => " + children.get(1).getKind());
-        }
-        BaseAstNode table = children.get(0).accept(this);
-        builder.setTable(table);
-
-        return builder.build();
-    }
-
-
-    private BaseAstNode extractFunction(SqlNode parent, List<SqlNode> children) {
+    private TenaliAstNode extractFunction(SqlNode parent, List<SqlNode> children) {
         FunctionNode.FunctionBuilder builder = new FunctionNode.FunctionBuilder();
 
         SqlOperator operator = ((SqlCall ) parent).getOperator();
         builder.setFunctionName(operator.getName());
 
-        BaseAstNodeList nodeList = new BaseAstNodeList();
+        TenaliAstNodeList nodeList = new TenaliAstNodeList();
         for (SqlNode child : children) {
             if (child != null) {
                 nodeList.add(child.accept(this));
@@ -225,21 +153,59 @@ public class CalciteAstToBaseAstConverter implements SqlVisitor<BaseAstNode> {
         return builder.build();
     }
 
+    private TenaliAstNode extractJoin(SqlJoin parent) {
+        JoinNode.JoinBuilder builder = new JoinNode.JoinBuilder();
+        builder.setJoinType(parent.getJoinType().name());
+        System.out.println(parent.getJoinType().name() + " ,  _  " + builder.toString() );
 
-    private BaseAstNode extractOrderby(SqlNode parent, List<SqlNode> children) {
+        SqlNode leftNode = parent.getLeft();
+        SqlNode rightNode = parent.getRight();
+
+        assert(leftNode != null && rightNode != null);
+
+        TenaliAstNode leftNodeAst = leftNode.accept(this);
+        builder.setLeftNode(leftNodeAst);
+
+        TenaliAstNode rightNodeAst = rightNode.accept(this);
+        builder.setRightNode(rightNodeAst);
+
+        if(parent.getCondition() != null) {
+            TenaliAstNode joinCondition = parent.getCondition().accept(this);
+            builder.setJoinCondition(joinCondition);
+        }
+
+        return builder.build();
+    }
+
+
+    private TenaliAstNode extractLateral(SqlNode parent, List<SqlNode> children) {
+        LateralNode.LateralBuilder builder = new LateralNode.LateralBuilder();
+
+        System.out.println("LATERAl 1 => " + children.get(0).getKind());
+        if(children.size() > 1) {
+            System.out.println("LATERAl 2 => " + children.get(1).getKind());
+        }
+        TenaliAstNode table = children.get(0).accept(this);
+        builder.setTable(table);
+
+        return builder.build();
+    }
+
+
+    private TenaliAstNode extractOrderby(SqlNode parent, List<SqlNode> children) {
         SelectNode.SelectBuilder selectBuilder = null;
 
-        //OrderBy wraps the SelectNode and we want it the other way round in our BaseAst.
+        //OrderBy wraps the SelectNode and we want it the other way round in our TenaliAst.
         //So, create a SelectNode first and then add the OrderBy columns.
         SqlNode selectChild = children.get(0);
         if (selectChild != null) {
-            BaseAstNode node = selectChild.accept(this);
+            TenaliAstNode node = selectChild.accept(this);
             selectBuilder = new SelectNode.SelectBuilder((SelectNode) node);
         }
 
         SqlNode orderByCols = children.get(1);
         if(orderByCols instanceof SqlNodeList) {
-            BaseAstNode node = orderByCols.accept(this);
+            TenaliAstNode node = ((SqlNodeList) orderByCols).accept(this);
             selectBuilder.setOrderBy(node);
         }
 
@@ -247,8 +213,8 @@ public class CalciteAstToBaseAstConverter implements SqlVisitor<BaseAstNode> {
     }
 
 
-    private BaseAstNode extract(SqlNode parent, List<SqlNode> children) {
-        BaseAstNodeList nodeList = new BaseAstNodeList();
+    private TenaliAstNode extract(SqlNode parent, List<SqlNode> children) {
+        TenaliAstNodeList nodeList = new TenaliAstNodeList();
 
         for (SqlNode child : children) {
             if (child != null) {
@@ -260,12 +226,47 @@ public class CalciteAstToBaseAstConverter implements SqlVisitor<BaseAstNode> {
     }
 
 
-    @Override public BaseAstNode visit(SqlLiteral literal) {
+    private TenaliAstNodeList extractList(SqlNode parent, TenaliAstNodeList.NodeListBuilder builder,
+                                                            List<SqlNode> children) {
+        System.out.println(parent.getKind() + " , list  _  " + parent.toString() + " ,  _  Children _ " + children.size());
+
+        if (children != null) {
+            for (SqlNode sqlNode : children) {
+                System.out.println("   list child  __" + sqlNode.getKind());
+                if (sqlNode == null) {
+                    System.out.println("SQL Node is NULL..");
+                } else {
+                    TenaliAstNode node = sqlNode.accept(this);
+                    builder.addNode(node);
+                }
+            }
+        }
+
+        return builder.build();
+    }
+
+
+
+    private TenaliAstNodeList wrapInBaseAstNodeList(TenaliAstNode node) {
+        TenaliAstNodeList nodes = new TenaliAstNodeList();
+        nodes.add(node);
+        return nodes;
+    }
+
+
+    public  String convertToString(TenaliAstNode node) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.writeValueAsString(node);
+    }
+
+
+
+    @Override public TenaliAstNode visit(SqlLiteral literal) {
         return new LiteralNode(literal.getValue());
     }
 
-    @Override public BaseAstNode visit(SqlCall call) {
-        BaseAstNode node = null;
+    @Override public TenaliAstNode visit(SqlCall call) {
+        TenaliAstNode node = null;
 
         System.out.println("call ===== "+ call.getKind()  + "   " + call.getOperator().getClass());
 
@@ -303,6 +304,7 @@ public class CalciteAstToBaseAstConverter implements SqlVisitor<BaseAstNode> {
                     if(operator instanceof SqlBinaryOperator) {
                         node = extractOperator(operator.getName(), call.getOperandList());
                     } else {
+                        System.out.println("Going Nowhere .... ");
                         node = extract(call, call.getOperandList());
                     }
             }
@@ -311,26 +313,26 @@ public class CalciteAstToBaseAstConverter implements SqlVisitor<BaseAstNode> {
         return node;
     }
 
-    @Override public BaseAstNode visit(SqlNodeList nodeList) {
+    @Override public TenaliAstNode visit(SqlNodeList nodeList) {
         System.out.println("SqlNodeList ---- " + nodeList.getList());
-        return extractList(nodeList, new BaseAstNodeList.NodeListBuilder(), nodeList.getList());
+        return extractList(nodeList, new TenaliAstNodeList.NodeListBuilder(), nodeList.getList());
     }
 
-    @Override public BaseAstNode visit(SqlIdentifier id) {
+    @Override public TenaliAstNode visit(SqlIdentifier id) {
         return new IdentifierNode(id.toString());
     }
 
-    @Override public BaseAstNode visit(SqlDataTypeSpec type) {
+    @Override public TenaliAstNode visit(SqlDataTypeSpec type) {
         System.out.println("type ---- " + type.getKind() + "   " + type.getClass());
         return null;
     }
 
-    @Override public BaseAstNode visit(SqlDynamicParam param) {
+    @Override public TenaliAstNode visit(SqlDynamicParam param) {
         System.out.println("param  " + param.getKind() + "   " + param.getClass());
         return null;
     }
 
-    @Override public BaseAstNode visit(SqlIntervalQualifier intervalQualifier) {
+    @Override public TenaliAstNode visit(SqlIntervalQualifier intervalQualifier) {
         System.out.println("intervalQualifier  " + intervalQualifier.getKind() + "   " + intervalQualifier.getClass());
         return null;
     }

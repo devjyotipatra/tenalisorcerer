@@ -1,20 +1,29 @@
 package com.qubole.tenali.parse.parser.config;
 
 
+import java.util.Objects;
+
 /**
  * Created by devjyotip on 5/30/18.
  */
 public class CommandContext {
 
-    TenaliType type;
-
     String stmt;
+
+    QueryContext qCtx;
 
     CommandContext parent;
 
     CommandContext child;
 
-    public CommandContext() { }
+    boolean isRootNode = false;
+
+
+    public CommandContext() {  }
+
+    public CommandContext(QueryType type) {
+        this.qCtx = new QueryContext(type);
+    }
 
 
     public boolean hasParent() {
@@ -49,18 +58,40 @@ public class CommandContext {
         this.stmt = stmt;
     }
 
-
-    public TenaliType getType() {
-        return type;
+    public void setQueryType(QueryType type) {
+        if(qCtx == null) {
+            qCtx = new QueryContext(type);
+        } else {
+            qCtx.setQueryType(type);
+        }
     }
 
-    public void setType(TenaliType type) {
-        this.type = type;
+    public QueryType getQueryType() {
+        return qCtx.getQueryType();
+    }
+
+
+    public boolean isRootNode() {
+        return isRootNode;
+    }
+
+    public void setAsRootNode() {
+        isRootNode = true;
+    }
+
+
+    public void setQueryContext(QueryContext qCtx) {
+        this.qCtx = qCtx;
+    }
+
+    public QueryContext getQueryContext() {
+        return this.qCtx;
     }
 
 
     public CommandContext cloneContext() {
-        CommandContext ctx = new CommandContext();
+        CommandContext ctx = new CommandContext(qCtx.queryType);
+        ctx.setStmt(stmt);
         return ctx;
     }
 
@@ -83,5 +114,66 @@ public class CommandContext {
     private void appendNewContext(CommandContext cctx, CommandContext qctx) {
         qctx.setChild(cctx);
         cctx.setParent(qctx);
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == this) return true;
+        if (!(other instanceof CommandContext)) {
+            return false;
+        }
+        CommandContext context = (CommandContext) other;
+        return qCtx.getQueryType() == context.getQueryType() &&
+                Objects.equals(parent, context.parent);
+    }
+
+    @Override
+    public int hashCode() {
+        long parentHashCode = (parent == null) ? -1 : parent.hashCode();
+        return Objects.hash(parentHashCode);
+    }
+
+
+    public CommandContextIterator iterator() {
+        return new CommandContextIterator(this);
+    }
+
+
+    public class CommandContextIterator {
+
+        CommandContext rootCtx = null;
+
+        private CommandContextIterator() { }
+
+        private CommandContextIterator(CommandContext rootCtx) {
+            this.rootCtx = rootCtx;
+        }
+
+        public boolean hasNext() {
+            if(rootCtx == null) {
+                return false;
+            }
+
+            if(rootCtx.isRootNode) {
+                return true;
+            }
+
+            if(rootCtx.hasChild()) {
+                CommandContext ctx = rootCtx.getChild();
+
+                if (ctx != null) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
+        public CommandContext next() {
+            CommandContext ctx = rootCtx;
+            rootCtx = rootCtx.getChild();
+            return ctx;
+        }
+
     }
 }

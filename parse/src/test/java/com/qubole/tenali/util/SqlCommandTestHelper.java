@@ -1,10 +1,14 @@
 package com.qubole.tenali.util;
 
-import com.qubole.tenali.parse.parser.TenaliAnsiSqlParser;
-import com.qubole.tenali.parse.parser.TenaliHiveSqlParser;
-import com.qubole.tenali.parse.parser.TenaliSqlCommandHandler;
-import com.qubole.tenali.parse.parser.TenaliSqlCommandLexer;
+import com.qubole.tenali.parse.parser.AbstractCommandHandler;
+import com.qubole.tenali.parse.parser.AnsiSqlParser;
+import com.qubole.tenali.parse.parser.HiveSqlParser;
+import com.qubole.tenali.parse.parser.PrestoSqlParser;
+import com.qubole.tenali.parse.parser.lexer.HiveCommandLexer;
+import com.qubole.tenali.parse.parser.lexer.PrestoCommandLexer;
+import com.qubole.tenali.parse.parser.lexer.SqlCommandLexer;
 import com.qubole.tenali.parse.parser.config.CommandType;
+import com.qubole.tenali.parse.parser.sql.CalciteAstTransformer;
 
 import java.io.IOException;
 
@@ -13,15 +17,36 @@ import java.io.IOException;
  */
 public class SqlCommandTestHelper {
 
-  public static void parseHive(String command) throws IOException {
-    TenaliSqlCommandHandler handler = new TenaliSqlCommandHandler(new TenaliSqlCommandLexer(),
-            new TenaliHiveSqlParser());
-    handler.submit(CommandType.Type.SQL, command);
-  }
+    public static String parseHive(String command) throws IOException {
+        AbstractCommandHandler handler = new AbstractCommandHandler
+                .CommandParserBuilder(CommandType.HIVE)
+                .setLexer(new HiveCommandLexer())
+                .setParser(new HiveSqlParser())
+                .build(command);
 
-    public static void parseAnsiSql(String command) throws IOException {
-        TenaliSqlCommandHandler handler = new TenaliSqlCommandHandler(new TenaliSqlCommandLexer(),
-                new TenaliAnsiSqlParser());
-        handler.submit(CommandType.Type.SQL, command);
+        return handler.getIthStatement(0);
+    }
+
+    public static String parsePresto(String command) throws IOException {
+        AbstractCommandHandler handler = new AbstractCommandHandler
+                .CommandParserBuilder(CommandType.PRESTO)
+                .setLexer(new PrestoCommandLexer())
+                .setParser(new PrestoSqlParser())
+                .setTransformer(new CalciteAstTransformer())
+                .build(command);
+
+
+
+        return handler.getIthStatement(0);
+    }
+
+    public static String parseSparkSql(String command) throws IOException {
+        AbstractCommandHandler handler = new AbstractCommandHandler
+                .CommandParserBuilder(CommandType.SPARK_SQL)
+                .setLexer(new SqlCommandLexer())
+                .setParser(new HiveSqlParser())
+                .build(command);
+
+        return handler.getIthStatement(0);
     }
 }

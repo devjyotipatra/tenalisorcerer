@@ -10,7 +10,7 @@ public class AliasResolverTest {
         String command = "select a, tab.b from table1 tab where tab.a>0";
 
         SqlCommandTestHelper.parseHive(command);
-        SqlCommandTestHelper.parseAnsiSql(command);
+        SqlCommandTestHelper.parsePresto(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
     }
 }

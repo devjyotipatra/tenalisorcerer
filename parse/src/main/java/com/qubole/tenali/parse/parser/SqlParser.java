@@ -5,12 +5,13 @@ import com.qubole.tenali.parse.parser.config.CommandType;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class TenaliSqlParser {
+// This is experimental
+public final class SqlParser {
 
     private static Map<CommandType, TenaliParser> sqlParserMap = new HashMap<>();
 
 
-    private TenaliSqlParser() {
+    private SqlParser() {
         throw new AssertionError("Final class; cannot instantiate");
     }
 
@@ -19,15 +20,15 @@ public final class TenaliSqlParser {
         TenaliParser parser = sqlParserMap.get(commandType);
 
         if(parser == null) {
-            switch(commandType.getType()) {
+            switch(commandType) {
                 case HIVE:
                     System.out.println("Creating Hive Parser ");
-                    parser = new TenaliHiveSqlParser();
+                    parser = new HiveSqlParser();
                     break;
                 case SQL:
                 case PRESTO:
                     System.out.println("Creating Ansi Sql Parser ");
-                    parser = new TenaliAnsiSqlParser();
+                    parser = new AnsiSqlParser();
                     break;
             }
 

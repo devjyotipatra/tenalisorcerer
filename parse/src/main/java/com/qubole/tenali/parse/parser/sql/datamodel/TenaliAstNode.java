@@ -3,12 +3,7 @@ package com.qubole.tenali.parse.parser.sql.datamodel;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.qubole.tenali.parse.parser.sql.visitor.BaseAstNodeVisitor;
-
-import java.security.SecureRandom;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Random;
+import com.qubole.tenali.parse.parser.sql.visitor.TenaliAstNodeVisitor;
 
 
 @JsonTypeInfo(
@@ -25,14 +20,15 @@ import java.util.Random;
         @JsonSubTypes.Type(value = OperatorNode.class, name = "operator"),
         @JsonSubTypes.Type(value = AsNode.class, name = "as"),
         @JsonSubTypes.Type(value = LiteralNode.class, name = "literal"),
-        @JsonSubTypes.Type(value = BaseAstNodeList.class, name = "list"),
+        @JsonSubTypes.Type(value = TenaliAstNodeList.class, name = "list"),
         @JsonSubTypes.Type(value = ErrorNode.class, name = "error")})
-public abstract class BaseAstNode implements Cloneable {
+public abstract class TenaliAstNode implements Cloneable {
 
-    public abstract void accept(BaseAstNodeVisitor visitor);
+    public abstract void accept(TenaliAstNodeVisitor visitor);
 
-    public interface Builder {
-        public BaseAstNode build();
+
+    public interface Builder<T> {
+        public T build();
 
         public String toString();
     }

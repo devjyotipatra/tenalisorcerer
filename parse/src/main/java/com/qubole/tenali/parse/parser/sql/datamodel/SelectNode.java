@@ -2,37 +2,37 @@ package com.qubole.tenali.parse.parser.sql.datamodel;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qubole.tenali.parse.parser.sql.visitor.BaseAstNodeVisitor;
+import com.qubole.tenali.parse.parser.sql.visitor.TenaliAstNodeVisitor;
 
 import java.security.SecureRandom;
 import java.util.Random;
 
 
-public class SelectNode extends BaseAstNode {
-    public final BaseAstNode where;
-    public final BaseAstNode orderBy;
-    public final BaseAstNodeList groupBy;
-    public final BaseAstNode from;
-    public final BaseAstNodeList with;
-    public final BaseAstNodeList columns;
-    public final BaseAstNodeList keywords;
-    public final BaseAstNode having;
-    public final BaseAstNodeList windowDecls;
+public class SelectNode extends TenaliAstNode {
+    public final TenaliAstNode where;
+    public final TenaliAstNode orderBy;
+    public final TenaliAstNodeList groupBy;
+    public final TenaliAstNode from;
+    public final TenaliAstNodeList with;
+    public final TenaliAstNodeList columns;
+    public final TenaliAstNodeList keywords;
+    public final TenaliAstNode having;
+    public final TenaliAstNodeList windowDecls;
 
     public final int vid;
 
     final RandomInt random = new RandomInt(8);
 
     @JsonCreator
-    SelectNode(@JsonProperty("where") BaseAstNode where,
-               @JsonProperty("orderBy") BaseAstNode orderBy,
-               @JsonProperty("groupBy") BaseAstNodeList groupBy,
-               @JsonProperty("from") BaseAstNode from,
-               @JsonProperty("with") BaseAstNodeList with,
-               @JsonProperty("columns") BaseAstNodeList columns,
-               @JsonProperty("keywords") BaseAstNodeList keywords,
-               @JsonProperty("having") BaseAstNode having,
-               @JsonProperty("window") BaseAstNodeList windowDecls) {
+    SelectNode(@JsonProperty("where") TenaliAstNode where,
+               @JsonProperty("orderBy") TenaliAstNode orderBy,
+               @JsonProperty("groupBy") TenaliAstNodeList groupBy,
+               @JsonProperty("from") TenaliAstNode from,
+               @JsonProperty("with") TenaliAstNodeList with,
+               @JsonProperty("columns") TenaliAstNodeList columns,
+               @JsonProperty("keywords") TenaliAstNodeList keywords,
+               @JsonProperty("having") TenaliAstNode having,
+               @JsonProperty("window") TenaliAstNodeList windowDecls) {
         this.where = where;
         this.orderBy = orderBy;
         this.groupBy = groupBy;
@@ -53,7 +53,7 @@ public class SelectNode extends BaseAstNode {
     }*/
 
     @Override
-    public void accept(BaseAstNodeVisitor visitor) {
+    public void accept(TenaliAstNodeVisitor visitor) {
         visitor.visit(this);
     }
 
@@ -136,16 +136,16 @@ public class SelectNode extends BaseAstNode {
     }
 
 
-    public static class SelectBuilder implements Builder{
-        BaseAstNode where;
-        BaseAstNode orderBy;
-        BaseAstNodeList groupBy;
-        BaseAstNode from;
-        BaseAstNodeList with;
-        BaseAstNodeList columns;
-        BaseAstNodeList keywords;
-        BaseAstNode having;
-        BaseAstNodeList windowDecls;
+    public static class SelectBuilder implements Builder<TenaliAstNode> {
+        TenaliAstNode where;
+        TenaliAstNode orderBy;
+        TenaliAstNodeList groupBy;
+        TenaliAstNode from;
+        TenaliAstNodeList with;
+        TenaliAstNodeList columns;
+        TenaliAstNodeList keywords;
+        TenaliAstNode having;
+        TenaliAstNodeList windowDecls;
 
         public SelectBuilder() {}
 
@@ -164,7 +164,7 @@ public class SelectNode extends BaseAstNode {
         }
 
         @Override
-        public BaseAstNode build() {
+        public TenaliAstNode build() {
             return new SelectNode(where,
                     orderBy,
                     groupBy,
@@ -176,75 +176,75 @@ public class SelectNode extends BaseAstNode {
                     windowDecls);
         }
 
-        public BaseAstNode getWhere() {
+        public TenaliAstNode getWhere() {
             return where;
         }
 
-        public void setWhere(BaseAstNode where) {
+        public void setWhere(TenaliAstNode where) {
             this.where = where;
         }
 
-        public BaseAstNode getOrderBy() {
+        public TenaliAstNode getOrderBy() {
             return orderBy;
         }
 
-        public void setOrderBy(BaseAstNode orderBy) {
+        public void setOrderBy(TenaliAstNode orderBy) {
             this.orderBy = orderBy;
         }
 
-        public BaseAstNodeList getGroupBy() {
+        public TenaliAstNodeList getGroupBy() {
             return groupBy;
         }
 
-        public void setGroupBy(BaseAstNodeList groupBy) {
+        public void setGroupBy(TenaliAstNodeList groupBy) {
             this.groupBy = groupBy;
         }
 
-        public BaseAstNode getFrom() {
+        public TenaliAstNode getFrom() {
             return from;
         }
 
-        public void setFrom(BaseAstNode from) {
+        public void setFrom(TenaliAstNode from) {
             this.from = from;
         }
 
-        public BaseAstNodeList getWith() {
+        public TenaliAstNodeList getWith() {
             return with;
         }
 
-        public void setWith(BaseAstNodeList with) {
+        public void setWith(TenaliAstNodeList with) {
             this.with = with;
         }
 
-        public BaseAstNodeList getColumns() {
+        public TenaliAstNodeList getColumns() {
             return columns;
         }
 
-        public void setColumns(BaseAstNodeList columns) {
+        public void setColumns(TenaliAstNodeList columns) {
             this.columns = columns;
         }
 
-        public BaseAstNodeList getKeywords() {
+        public TenaliAstNodeList getKeywords() {
             return keywords;
         }
 
-        public void setKeywords(BaseAstNodeList keywords) {
+        public void setKeywords(TenaliAstNodeList keywords) {
             this.keywords = keywords;
         }
 
-        public BaseAstNode getHaving() {
+        public TenaliAstNode getHaving() {
             return having;
         }
 
-        public void setHaving(BaseAstNode having) {
+        public void setHaving(TenaliAstNode having) {
             this.having = having;
         }
 
-        public BaseAstNodeList getWindowDecls() {
+        public TenaliAstNodeList getWindowDecls() {
             return windowDecls;
         }
 
-        public void setWindowDecls(BaseAstNodeList windowDecls) {
+        public void setWindowDecls(TenaliAstNodeList windowDecls) {
             this.windowDecls = windowDecls;
         }
     }

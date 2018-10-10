@@ -2,16 +2,16 @@ package com.qubole.tenali.parse.parser.sql.datamodel;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qubole.tenali.parse.parser.sql.visitor.BaseAstNodeVisitor;
+import com.qubole.tenali.parse.parser.sql.visitor.TenaliAstNodeVisitor;
 
-public class AsNode extends BaseAstNode {
+public class AsNode extends TenaliAstNode {
 
     public String aliasName;
-    public BaseAstNode value;
+    public TenaliAstNode value;
 
     @JsonCreator
     public AsNode(@JsonProperty("aliasName") String aliasName,
-                        @JsonProperty("value") BaseAstNode value) {
+                        @JsonProperty("value") TenaliAstNode value) {
         super();
         this.aliasName = aliasName;
         this.value = value;
@@ -19,15 +19,15 @@ public class AsNode extends BaseAstNode {
     }
 
     @Override
-    public void accept(BaseAstNodeVisitor visitor) {
+    public void accept(TenaliAstNodeVisitor visitor) {
         return;
     }
 
-    public static class AsBuilder implements Builder {
+    public static class AsBuilder implements Builder<TenaliAstNode> {
         public String aliasName;
-        public BaseAstNode value;
+        public TenaliAstNode value;
 
-        public BaseAstNode build() {
+        public TenaliAstNode build() {
             return new AsNode(aliasName, value);
         }
 
@@ -39,11 +39,11 @@ public class AsNode extends BaseAstNode {
             this.aliasName = aliasName;
         }
 
-        public BaseAstNode getValue() {
+        public TenaliAstNode getValue() {
             return value;
         }
 
-        public void setValue(BaseAstNode value) {
+        public void setValue(TenaliAstNode value) {
             this.value = value;
         }
     }

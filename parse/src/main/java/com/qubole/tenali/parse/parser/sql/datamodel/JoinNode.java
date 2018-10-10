@@ -2,19 +2,19 @@ package com.qubole.tenali.parse.parser.sql.datamodel;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qubole.tenali.parse.parser.sql.visitor.BaseAstNodeVisitor;
+import com.qubole.tenali.parse.parser.sql.visitor.TenaliAstNodeVisitor;
 
-public class JoinNode extends BaseAstNode {
+public class JoinNode extends TenaliAstNode {
     public final String joinType;
-    public final BaseAstNode leftNode;
-    public final BaseAstNode rightNode;
-    public final BaseAstNode joinCondition;
+    public final TenaliAstNode leftNode;
+    public final TenaliAstNode rightNode;
+    public final TenaliAstNode joinCondition;
 
     @JsonCreator
     public JoinNode(@JsonProperty("jointype") String joinType,
-                    @JsonProperty("left") BaseAstNode leftNode,
-                    @JsonProperty("right") BaseAstNode rightNode,
-                    @JsonProperty("condition") BaseAstNode joinCondition) {
+                    @JsonProperty("left") TenaliAstNode leftNode,
+                    @JsonProperty("right") TenaliAstNode rightNode,
+                    @JsonProperty("condition") TenaliAstNode joinCondition) {
         this.joinType = joinType;
         this.leftNode = leftNode;
         this.rightNode = rightNode;
@@ -22,42 +22,42 @@ public class JoinNode extends BaseAstNode {
     }
 
     @Override
-    public void accept(BaseAstNodeVisitor visitor) {
+    public void accept(TenaliAstNodeVisitor visitor) {
         visitor.visit(this);
     }
 
-    public static class  JoinBuilder implements Builder {
+    public static class  JoinBuilder implements Builder<TenaliAstNode> {
         String joinType;
-        BaseAstNode leftNode;
-        BaseAstNode rightNode;
-        BaseAstNode joinCondition;
+        TenaliAstNode leftNode;
+        TenaliAstNode rightNode;
+        TenaliAstNode joinCondition;
 
         @Override
         public JoinNode build() {
             return new JoinNode(joinType, leftNode, rightNode, joinCondition);
         }
 
-        public BaseAstNode getLeftNode() {
+        public TenaliAstNode getLeftNode() {
             return leftNode;
         }
 
-        public void setLeftNode(BaseAstNode leftNode) {
+        public void setLeftNode(TenaliAstNode leftNode) {
             this.leftNode = leftNode;
         }
 
-        public BaseAstNode getRightNode() {
+        public TenaliAstNode getRightNode() {
             return rightNode;
         }
 
-        public void setRightNode(BaseAstNode rightNode) {
+        public void setRightNode(TenaliAstNode rightNode) {
             this.rightNode = rightNode;
         }
 
-        public BaseAstNode getJoinCondition() {
+        public TenaliAstNode getJoinCondition() {
             return joinCondition;
         }
 
-        public void setJoinCondition(BaseAstNode joinCondition) {
+        public void setJoinCondition(TenaliAstNode joinCondition) {
             this.joinCondition = joinCondition;
         }
 

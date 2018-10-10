@@ -1,12 +1,12 @@
 package com.qubole.tenali.parse.parser.sql.visitor;
 
-import com.qubole.tenali.parse.parser.sql.datamodel.BaseAstNode;
 import com.qubole.tenali.parse.parser.sql.datamodel.SelectNode;
+import com.qubole.tenali.parse.parser.sql.datamodel.TenaliAstNode;
 
-public class SelectNodeVisitor extends BaseAstNodeVisitor {
+public class SelectNodeVisitor extends TenaliAstNodeVisitor {
 
     @Override
-    public void visit(BaseAstNode node) {
+    public void visit(TenaliAstNode node) {
         if(!(node instanceof SelectNode)) {
             System.out.println("Error:  node is not instance of selectnode");
             return;
@@ -19,7 +19,7 @@ public class SelectNodeVisitor extends BaseAstNodeVisitor {
         }
 
         if(select.hasGroupBy()) {
-            for (BaseAstNode n : select.groupBy.getOperandlist()) {
+            for (TenaliAstNode n : select.groupBy.getOperandlist()) {
                 n.accept(this);
             }
         }
@@ -27,16 +27,16 @@ public class SelectNodeVisitor extends BaseAstNodeVisitor {
         select.from.accept(this);
 
         if(select.hasWith()) {
-            for (BaseAstNode n : select.with.getOperandlist()) {
+            for (TenaliAstNode n : select.with.getOperandlist()) {
                 n.accept(this);
             }
         }
 
-        for (BaseAstNode n : select.columns.getOperandlist()) {
+        for (TenaliAstNode n : select.columns.getOperandlist()) {
             n.accept(this);
         }
 
-        for (BaseAstNode n : select.keywords.getOperandlist()) {
+        for (TenaliAstNode n : select.keywords.getOperandlist()) {
             n.accept(this);
         }
 
@@ -45,7 +45,7 @@ public class SelectNodeVisitor extends BaseAstNodeVisitor {
         }
 
         if(select.hasWindow()) {
-            for (BaseAstNode n : select.windowDecls.getOperandlist()) {
+            for (TenaliAstNode n : select.windowDecls.getOperandlist()) {
                 n.accept(this);
             }
         }

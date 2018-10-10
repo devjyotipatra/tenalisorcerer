@@ -3,22 +3,22 @@ package com.qubole.tenali.parse.parser.sql.datamodel;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qubole.tenali.parse.parser.sql.visitor.BaseAstNodeVisitor;
+import com.qubole.tenali.parse.parser.sql.visitor.TenaliAstNodeVisitor;
 
 
-public class OperatorNode extends BaseAstNode {
+public class OperatorNode extends TenaliAstNode {
     public String operator;
-    public final BaseAstNodeList operands;
+    public final TenaliAstNodeList operands;
 
     @JsonCreator
     public OperatorNode(@JsonProperty("operator") String operator,
-                        @JsonProperty("operands") BaseAstNodeList operands) {
+                        @JsonProperty("operands") TenaliAstNodeList operands) {
         this.operator = operator;
         this.operands = operands;
     }
 
     @Override
-    public void accept(BaseAstNodeVisitor visitor) {
+    public void accept(TenaliAstNodeVisitor visitor) {
         visitor.visit(this);
     }
 
@@ -30,12 +30,12 @@ public class OperatorNode extends BaseAstNode {
         return sb.toString();
     }
 
-    public static class  OperatorBuilder implements Builder {
+    public static class  OperatorBuilder implements Builder<TenaliAstNode> {
         String operator;
-        BaseAstNodeList operands;
+        TenaliAstNodeList operands;
 
         @Override
-        public BaseAstNode build() {
+        public TenaliAstNode build() {
             return new OperatorNode(operator, operands);
         }
 
@@ -47,11 +47,11 @@ public class OperatorNode extends BaseAstNode {
             this.operator = operator;
         }
 
-        public BaseAstNodeList getOperands() {
+        public TenaliAstNodeList getOperands() {
             return operands;
         }
 
-        public void setOperands(BaseAstNodeList operands) {
+        public void setOperands(TenaliAstNodeList operands) {
             this.operands = operands;
         }
     }

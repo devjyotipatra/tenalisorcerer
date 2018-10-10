@@ -20,7 +20,7 @@ public class TenaliBaseAstAliasResolver {
     public TenaliBaseAstAliasResolver() { }
 
 
-    public void dfsFindAlias(BaseAstNode root) {
+ /*   public void dfsFindAlias(BaseAstNode root) {
 
         Set<BaseAstNode> visitedSubQueries = new HashSet<>();
 

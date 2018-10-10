@@ -1,20 +1,32 @@
-package com.qubole.tenali.parse.parser;
+package com.qubole.tenali.parse.parser.lexer;
 
 import antlr4.QDSCommandBaseVisitor;
+import antlr4.QDSCommandLexer;
+import antlr4.QDSCommandParser;
+import com.qubole.tenali.parse.exception.CommandErrorListener;
+import com.qubole.tenali.parse.exception.CommandParseError;
+import com.qubole.tenali.parse.exception.SQLSyntaxError;
 import com.qubole.tenali.parse.parser.config.CommandType;
 import com.qubole.tenali.parse.parser.config.CommandContext;
-import com.qubole.tenali.parse.parser.config.Query;
+import com.qubole.tenali.parse.parser.config.QueryType;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import static antlr4.QDSCommandLexer.*;
 
 
-public class TenaliSqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> implements TenaliLexer<CommandContext>  {
+public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> implements TenaliLexer<CommandContext> {
     /**
      * Function for segregating query types and calling the parser with the right context
      * <p>
-     * Here we have called the same parser method (TenaliHiveSqlParser.parse) for all the query types.
+     * Here we have called the same parser method (HiveSqlParser.parse) for all the query types.
      * This can be changed in future to call specific parsers like
      * TenaliHiveSelectParser, TenaliHiveInsertParser, TenaliHiveCreateParser
      * This would help in avoiding lot of (if-else) wiring inside the Parse function and result in
@@ -23,9 +35,18 @@ public class TenaliSqlCommandLexer extends QDSCommandBaseVisitor<CommandContext>
      * @param ctx: Sql statement context from Antlr
      */
 
-    final CommandType.Type commandType = CommandType.Type.SQL;
+    CommandType commandType;
 
     CommandContext root;
+
+
+    public SqlCommandLexer() {
+        this(CommandType.SQL);
+    }
+
+    public SqlCommandLexer(CommandType commandType) {
+        this.commandType = commandType;
+    }
 
 
     @Override
@@ -41,59 +62,60 @@ public class TenaliSqlCommandLexer extends QDSCommandBaseVisitor<CommandContext>
 
     @Override
     public CommandContext visitSql_stmt(antlr4.QDSCommandParser.Sql_stmtContext ctx) {
+        CommandContext qctx = new CommandContext();
+
         String stmt = ctx.getText().trim();
         int queryType = ctx.op.getType();
 
-        CommandContext qctx = new CommandContext();
         qctx.setStmt(stmt);
 
         System.out.println(" <=  visitSql_stmt  => " + stmt);
 
         switch (queryType) {
             case Q_SELECT:
-                qctx.setType(new QueryType(Query.Type.SELECT));
+                qctx.setQueryType(QueryType.SELECT);
                 break;
             case Q_INSERT_INTO:
-                qctx.setType(new QueryType(Query.Type.INSERT_INTO));
+                qctx.setQueryType(QueryType.INSERT_INTO);
                 break;
             case Q_INSERT_OVERWRITE:
-                qctx.setType(new QueryType(Query.Type.INSERT_OVERWRITE));
+                qctx.setQueryType(QueryType.INSERT_OVERWRITE);
                 break;
             case Q_CTAS:
-                qctx.setType(new QueryType(Query.Type.CTAS));
+                qctx.setQueryType(QueryType.CTAS);
                 break;
             case Q_CREATE_VIEW:
-                qctx.setType(new QueryType(Query.Type.CREATE_VIEW));
+                qctx.setQueryType(QueryType.CREATE_VIEW);
                 break;
             case Q_CTE:
-                qctx.setType(new QueryType(Query.Type.CTE));
+                qctx.setQueryType(QueryType.CTE);
                 break;
             case Q_CREATE_TABLE:
             case Q_CREATE_EXTERNAL_TABLE:
-                qctx.setType(new QueryType(Query.Type.CREATE_TABLE));
+                qctx.setQueryType(QueryType.CREATE_TABLE);
                 break;
             case Q_DROP_TABLE:
-                qctx.setType(new QueryType(Query.Type.DROP_TABLE));
+                qctx.setQueryType(QueryType.DROP_TABLE);
             case Q_DROP_VIEW:
-                qctx.setType(new QueryType(Query.Type.DROP_VIEW));
+                qctx.setQueryType(QueryType.DROP_VIEW);
                 break;
             case Q_USE:
-                qctx.setType(new QueryType(Query.Type.USE));
+                qctx.setQueryType(QueryType.USE);
                 //qctx.setDefaultSchema(getDefaultSchema(stmt));
                 break;
             case Q_CREATE_FUNCTION:
-                qctx.setType(new QueryType(Query.Type.CREATE_FUNCTION));
+                qctx.setQueryType(QueryType.CREATE_FUNCTION);
                 //cctx.setIsTemporaryFunctionUsed(true);
                 //cctx.addTemporaryFunction(getFunction(stmt));
                 break;
             case Q_SET:
-                qctx.setType(new QueryType(Query.Type.SET));
+                qctx.setQueryType(QueryType.SET);
                 break;
             case Q_ALTER_TABLE:
-                qctx.setType(new QueryType(Query.Type.ALTER_TABLE));
+                qctx.setQueryType(QueryType.ALTER_TABLE);
                 break;
             case Q_ADD_JAR:
-                qctx.setType(new QueryType(Query.Type.ADD_JAR));
+                qctx.setQueryType(QueryType.ADD_JAR);
                 //cctx.setIsExternalJarUsed(true);
                 //cctx.addJarPath(getJar(stmt));
                 break;
@@ -114,9 +136,11 @@ public class TenaliSqlCommandLexer extends QDSCommandBaseVisitor<CommandContext>
             System.out.println(i + " <=  visitChildren  => " + c.getText());
             CommandContext result = c.accept(this);
 
-            if(result != null && result.getType().getValue() != Query.Type.UNKNOWN) {
+            if(result != null && result.getQueryType() != QueryType.UNKNOWN) {
                 if(root == null) {
                     root = result;
+                    root.setAsRootNode();
+
                     cctx = result;
                 } else {
                     cctx = this.aggregateResult(root.getCurrentContext(), result);
@@ -134,11 +158,38 @@ public class TenaliSqlCommandLexer extends QDSCommandBaseVisitor<CommandContext>
     }
 
 
+    @Override
+    public void prepare(String command) {
+        try {
+            InputStream antlrInputStream =
+                    new ByteArrayInputStream(command.getBytes(StandardCharsets.UTF_8));
+
+            QDSCommandLexer lexer =
+                    new QDSCommandLexer(CharStreams.fromStream(antlrInputStream, StandardCharsets.UTF_8));
+
+            QDSCommandParser parser = new QDSCommandParser(new CommonTokenStream(lexer));
+            parser.setBuildParseTree(true);
+            parser.removeErrorListeners();
+            parser.addErrorListener(new CommandErrorListener());
+
+            ParseTree tree = parser.parse();
+            visit(tree);
+
+        } catch (CommandParseError e) {
+            throw new SQLSyntaxError(e);
+        } catch (IOException io) {
+
+        }
+    }
+
+
+    @Override
     public CommandContext getRootContext() {
         return root;
     }
 
-    public CommandType.Type getLexerType() {
+    @Override
+    public CommandType getCommandType() {
         return commandType;
     }
 

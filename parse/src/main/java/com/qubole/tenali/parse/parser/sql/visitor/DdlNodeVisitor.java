@@ -1,12 +1,12 @@
 package com.qubole.tenali.parse.parser.sql.visitor;
 
-import com.qubole.tenali.parse.parser.sql.datamodel.BaseAstNode;
 import com.qubole.tenali.parse.parser.sql.datamodel.DdlNode;
+import com.qubole.tenali.parse.parser.sql.datamodel.TenaliAstNode;
 
-public class DdlNodeVisitor extends BaseAstNodeVisitor {
+public class DdlNodeVisitor extends TenaliAstNodeVisitor {
 
     @Override
-    public void visit(BaseAstNode node) {
+    public void visit(TenaliAstNode node) {
         if(!(node instanceof DdlNode)) {
             System.out.println("Error:  node is not instance of JoinNode");
             return;
