@@ -12,6 +12,7 @@ public class QueryContext<T> {
 
     TenaliAstNode root;
 
+
     public QueryContext(QueryType queryType) {
         this.queryType = queryType;
     }
@@ -55,6 +56,7 @@ public class QueryContext<T> {
     public void setAstRoot(TenaliAstNode root) {
         this.root = root;
     }
+
 
     public String convertAstToString() {
         return ast.toString();

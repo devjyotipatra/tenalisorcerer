@@ -18,6 +18,10 @@ public class CommandContext {
 
     boolean isRootNode = false;
 
+    boolean isDDLQuery;
+
+    boolean isSupportedDDLQuery;
+
 
     public CommandContext() {  }
 
@@ -111,10 +115,30 @@ public class CommandContext {
         appendNewContext(cctx, qctx);
     }
 
+
+
     private void appendNewContext(CommandContext cctx, CommandContext qctx) {
         qctx.setChild(cctx);
         cctx.setParent(qctx);
     }
+
+
+    public void setIsDDLQuery() {
+        isDDLQuery = true;
+    }
+
+    public void setIsSupportedDDLQuery() {
+        isSupportedDDLQuery = true;
+    }
+
+    public boolean getIsDDLQuery() {
+        return isDDLQuery;
+    }
+
+    public boolean getIsSupportedDDLQuery() {
+        return isSupportedDDLQuery;
+    }
+
 
     @Override
     public boolean equals(Object other) {

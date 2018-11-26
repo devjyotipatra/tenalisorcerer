@@ -3,16 +3,28 @@ package com.qubole.tenali.parse.parser.sql;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qubole.tenali.parse.parser.AstTransformer;
+import com.qubole.tenali.parse.parser.config.QueryContext;
 import com.qubole.tenali.parse.parser.sql.datamodel.*;
 import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.util.SqlVisitor;
 
 import java.util.List;
 
+
+/*
+
+Create TenliAStNode for Select AST
+For other AST types (insert, CTAS, CTE) update the metadata
+(table name in CTAS) querycontext
+ */
+
 public class CalciteAstTransformer implements AstTransformer<SqlNode>, SqlVisitor<TenaliAstNode> {
 
-    public TenaliAstNode transform(SqlNode ast) {
+    QueryContext queryContext = null;
+
+    public TenaliAstNode transform(SqlNode ast, QueryContext qCtx) {
         System.out.println("AST   => "+ast);
+        queryContext = qCtx;
         return ast.accept(this);
     }
 
@@ -111,11 +123,16 @@ public class CalciteAstTransformer implements AstTransformer<SqlNode>, SqlVisito
     }
 
 
-    private TenaliAstNode extractOperator(String operatorName, List<SqlNode> children) {
+    private TenaliAstNode extractOperator(SqlNode parent, List<SqlNode> children) {
+        SqlOperator operator = ((SqlCall) parent).getOperator();
+
+        if(!(operator instanceof SqlOperator)) {
+            return null;
+        }
         OperatorNode.OperatorBuilder builder = new OperatorNode.OperatorBuilder();
         System.out.println("  )))))) Operators  ,  _  Children _  (((((( " + children.size());
 
-        builder.setOperator(operatorName);
+        builder.setOperator(operator.getName());
 
         TenaliAstNodeList identifiers = new TenaliAstNodeList();
 
@@ -293,7 +310,13 @@ public class CalciteAstTransformer implements AstTransformer<SqlNode>, SqlVisito
                 case ORDER_BY:
                     node = extractOrderby(call, call.getOperandList());
                     break;
-                case CASE:
+                default:
+                    node = extractOperator(call, call.getOperandList());
+                    if(node == null) {
+                        System.out.println("Going Nowhere .... ");
+                        node = extract(call, call.getOperandList());
+                    }
+                /*case CASE:
                 case OVER:
                 case WINDOW:
                     SqlOperator winOperator = call.getOperator();
@@ -306,7 +329,7 @@ public class CalciteAstTransformer implements AstTransformer<SqlNode>, SqlVisito
                     } else {
                         System.out.println("Going Nowhere .... ");
                         node = extract(call, call.getOperandList());
-                    }
+                    }*/
             }
         }
 

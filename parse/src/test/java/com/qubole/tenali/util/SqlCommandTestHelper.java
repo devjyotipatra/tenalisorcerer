@@ -9,6 +9,7 @@ import com.qubole.tenali.parse.parser.lexer.PrestoCommandLexer;
 import com.qubole.tenali.parse.parser.lexer.SqlCommandLexer;
 import com.qubole.tenali.parse.parser.config.CommandType;
 import com.qubole.tenali.parse.parser.sql.CalciteAstTransformer;
+import com.qubole.tenali.parse.parser.sql.HiveAstTransformer;
 
 import java.io.IOException;
 
@@ -22,6 +23,7 @@ public class SqlCommandTestHelper {
                 .CommandParserBuilder(CommandType.HIVE)
                 .setLexer(new HiveCommandLexer())
                 .setParser(new HiveSqlParser())
+                .setTransformer(new HiveAstTransformer())
                 .build(command);
 
         return handler.getIthStatement(0);

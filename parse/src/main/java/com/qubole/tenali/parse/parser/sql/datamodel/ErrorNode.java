@@ -6,12 +6,12 @@ import com.qubole.tenali.parse.parser.sql.visitor.TenaliAstNodeVisitor;
 
 public class ErrorNode extends TenaliAstNode {
     public String error;
-    public String unsupportedNodeType;
+    //public String unsupportedNodeType;
     @JsonCreator
-    public ErrorNode(@JsonProperty("error") String error,
-                     @JsonProperty("unsupportednode") String unsupportedNodeType) {
+    public ErrorNode(@JsonProperty("error") String error/*,
+                     @JsonProperty("unsupportednode") String unsupportedNodeType*/) {
         this.error = error;
-        this.unsupportedNodeType = unsupportedNodeType;
+        //this.unsupportedNodeType = unsupportedNodeType;
     }
 
     @Override

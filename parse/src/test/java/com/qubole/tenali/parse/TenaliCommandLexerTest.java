@@ -34,8 +34,8 @@ public class TenaliCommandLexerTest {
                 "GROUP BY JobTitle, MaritalStatus\n" +
                 "HAVING   x in (select x from tab1)";
 
-        //SqlCommandTestHelper.parseHive(command);
-        SqlCommandTestHelper.parsePresto(command);
+        SqlCommandTestHelper.parseHive(command);
+        //SqlCommandTestHelper.parsePresto(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
     }
 

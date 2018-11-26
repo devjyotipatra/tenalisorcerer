@@ -148,11 +148,14 @@ public final class AbstractCommandHandler {
 
                     QueryContext qCtx = handler.getQueryContext(parseObject);
                     System.out.println("TENALI AST   =>  " + qCtx.getAst().toString());
-                    TenaliAstNode root = transformer.transform(qCtx.getAst());
 
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    System.out.println("======~~~~~~~~~>>" + objectMapper.writeValueAsString(root));
+                    if(transformer != null) {
+                        TenaliAstNode root = transformer.transform(qCtx.getAst(), qCtx);
 
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        System.out.println("======~~~~~~~~~>>" + objectMapper.writeValueAsString(root));
+
+                    }
                 }
             }
 

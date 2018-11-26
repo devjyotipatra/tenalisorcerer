@@ -8,6 +8,7 @@
 
   <modules>
     <module>parse</module>
+      <module>core</module>
   </modules>
 
   <packaging>pom</packaging>
@@ -19,13 +20,16 @@
     <!-- check if there is a better way -->
     <project.rootdir>${basedir}/..</project.rootdir>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <antlr4.version>4.7</antlr4.version>
     <antlr4.visitor>true</antlr4.visitor>
     <antlr4.listener>true</antlr4.listener>
     <slf4j.version>1.7.6</slf4j.version>
     <scala.version>2.11.1</scala.version>
     <calcite.version>1.15.0</calcite.version>
-    <hive.version>1.2.0-qds-1.0.0</hive.version>
+    <hive.version>1.2.0</hive.version>
     <hadoop.version>2.6.0-qds-0.4.8</hadoop.version>
+    <presto.version>0.193</presto.version>
+    <jackson.version>2.4.0</jackson.version>
   </properties>
 
   <repositories>
@@ -48,12 +52,14 @@
       <version>1.7.1</version>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.11</version>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest-all</artifactId>

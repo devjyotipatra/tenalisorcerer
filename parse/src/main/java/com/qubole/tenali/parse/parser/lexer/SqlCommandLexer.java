@@ -119,6 +119,11 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
                 //cctx.setIsExternalJarUsed(true);
                 //cctx.addJarPath(getJar(stmt));
                 break;
+            default:
+                qctx.setIsDDLQuery();
+                if(isSupportedDDL(queryType)) {
+                    qctx.setIsSupportedDDLQuery();
+                }
         }
 
         return qctx;
@@ -191,6 +196,13 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
     @Override
     public CommandType getCommandType() {
         return commandType;
+    }
+
+
+    public boolean isSupportedDDL(int type) {
+        return type == Q_CREATE_TABLE
+                || type == Q_CREATE_VIEW
+                || type == Q_DROP_VIEW;
     }
 
 }
