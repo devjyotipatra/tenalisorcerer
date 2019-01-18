@@ -5,62 +5,97 @@ package com.qubole.tenali.parse.parser.config;
  */
 
 import org.apache.calcite.sql.validate.SqlAbstractConformance;
+import org.apache.calcite.sql.validate.SqlConformance;
 import org.apache.calcite.sql.validate.SqlConformanceEnum;
 
 /**
  * Implementation of Calcite {@code SqlConformance} for Presto.
  */
-public class TenaliConformance extends SqlAbstractConformance {
-  private static final TenaliConformance INSTANCE = new TenaliConformance();
+public class TenaliConformance implements SqlConformance {
+    private TenaliConformance() { }
 
-  public static TenaliConformance instance() {
+    private static final TenaliConformance INSTANCE = new TenaliConformance();
+
+    public static TenaliConformance instance() {
     return INSTANCE;
   }
 
-  @Override
-  public boolean isBangEqualAllowed() {
-    // For x != y (as an alternative to x <> y)
-    return true;
-  }
 
-  @Override
-  public boolean isSortByOrdinal() {
-    // For ORDER BY 1
-    return true;
-  }
+    public boolean isLiberal() {
+        return SqlConformanceEnum.DEFAULT.isLiberal();
+    }
 
-  @Override
-  public boolean isSortByAlias() {
-    // For ORDER BY columnAlias (where columnAlias is a "column AS columnAlias")
-    return true;
-  }
+    public boolean isGroupByAlias() {
+        return false;
+    }
 
-  @Override
-  public boolean isGroupByAlias() {
-    // Disable GROUP BY columnAlias (where columnAlias is a "column AS columnAlias")
-    // since it causes ambiguity in the Calcite validator for queries like
-    // SELECT func(x) AS x, COUNT(*) FROM table GROUP BY func(x)
-    // Hive also does the same.
-    return false;
-  }
+    public boolean isGroupByOrdinal() {
+        return true;
+    }
 
-  @Override
-  public boolean isGroupByOrdinal() {
-    return true;
-  }
+    public boolean isHavingAlias() {
+        return true;
+    }
 
-  @Override
-  public boolean isHavingAlias() {
-    return true;
-  }
+    public boolean isSortByOrdinal() {
+        return true;
+    }
 
-  @Override
-  public boolean isMinusAllowed() {
-    return SqlConformanceEnum.DEFAULT.isMinusAllowed();
-  }
+    public boolean isSortByAlias() {
+        return true;
+    }
 
-  @Override
-  public boolean isApplyAllowed() {
-    return SqlConformanceEnum.DEFAULT.isApplyAllowed();
-  }
+    public boolean isSortByAliasObscures() {
+        return SqlConformanceEnum.DEFAULT.isSortByAliasObscures();
+    }
+
+    public boolean isFromRequired() {
+        return SqlConformanceEnum.DEFAULT.isFromRequired();
+    }
+
+    public boolean isBangEqualAllowed() {
+        return true;
+    }
+
+    public boolean isMinusAllowed() {
+        return SqlConformanceEnum.DEFAULT.isMinusAllowed();
+    }
+
+    public boolean isApplyAllowed() {
+        return SqlConformanceEnum.DEFAULT.isApplyAllowed();
+    }
+
+    public boolean isInsertSubsetColumnsAllowed() {
+        return SqlConformanceEnum.DEFAULT.isInsertSubsetColumnsAllowed();
+    }
+
+    public boolean allowNiladicParentheses() {
+        return SqlConformanceEnum.DEFAULT.allowNiladicParentheses();
+    }
+
+    public boolean allowExplicitRowValueConstructor() {
+        return SqlConformanceEnum.DEFAULT.allowExplicitRowValueConstructor();
+    }
+
+    public boolean allowExtend() {
+        return SqlConformanceEnum.DEFAULT.allowExtend();
+    }
+
+    public boolean isLimitStartCountAllowed() {
+        return SqlConformanceEnum.DEFAULT.isLimitStartCountAllowed();
+    }
+
+    public boolean isPercentRemainderAllowed() {
+        return SqlConformanceEnum.DEFAULT.isPercentRemainderAllowed();
+    }
+
+    public boolean allowGeometry() {
+        return SqlConformanceEnum.DEFAULT.allowGeometry();
+    }
+
+    public boolean shouldConvertRaggedUnionTypesToVarying() {
+        return SqlConformanceEnum.DEFAULT.shouldConvertRaggedUnionTypesToVarying();
+    }
+
+
 }

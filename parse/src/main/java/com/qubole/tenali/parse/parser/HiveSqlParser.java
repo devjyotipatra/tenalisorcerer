@@ -20,7 +20,6 @@ public class HiveSqlParser implements TenaliParser {
 
     public ParseObject<ASTNode> parse(QueryType queryType, String sql) throws IOException {
         ParseObject parseObj = new ParseObject(CommandType.HIVE, queryType);
-        ASTNode ast = null;
         try {
             ASTNode root = parseDriver.parse(sql);
 

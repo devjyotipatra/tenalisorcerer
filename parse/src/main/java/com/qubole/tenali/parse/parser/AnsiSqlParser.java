@@ -10,12 +10,14 @@ import org.apache.calcite.config.Lex;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
+import org.apache.calcite.sql.parser.impl.SqlParserImpl;
+import org.apache.calcite.sql.validate.SqlConformance;
 
 import java.io.IOException;
 
 public class AnsiSqlParser implements TenaliParser {
 
-    static SqlParser.Config parserConfig;
+    static SqlParser sqlParser;
 
     public AnsiSqlParser() {
         /*parserConfig = SqlParser.configBuilder()
@@ -38,22 +40,27 @@ public class AnsiSqlParser implements TenaliParser {
                 //.setConformance(TenaliConformance.instance())
                 .build();*/
 
-        parserConfig = SqlParser.configBuilder()
-                .setUnquotedCasing(Casing.UNCHANGED)
-                .setQuotedCasing(Casing.UNCHANGED)
-                .setQuoting(Quoting.DOUBLE_QUOTE)
-                .setConformance(TenaliConformance.instance())
-                .build();
+        Quoting quoting = Quoting.DOUBLE_QUOTE;
+        Casing unquotedCasing = Casing.TO_UPPER;
+        Casing quotedCasing = Casing.UNCHANGED;
+        SqlConformance conformance = TenaliConformance.instance();
+
+        sqlParser = SqlParser.create("",
+                        SqlParser.configBuilder()
+                        .setParserFactory(SqlParserImpl.FACTORY)
+                        .setQuoting(quoting)
+                        .setUnquotedCasing(unquotedCasing)
+                        .setQuotedCasing(quotedCasing)
+                        .setConformance(conformance)
+                        .build());
     }
 
     public ParseObject<SqlNode> parse(QueryType queryType, String command) throws IOException {
         ParseObject parseobject = new ParseObject(CommandType.SQL, queryType);
         SqlNode ast = null;
 
-        SqlParser parser = SqlParser.create(command, parserConfig);
-
         try {
-                ast = parser.parseStmt();
+                ast = sqlParser.parseQuery(command);
                 parseobject.setParseObject(ast);
             /*if (ast != null) {
                 CalciteAstToBaseAstConverter converter = new CalciteAstToBaseAstConverter();

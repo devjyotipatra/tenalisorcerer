@@ -20,7 +20,7 @@ public class CachingMetastore {
     public CachingMetastore() throws Exception {
         IMetaStoreClient apimetastoreClient =
                 new APIMetastoreClient(5911, "api.qubole.com",
-                        "EnhW9CcvppxUXUPUesWxKnjxC5nSF5zcWR8szsQGTZe96VQNwWq13z1VqkU2W6qb");
+                        "EMPTY");
     }
 
     public List<FieldSchema> getCatalog(String accountid, String dbName, String tableName) throws Exception {

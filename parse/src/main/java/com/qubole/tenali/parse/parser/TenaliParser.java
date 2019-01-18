@@ -74,7 +74,7 @@ public interface TenaliParser<T> {
 
         @Override
         public int hashCode() {
-            int hashCode = -1;
+            int hashCode;
             if(obj != null) {
                 hashCode = obj.toString().hashCode();
             } else {
