@@ -1,6 +1,6 @@
 package com.qubole.tenali.parse;
 
-import com.qubole.tenali.parse.parser.util.CachingMetastore;
+import com.qubole.tenali.parse.util.CachingMetastore;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.junit.Test;
 
