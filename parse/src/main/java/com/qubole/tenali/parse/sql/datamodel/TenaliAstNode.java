@@ -12,7 +12,7 @@ import com.qubole.tenali.parse.sql.TenaliAstBaseVisitor;
         property = "type")
 @JsonSubTypes({
         @JsonSubTypes.Type(value = SelectNode.class, name = "select"),
-        @JsonSubTypes.Type(value = DdlNode.class, name = "ddl"),
+        @JsonSubTypes.Type(value = DDLNode.class, name = "ddl"),
         @JsonSubTypes.Type(value = FunctionNode.class, name = "function"),
         @JsonSubTypes.Type(value = IdentifierNode.class, name = "identifier"),
         @JsonSubTypes.Type(value = JoinNode.class, name = "join"),
@@ -24,7 +24,7 @@ import com.qubole.tenali.parse.sql.TenaliAstBaseVisitor;
         @JsonSubTypes.Type(value = ErrorNode.class, name = "error")})
 public abstract class TenaliAstNode implements Cloneable {
 
-    public abstract void accept(TenaliAstBaseVisitor visitor);
+    public abstract Object accept(TenaliAstBaseVisitor visitor);
 
 
     public interface Builder<T> {

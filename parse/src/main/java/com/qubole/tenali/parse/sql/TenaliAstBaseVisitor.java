@@ -1,21 +1,27 @@
 package com.qubole.tenali.parse.sql;
 
 import com.qubole.tenali.parse.AstBaseVisitor;
+import com.qubole.tenali.parse.config.CommandContext;
 import com.qubole.tenali.parse.config.QueryType;
 import com.qubole.tenali.parse.sql.datamodel.*;
-import com.qubole.tenali.parse.util.exception.NotImplementedException;
 
 public abstract class TenaliAstBaseVisitor<T> extends AstBaseVisitor<TenaliAstNode, T> {
+
+    protected String defaultDb = "default";
+
+    protected CommandContext ctx;
 
     public TenaliAstBaseVisitor() {
         super(TenaliAstNode.class);
     }
 
     @Override
-    public T transform(TenaliAstNode ast, QueryType queryType) {
+    public T transform(TenaliAstNode ast, CommandContext ctx) {
         T root = null;
+        this.ctx = ctx;
 
-        if(queryType == QueryType.SELECT) {
+        if(ctx.getQueryContext().getQueryType() == QueryType.SELECT
+                || ctx.getQueryContext().getQueryType() == QueryType.CTE) {
             root = visit(ast);
         }
 
@@ -24,9 +30,5 @@ public abstract class TenaliAstBaseVisitor<T> extends AstBaseVisitor<TenaliAstNo
     }
 
     public abstract T visit(TenaliAstNode node);
-
-    public T visitSelectNode(TenaliAstNode node) {
-        throw new NotImplementedException();
-    }
 
 }

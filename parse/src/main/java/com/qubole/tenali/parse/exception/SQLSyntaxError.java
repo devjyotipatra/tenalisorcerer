@@ -3,7 +3,7 @@ package com.qubole.tenali.parse.exception;
 /**
  * Created by devjyotip on 5/12/18.
  */
-public class SQLSyntaxError extends SQLParseException {
+public class SQLSyntaxError extends TenaliSQLParseException {
   SQLParserErrorType errorType = SQLParserErrorType.SQLPARSEERROR;
   String errorMessage;
   String detailedMessage;

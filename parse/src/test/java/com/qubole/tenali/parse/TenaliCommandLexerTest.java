@@ -19,7 +19,7 @@ public class TenaliCommandLexerTest {
                 "order by dt, mt asc";
 
         //SqlCommandTestHelper.parseHive(command);
-        SqlCommandTestHelper.parsePresto(command);
+        SqlCommandTestHelper.parsePrestoQuery(command);
 
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
     }
@@ -35,7 +35,7 @@ public class TenaliCommandLexerTest {
                 "HAVING   x in (select x from tab1)";
 
         SqlCommandTestHelper.parseHive(command);
-        //SqlCommandTestHelper.parsePresto(command);
+        //SqlCommandTestHelper.parsePrestoQuery(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
     }
 
@@ -44,7 +44,7 @@ public class TenaliCommandLexerTest {
         String command = "SELECT a, b from tab where a>0 and b>0";
 
         //SqlCommandTestHelper.parseHive(command);
-        SqlCommandTestHelper.parsePresto(command);
+        SqlCommandTestHelper.parsePrestoQuery(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
     }
 
@@ -53,7 +53,7 @@ public class TenaliCommandLexerTest {
         String command = "SELECT a, b, c, count(*) as cnt from tab where a>0 group by a, b, c order by a, b";
 
         //SqlCommandTestHelper.parseHive(command);
-        SqlCommandTestHelper.parsePresto(command);
+        SqlCommandTestHelper.parsePrestoQuery(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
     }
 
@@ -62,7 +62,7 @@ public class TenaliCommandLexerTest {
         String command = "; \n\r\n\r\n ;SELECT distinct tab.X1 AS a, X2 b from tab where a1>0 and a2!=0 and a3=9";
 
         SqlCommandTestHelper.parseHive(command);
-        SqlCommandTestHelper.parsePresto(command);
+        SqlCommandTestHelper.parsePrestoQuery(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
     }
 
@@ -74,7 +74,7 @@ public class TenaliCommandLexerTest {
             "AND logdate>'2015-09-01') GROUP BY logdate, site_key, survey_id;";
 
         SqlCommandTestHelper.parseHive(command);
-        SqlCommandTestHelper.parsePresto(command);
+        SqlCommandTestHelper.parsePrestoQuery(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
     }
 
@@ -91,7 +91,7 @@ public class TenaliCommandLexerTest {
             "question_id, answer_id, tm_client_id, auction_id, exposed, correct;";
 
         SqlCommandTestHelper.parseHive(command);
-        SqlCommandTestHelper.parsePresto(command);
+        SqlCommandTestHelper.parsePrestoQuery(command);
         //assertThat("correct number of queries is 3", cctx.getListQueryContext().size()==3);
     }
 
@@ -104,7 +104,7 @@ public class TenaliCommandLexerTest {
             "question_id, answer_id, tm_client_id, auction_id, exposed, correct;";
 
         SqlCommandTestHelper.parseHive(command);
-        SqlCommandTestHelper.parsePresto(command);
+        SqlCommandTestHelper.parsePrestoQuery(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==3);
     }
 
@@ -127,7 +127,7 @@ public class TenaliCommandLexerTest {
             "order by dt asc";
 
         SqlCommandTestHelper.parseHive(command);
-        SqlCommandTestHelper.parsePresto(command);
+        SqlCommandTestHelper.parsePrestoQuery(command);
         //assertThat("correct number of queries is 3", cctx.getListQueryContext().size()==3);
     }
 
@@ -144,7 +144,7 @@ public class TenaliCommandLexerTest {
             "SELECT * FROM db_users u JOIN (SELECT * FROM table1) v on u.a=v.b;SELECT a,b, count(*) from ab where s='jrenv' GROUP BY a, b";
 
         SqlCommandTestHelper.parseHive(command);
-        SqlCommandTestHelper.parsePresto(command);
+        SqlCommandTestHelper.parsePrestoQuery(command);
     }
 
     @Test
@@ -152,7 +152,7 @@ public class TenaliCommandLexerTest {
         String command = "SELECT *\n\n FROM DEPT,\n\n LATERAL TABLE(RAMP(DEPT.DEPTNO)) adid";
 
         SqlCommandTestHelper.parseHive(command);
-        SqlCommandTestHelper.parsePresto(command);
+        SqlCommandTestHelper.parsePrestoQuery(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
     }
 
@@ -161,7 +161,7 @@ public class TenaliCommandLexerTest {
         String command = "SELECT * FROM foo, LATERAL (SELECT * FROM bar WHERE bar.id = foo.bar_id) ss;";
 
         SqlCommandTestHelper.parseHive(command);
-        SqlCommandTestHelper.parsePresto(command);
+        SqlCommandTestHelper.parsePrestoQuery(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
     }
 
@@ -185,7 +185,7 @@ public class TenaliCommandLexerTest {
                 "WHERE _timestamp BETWEEN unix_timestamp(ci.start_at) AND unix_timestamp(ci.down_at)";
 
         SqlCommandTestHelper.parseHive(command);
-        SqlCommandTestHelper.parsePresto(command);
+        SqlCommandTestHelper.parsePrestoQuery(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
     }
 
@@ -198,7 +198,7 @@ public class TenaliCommandLexerTest {
                 "WHERE x = 'foo'";
 
         SqlCommandTestHelper.parseHive(command);
-        SqlCommandTestHelper.parsePresto(command);
+        SqlCommandTestHelper.parsePrestoQuery(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
     }
 
@@ -208,7 +208,7 @@ public class TenaliCommandLexerTest {
                 "SELECT a, count(s.b) as cnt from (select c as a, d as b from tab where c>0 and d<0)s";
 
         SqlCommandTestHelper.parseHive(command);
-        SqlCommandTestHelper.parsePresto(command);
+        SqlCommandTestHelper.parsePrestoQuery(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
     }
 
@@ -217,7 +217,7 @@ public class TenaliCommandLexerTest {
         String command = "SELECT a, count(s.b) as cnt from (select c as a, d as b from tab where c>0 and d<0)s group by a order by cnt";
 
         SqlCommandTestHelper.parseHive(command);
-        SqlCommandTestHelper.parsePresto(command);
+        SqlCommandTestHelper.parsePrestoQuery(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
     }
 
@@ -228,7 +228,7 @@ public class TenaliCommandLexerTest {
                 "group by s.a, b, e order by cnt";
 
         SqlCommandTestHelper.parseHive(command);
-        SqlCommandTestHelper.parsePresto(command);
+        SqlCommandTestHelper.parsePrestoQuery(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
     }
 
@@ -237,7 +237,7 @@ public class TenaliCommandLexerTest {
         String command = "SELECT IF(CARDINALITY(my_array) >= 3, my_array[3], NULL)\n FROM tab1";
 
         SqlCommandTestHelper.parseHive(command);
-        SqlCommandTestHelper.parsePresto(command);
+        SqlCommandTestHelper.parsePrestoQuery(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
     }
 
@@ -248,7 +248,7 @@ public class TenaliCommandLexerTest {
                 "FROM tests CROSS JOIN UNNEST(scores) AS t (score);";
 
         SqlCommandTestHelper.parseHive(command);
-        SqlCommandTestHelper.parsePresto(command);
+        SqlCommandTestHelper.parsePrestoQuery(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
     }
 
@@ -259,7 +259,7 @@ public class TenaliCommandLexerTest {
                 "      from tbl\n";
 
         SqlCommandTestHelper.parseHive(command);
-        SqlCommandTestHelper.parsePresto(command);
+        SqlCommandTestHelper.parsePrestoQuery(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
     }
 
@@ -272,7 +272,7 @@ public class TenaliCommandLexerTest {
                 "     ) t";
 
         SqlCommandTestHelper.parseHive(command);
-        SqlCommandTestHelper.parsePresto(command);
+        SqlCommandTestHelper.parsePrestoQuery(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
     }
 
@@ -287,7 +287,7 @@ public class TenaliCommandLexerTest {
                 "group by venuestate order by venuestate";
 
         SqlCommandTestHelper.parseHive(command);
-        SqlCommandTestHelper.parsePresto(command);
+        SqlCommandTestHelper.parsePrestoQuery(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
     }
 }

@@ -30,7 +30,7 @@ public class CatalogColumn {
     @JsonCreator
     public CatalogColumn(@JsonProperty("name") String name,
                          @JsonProperty("type") String type,
-                         @JsonProperty("ordinal_position") String position) {
+                         @JsonProperty("is_partition") int isPartition) {
         this.name = name;
         this.type = type;
         this.isPartition = isPartition;

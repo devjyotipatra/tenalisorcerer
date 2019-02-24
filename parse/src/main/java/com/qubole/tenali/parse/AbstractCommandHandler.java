@@ -6,11 +6,9 @@ import com.qubole.tenali.parse.config.CommandType;
 import com.qubole.tenali.parse.config.CommandContext;
 import com.qubole.tenali.parse.config.QueryContext;
 import com.qubole.tenali.parse.config.QueryType;
+import com.qubole.tenali.parse.exception.TenaliSQLParseException;
 import com.qubole.tenali.parse.lexer.DummyLexer;
 import com.qubole.tenali.parse.sql.datamodel.TenaliAstNode;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.hadoop.hive.ql.parse.ASTNode;
-
 
 import java.io.IOException;
 
@@ -114,25 +112,32 @@ public final class AbstractCommandHandler {
                     TenaliParser.ParseObject parseObject = parser.parse(qCtx.getQueryType(),
                                                                         cCtx.getStmt());
 
+                    if(parseObject.obj == null) {
+                        throw new TenaliSQLParseException(parseObject.errorMessage);
+                    }
+
                     System.out.println("TENALI AST   =>  " + parseObject.toString());
 
                     Object ast = parseObject.getParseObject();
+                    qCtx.setParseAst(ast);
                     try {
                         ImmutableList<AstTransformer> transformers = this.transformerBuilder.build();
 
-                        for(AstTransformer transformer  : transformers) {
-                            System.out.println("=====> " + transformer.getIdentifier());
-                            System.out.println("=====> " + transformer.getType());
-                            System.out.println("=====> " + ast.getClass());
+                        if(transformers.size() > 0) {
+                            for (AstTransformer transformer : transformers) {
+                                System.out.println("=====> " + transformer.getIdentifier());
+                                System.out.println("=====> " + transformer.getType());
+                                System.out.println("=====> " + ast.getClass());
 
-                            Class clazz = Class.forName(transformer.getType().getCanonicalName());
-                            ast = transformer.transform(clazz.cast(ast), qCtx.getQueryType());
+                                Class clazz = Class.forName(transformer.getType().getCanonicalName());
+                                ast = transformer.transform(clazz.cast(ast), cCtx);
 
-                            System.out.println("FINAL1 =====> " + ast.toString());
+                                ObjectMapper objectMapper = new ObjectMapper();
+                                System.out.println("======~~~~~~~~~>>" + objectMapper.writeValueAsString(ast));
+                            }
+
+                            qCtx.setTenaliAst((TenaliAstNode) ast);
                         }
-
-                        System.out.println("FINAL2 =====> " + ast.getClass());
-                        qCtx.setTenaliAst((TenaliAstNode) ast);
 
                     } catch(ClassNotFoundException ex) {
                         System.out.println(String.format("Transformation Error: Class not found for ",
@@ -140,10 +145,6 @@ public final class AbstractCommandHandler {
                     } catch(ClassCastException ex) {
                         System.out.println("Transformation Error:  " + ex.getMessage());
                     }
-
-
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    System.out.println("======~~~~~~~~~>>" + objectMapper.writeValueAsString(ast));
 
                 }
             }

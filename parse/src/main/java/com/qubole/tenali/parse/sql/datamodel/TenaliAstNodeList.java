@@ -24,20 +24,28 @@ public class TenaliAstNodeList extends TenaliAstNode implements Iterable<TenaliA
     }
 
     public void add(TenaliAstNode node) {
-        list.add(node);
+        assert list != null;
+        if(node instanceof TenaliAstNodeList) {
+            list.addAll(((TenaliAstNodeList) node).getOperandlist());
+        } else {
+            list.add(node);
+        }
     }
 
     public void add(TenaliAstNodeList nodeList) {
-        assert list != null;
         for(TenaliAstNode node : nodeList) {
-            list.add(node);
+            add(node);
         }
     }
 
     public void add(List<TenaliAstNode> nodeList) {
         for(TenaliAstNode node : nodeList) {
-            list.add(node);
+            add(node);
         }
+    }
+
+    public void addAll(TenaliAstNodeList nodeList) {
+        add(nodeList.getOperandlist());
     }
 
     public Iterator<TenaliAstNode> iterator() {
@@ -48,11 +56,12 @@ public class TenaliAstNodeList extends TenaliAstNode implements Iterable<TenaliA
         return list;
     }
 
+
+    public TenaliAstNode get(int i) {return list.get(i);}
+
     @Override
-    public void accept(TenaliAstBaseVisitor visitor) {
-        for(TenaliAstNode node : list) {
-            node.accept(visitor);
-        }
+    public Object accept(TenaliAstBaseVisitor visitor) {
+        return null;
     }
 
     public int size() {
@@ -67,7 +76,7 @@ public class TenaliAstNodeList extends TenaliAstNode implements Iterable<TenaliA
             Iterator iter = iterator();
             while(iter.hasNext()) {
                 TenaliAstNode node = (TenaliAstNode) iter.next();
-                sb.append(node.toString()).append("\n");
+                sb.append(node.toString()).append(", ");
             }
         }
 

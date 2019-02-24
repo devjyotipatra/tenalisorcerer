@@ -12,8 +12,8 @@ public class LiteralNode extends TenaliAstNode {
     }
 
     @Override
-    public void accept(TenaliAstBaseVisitor visitor) {
-        return;
+    public Object accept(TenaliAstBaseVisitor visitor) {
+        return value;
     }
 
     @Override

@@ -167,7 +167,7 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
     public void prepare(String command) {
         try {
             InputStream antlrInputStream =
-                    new ByteArrayInputStream(command.getBytes(StandardCharsets.UTF_8));
+                    new ByteArrayInputStream(command.trim().getBytes(StandardCharsets.UTF_8));
 
             QDSCommandLexer lexer =
                     new QDSCommandLexer(CharStreams.fromStream(antlrInputStream, StandardCharsets.UTF_8));

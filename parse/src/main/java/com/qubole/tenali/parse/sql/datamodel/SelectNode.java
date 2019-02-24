@@ -2,41 +2,49 @@ package com.qubole.tenali.parse.sql.datamodel;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qubole.tenali.parse.sql.TenaliAstBaseVisitor;
 import com.qubole.tenali.parse.util.exception.NotImplementedException;
 
 import java.security.SecureRandom;
+import java.util.List;
 import java.util.Random;
 
 
 public class SelectNode extends TenaliAstNode {
-    @JsonIgnore
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public final TenaliAstNode where;
-    @JsonIgnore
-    public final TenaliAstNode orderBy;
-    @JsonIgnore
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public final TenaliAstNodeList orderBy;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public final TenaliAstNodeList groupBy;
-    public final TenaliAstNode from;
-    @JsonIgnore
+
+    public final TenaliAstNodeList from;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public final TenaliAstNodeList with;
+
     public final TenaliAstNodeList columns;
-    @JsonIgnore
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public final TenaliAstNodeList keywords;
-    @JsonIgnore
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public final TenaliAstNode having;
-    @JsonIgnore
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public final TenaliAstNodeList windowDecls;
 
-    public final int vid;
-
-    final RandomInt random = new RandomInt(8);
+    public static int vid = 0;
 
     @JsonCreator
     SelectNode(@JsonProperty("where") TenaliAstNode where,
-               @JsonProperty("orderBy") TenaliAstNode orderBy,
+               @JsonProperty("orderBy") TenaliAstNodeList orderBy,
                @JsonProperty("groupBy") TenaliAstNodeList groupBy,
-               @JsonProperty("from") TenaliAstNode from,
+               @JsonProperty("from") TenaliAstNodeList from,
                @JsonProperty("with") TenaliAstNodeList with,
                @JsonProperty("columns") TenaliAstNodeList columns,
                @JsonProperty("keywords") TenaliAstNodeList keywords,
@@ -52,7 +60,7 @@ public class SelectNode extends TenaliAstNode {
         this.having = having;
         this.windowDecls = windowDecls;
 
-        vid = random.nextInt();
+        vid = vid + 1;
     }
 
 
@@ -62,12 +70,8 @@ public class SelectNode extends TenaliAstNode {
     }*/
 
     @Override
-    public void accept(TenaliAstBaseVisitor visitor) {
-        try {
-            visitor.visitSelectNode(this);
-        } catch(NotImplementedException ex) {
-            visitor.visit(this);
-        }
+    public Object accept(TenaliAstBaseVisitor visitor) {
+        return visitor.visit(this);
     }
 
     public boolean hasOrderBy() {
@@ -93,6 +97,9 @@ public class SelectNode extends TenaliAstNode {
     public boolean hasHaving() {
         return having != null;
     }
+
+
+    public int getVid() {return vid;}
 
 
     @Override
@@ -151,9 +158,9 @@ public class SelectNode extends TenaliAstNode {
 
     public static class SelectBuilder implements Builder<TenaliAstNode> {
         TenaliAstNode where;
-        TenaliAstNode orderBy;
+        TenaliAstNodeList orderBy;
         TenaliAstNodeList groupBy;
-        TenaliAstNode from;
+        TenaliAstNodeList from;
         TenaliAstNodeList with;
         TenaliAstNodeList columns;
         TenaliAstNodeList keywords;
@@ -197,11 +204,14 @@ public class SelectNode extends TenaliAstNode {
             this.where = where;
         }
 
-        public TenaliAstNode getOrderBy() {
+        public TenaliAstNodeList getOrderBy() {
+            if(orderBy == null) {
+                orderBy = new TenaliAstNodeList();
+            }
             return orderBy;
         }
 
-        public void setOrderBy(TenaliAstNode orderBy) {
+        public void setOrderBy(TenaliAstNodeList orderBy) {
             this.orderBy = orderBy;
         }
 
@@ -213,11 +223,15 @@ public class SelectNode extends TenaliAstNode {
             this.groupBy = groupBy;
         }
 
-        public TenaliAstNode getFrom() {
+        public TenaliAstNodeList getFrom() {
+            if(from == null) {
+                from = new TenaliAstNodeList();
+            }
+
             return from;
         }
 
-        public void setFrom(TenaliAstNode from) {
+        public void setFrom(TenaliAstNodeList from) {
             this.from = from;
         }
 
@@ -230,6 +244,9 @@ public class SelectNode extends TenaliAstNode {
         }
 
         public TenaliAstNodeList getColumns() {
+            if(columns == null) {
+                columns = new TenaliAstNodeList();
+            }
             return columns;
         }
 
@@ -237,7 +254,18 @@ public class SelectNode extends TenaliAstNode {
             this.columns = columns;
         }
 
+        public void setColumns(List<String> columns) {
+            TenaliAstNodeList list = new TenaliAstNodeList();
+            for(String column : columns) {
+                list.add(new IdentifierNode(column));
+            }
+            this.columns = list;
+        }
+
         public TenaliAstNodeList getKeywords() {
+            if(keywords == null) {
+                keywords = new TenaliAstNodeList();
+            }
             return keywords;
         }
 
@@ -259,27 +287,6 @@ public class SelectNode extends TenaliAstNode {
 
         public void setWindowDecls(TenaliAstNodeList windowDecls) {
             this.windowDecls = windowDecls;
-        }
-    }
-
-    private class RandomInt {
-        final String digits = "1234567890987654321";
-
-        Random random = new SecureRandom();
-
-        final char[] symbols;
-
-        final char[] buf;
-
-        public RandomInt(int length) {
-            this.symbols = digits.toCharArray();
-            this.buf = new char[length];
-        }
-
-        public int nextInt() {
-            for (int idx = 0; idx < buf.length; ++idx)
-                buf[idx] = symbols[random.nextInt(symbols.length)];
-            return Integer.parseInt(new String(buf));
         }
     }
 }

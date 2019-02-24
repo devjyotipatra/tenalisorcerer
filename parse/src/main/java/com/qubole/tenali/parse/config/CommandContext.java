@@ -10,6 +10,8 @@ public class CommandContext {
 
     String stmt;
 
+    String defaultSchema;
+
     QueryContext qCtx;
 
     CommandContext parent;
@@ -26,7 +28,7 @@ public class CommandContext {
     public CommandContext() {  }
 
     public CommandContext(QueryType type) {
-        this.qCtx = new QueryContext(type);
+        setQueryType(type);
     }
 
 
@@ -62,6 +64,11 @@ public class CommandContext {
         this.stmt = stmt;
     }
 
+
+    public String getDefaultSchema() {
+        return defaultSchema;
+    }
+
     /*public void setQueryType(QueryType type) {
         if(qCtx == null) {
             qCtx = new QueryContext(type);
@@ -76,6 +83,14 @@ public class CommandContext {
 
     public void setQueryType(QueryType queryType) {
         this.qCtx = new QueryContext(queryType);
+        if(queryType == QueryType.USE) {
+            String[] tokens = stmt.split("[\\s]+");
+            if(tokens.length > 1) {
+                defaultSchema = tokens[1].replace(";", "").trim();
+            }
+        } else {
+            defaultSchema = getParent() != null ? getParent().getDefaultSchema() : "default";
+        }
     }
 
 

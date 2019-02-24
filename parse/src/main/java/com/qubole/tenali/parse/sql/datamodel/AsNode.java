@@ -19,13 +19,20 @@ public class AsNode extends TenaliAstNode {
     }
 
     @Override
-    public void accept(TenaliAstBaseVisitor visitor) {
-        value.accept(visitor);
+    public Object accept(TenaliAstBaseVisitor visitor) {
+        return value.accept(visitor);
     }
 
     public static class AsBuilder implements Builder<TenaliAstNode> {
         public String aliasName;
         public TenaliAstNode value;
+
+        public AsBuilder() {}
+
+        public AsBuilder(AsNode asNode) {
+            this.aliasName = asNode.aliasName;
+            this.value = asNode.value;
+        }
 
         public TenaliAstNode build() {
             return new AsNode(aliasName, value);

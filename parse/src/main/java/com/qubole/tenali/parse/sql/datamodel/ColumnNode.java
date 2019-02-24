@@ -19,8 +19,8 @@ public class ColumnNode extends TenaliAstNode {
     }
 
     @Override
-    public void accept(TenaliAstBaseVisitor visitor) {
-        return;
+    public Object accept(TenaliAstBaseVisitor visitor) {
+        return visitor.visit(columnName);
     }
 
     public static class ColumnBuilder implements Builder<TenaliAstNode> {

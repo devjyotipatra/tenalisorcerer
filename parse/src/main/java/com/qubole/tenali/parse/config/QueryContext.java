@@ -7,6 +7,8 @@ public class QueryContext {
 
     QueryType queryType = QueryType.UNKNOWN;
 
+    Object parseAst;
+
     TenaliAstNode root;
 
 
@@ -14,10 +16,12 @@ public class QueryContext {
         this.queryType = queryType;
     }
 
-    public QueryContext(QueryType queryType, TenaliAstNode root) {
+    public QueryContext(QueryType queryType, Object parseAst) {
         this.queryType = queryType;
-        this.root = root;
+        this.parseAst = parseAst;
     }
+
+
 
    /* public QueryContext(TenaliParser.ParseObject parseObject) {
         queryType = parseObject.getQueryType();
@@ -49,5 +53,13 @@ public class QueryContext {
 
     public TenaliAstNode getTenaliAst() {
         return root;
+    }
+
+    public Object getParseAst() {
+        return parseAst;
+    }
+
+    public void setParseAst(Object parseAst) {
+        this.parseAst = parseAst;
     }
 }

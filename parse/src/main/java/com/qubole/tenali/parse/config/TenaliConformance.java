@@ -80,6 +80,10 @@ public class TenaliConformance implements SqlConformance {
         return SqlConformanceEnum.DEFAULT.allowExtend();
     }
 
+    public boolean allowExtendedTrim() {
+        return SqlConformanceEnum.DEFAULT.allowExtendedTrim();
+    }
+
     public boolean isLimitStartCountAllowed() {
         return SqlConformanceEnum.DEFAULT.isLimitStartCountAllowed();
     }

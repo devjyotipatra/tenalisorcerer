@@ -3,6 +3,7 @@ package com.qubole.tenali.parse.sql;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qubole.tenali.parse.AstBaseVisitor;
+import com.qubole.tenali.parse.config.CommandContext;
 import com.qubole.tenali.parse.config.QueryType;
 import com.qubole.tenali.parse.sql.datamodel.*;
 import org.apache.calcite.sql.*;
@@ -20,16 +21,16 @@ For other AST types (insert, CTAS, CTE) update the metadata
 
 public class CalciteAstTransformer extends AstBaseVisitor<SqlNode, TenaliAstNode> implements SqlVisitor<TenaliAstNode> {
 
-    QueryType queryType = QueryType.UNKNOWN;
+    CommandContext ctx = null;
 
     public CalciteAstTransformer() {
         super(SqlNode.class);
     }
 
 
-    public TenaliAstNode transform(SqlNode ast, QueryType queryType) {
+    public TenaliAstNode transform(SqlNode ast, CommandContext ctx) {
         System.out.println("AST   => "+ast);
-        this.queryType = queryType;
+        this.ctx = ctx;
         return ast.accept(this);
     }
 
@@ -69,7 +70,7 @@ public class CalciteAstTransformer extends AstBaseVisitor<SqlNode, TenaliAstNode
                         break;
                     case 2:
                         label = "from";
-                        builder.setFrom(node);
+                        builder.setFrom((TenaliAstNodeList) node);
                         break;
                     case 3:
                         label = "where";
@@ -228,7 +229,7 @@ public class CalciteAstTransformer extends AstBaseVisitor<SqlNode, TenaliAstNode
         SqlNode orderByCols = children.get(1);
         if(orderByCols instanceof SqlNodeList) {
             TenaliAstNode node = ((SqlNodeList) orderByCols).accept(this);
-            selectBuilder.setOrderBy(node);
+            selectBuilder.getOrderBy().add(node);
         }
 
         return selectBuilder.build();

@@ -15,8 +15,8 @@ public class LateralNode extends TenaliAstNode {
     }
 
     @Override
-    public void accept(TenaliAstBaseVisitor visitor) {
-        return;
+    public Object accept(TenaliAstBaseVisitor visitor) {
+        return visitor.visit(table);
     }
 
     public static class LateralBuilder implements Builder<TenaliAstNode> {

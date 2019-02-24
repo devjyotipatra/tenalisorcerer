@@ -18,8 +18,8 @@ public class OperatorNode extends TenaliAstNode {
     }
 
     @Override
-    public void accept(TenaliAstBaseVisitor visitor) {
-        visitor.visit(this);
+    public Object accept(TenaliAstBaseVisitor visitor) {
+        return visitor.visit(operands);
     }
 
     @Override
@@ -33,6 +33,13 @@ public class OperatorNode extends TenaliAstNode {
     public static class  OperatorBuilder implements Builder<TenaliAstNode> {
         String operator;
         TenaliAstNodeList operands;
+
+        public OperatorBuilder() {}
+
+        public OperatorBuilder(OperatorNode node) {
+            this.operator = node.operator;
+            this.operands = node.operands;
+        }
 
         @Override
         public TenaliAstNode build() {

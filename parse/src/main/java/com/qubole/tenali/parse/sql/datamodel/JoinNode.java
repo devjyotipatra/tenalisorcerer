@@ -22,9 +22,11 @@ public class JoinNode extends TenaliAstNode {
     }
 
     @Override
-    public void accept(TenaliAstBaseVisitor visitor) {
-        visitor.visit(this.leftNode);
-        visitor.visit(this.rightNode);
+    public Object accept(TenaliAstBaseVisitor visitor) {
+        Object[] arr = new Object[2];
+        arr[0] = visitor.visit(this.leftNode);
+        arr[1] = visitor.visit(this.rightNode);
+        return arr;
     }
 
     public static class  JoinBuilder implements Builder<TenaliAstNode> {
@@ -32,6 +34,15 @@ public class JoinNode extends TenaliAstNode {
         TenaliAstNode leftNode;
         TenaliAstNode rightNode;
         TenaliAstNode joinCondition;
+
+        public JoinBuilder() { }
+
+        public JoinBuilder(JoinNode node) {
+            this.joinType = node.joinType;
+            this.leftNode = node.leftNode;
+            this.rightNode = node.rightNode;
+            this.joinCondition = node.joinCondition;
+        }
 
         @Override
         public JoinNode build() {

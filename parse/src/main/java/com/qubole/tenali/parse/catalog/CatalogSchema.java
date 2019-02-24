@@ -13,10 +13,10 @@ import java.util.Map;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CatalogSchema {
-    public Map<String, List<CatalogTable>> schemas;
+    public Map<String, List<CatalogTable>> schema;
 
     @JsonCreator
-    public CatalogSchema(@JsonProperty("schemas") Map<String, List<CatalogTable>> schemas) {
-        this.schemas = schemas;
+    public CatalogSchema(@JsonProperty("schema") Map<String, List<CatalogTable>> schema) {
+        this.schema = schema;
     }
 }

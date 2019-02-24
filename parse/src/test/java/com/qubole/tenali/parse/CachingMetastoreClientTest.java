@@ -1,5 +1,7 @@
 package com.qubole.tenali.parse;
 
+import com.qubole.tenali.parse.catalog.CatalogColumn;
+import com.qubole.tenali.parse.catalog.CatalogTable;
 import com.qubole.tenali.parse.util.CachingMetastore;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.junit.Test;
@@ -16,10 +18,10 @@ public class CachingMetastoreClientTest {
         String tableName = "query_hists";
 
         CachingMetastore client = new CachingMetastore();
-        List<FieldSchema> columnList = client.getCatalog(accountid, dbName, tableName);
+        CatalogTable schema = client.getSchema(accountid, dbName, tableName);
 
-        for(FieldSchema field : columnList) {
-            System.out.println("=======> " + field.getName());
+        for(CatalogColumn column : schema.getColumns()) {
+            System.out.println("=======> " + column.getName());
         }
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
     }

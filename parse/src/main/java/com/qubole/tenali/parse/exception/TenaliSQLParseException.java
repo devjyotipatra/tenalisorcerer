@@ -3,10 +3,10 @@ package com.qubole.tenali.parse.exception;
 /**
  * Created by devjyotip on 5/12/18.
  */
-public class SQLParseException extends RuntimeException {
+public class TenaliSQLParseException extends RuntimeException {
 
   private final org.slf4j.Logger logger =
-      org.slf4j.LoggerFactory.getLogger(SQLParseException.class);
+      org.slf4j.LoggerFactory.getLogger(TenaliSQLParseException.class);
 
   /**
    * SQL Parser Error Types
@@ -18,23 +18,23 @@ public class SQLParseException extends RuntimeException {
   }
 
 
-  public SQLParseException() {
+  public TenaliSQLParseException() {
     super();
   }
 
-  public SQLParseException(String message, Throwable cause) {
+  public TenaliSQLParseException(String message, Throwable cause) {
     super(message, cause);
   }
 
-  public SQLParseException(String message) {
+  public TenaliSQLParseException(String message) {
     super(message);
   }
 
-  public SQLParseException(Throwable cause) {
+  public TenaliSQLParseException(Throwable cause) {
     super(cause);
   }
 
-  public SQLParseException(String message, SQLParseException ex) {
+  public TenaliSQLParseException(String message, TenaliSQLParseException ex) {
     super(message + "\n" + ex.getMessage(), ex.getCause());
   }
 }

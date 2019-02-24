@@ -18,8 +18,8 @@ public class FunctionNode extends TenaliAstNode {
     }
 
     @Override
-    public void accept(TenaliAstBaseVisitor visitor) {
-        visitor.visit(this);
+    public Object accept(TenaliAstBaseVisitor visitor) {
+        return visitor.visit(arguments);
     }
 
     public static class  FunctionBuilder implements Builder<TenaliAstNode> {
