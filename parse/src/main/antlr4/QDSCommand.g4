@@ -106,16 +106,21 @@ Q_SEMI
  ;
 
 
+COMMENTS
+ : (SIMPLE_COMMENT | BRACKETED_EMPTY_COMMENT | BRACKETED_COMMENT)* -> channel(HIDDEN)
+ ;
+
+
 SIMPLE_COMMENT
-  : '--' ~[\r\n]* '\r'? '\n'? -> channel(HIDDEN)
+  : '\n'? '--' ~[\r\n]* '\r'? '\n'?
   ;
 
 BRACKETED_EMPTY_COMMENT
- : '/**/' -> channel(HIDDEN)
+ : '/**/'
  ;
 
 BRACKETED_COMMENT
- : '/*' ~[+] .*? '*/' -> channel(HIDDEN)
+ : '/*' ~[+] .*? '*/'
  ;
 
 WS
