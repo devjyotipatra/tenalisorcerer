@@ -1,23 +1,16 @@
 package com.qubole.tenali.parse.sql;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qubole.tenali.parse.AstBaseVisitor;
 import com.qubole.tenali.parse.config.CommandContext;
-import com.qubole.tenali.parse.config.QueryContext;
-import com.qubole.tenali.parse.config.QueryType;
-import com.qubole.tenali.parse.AstTransformer;
 import com.qubole.tenali.parse.sql.datamodel.*;
 import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Stack;
+
 
 /*
-
 Create TenliAStNode for Select AST
 For other AST types (insert, CTAS, CTE) update the metadata
 (table name in CTAS) querycontext
@@ -118,6 +111,7 @@ public class HiveAstTransformer extends AstBaseVisitor<ASTNode, TenaliAstNode> {
         return node;
     }
 
+
     private TenaliAstNode parseLateralView(ASTNode parent) {
         System.out.println(" parseLateralView => ");
         if(parent.getChildCount() < 2) {
@@ -137,11 +131,13 @@ public class HiveAstTransformer extends AstBaseVisitor<ASTNode, TenaliAstNode> {
         ASTNode selectExpr = (ASTNode) select.getChild(0);
         if(selectExpr != null && selectExpr.getChildCount() > 0) {
             ASTNode function = (ASTNode) selectExpr.getChild(0);
+            TenaliAstNode functionNode = parseSpecialFunction(function);
 
             String aliasName = null;
 
             for(int i=1; i<selectExpr.getChildCount(); i++) {
                 ASTNode column = (ASTNode) selectExpr.getChild(i);
+
                 if(column.getToken().getType() != HiveParser.TOK_TABALIAS) {
                     columns.add(new IdentifierNode(column.getText()));
                 } else {
@@ -149,16 +145,14 @@ public class HiveAstTransformer extends AstBaseVisitor<ASTNode, TenaliAstNode> {
                 }
             }
 
-            List<Node> nodeList = function.getChildren();
-            sBuilder.getFrom().add(new FunctionNode("LATERAL_VIEW",
-                    getOperandList(nodeList.subList(1, nodeList.size()))));
+            sBuilder.getFrom().add(functionNode);
             sBuilder.setColumns(columns);
 
-             new AsNode(aliasName, sBuilder.build());
+            asNode = new AsNode(aliasName, sBuilder.build());
         }
 
-        from.add(asNode);
         from.add(parse(tableNode));
+        from.add(asNode);
 
         return from;
     }
@@ -322,7 +316,6 @@ public class HiveAstTransformer extends AstBaseVisitor<ASTNode, TenaliAstNode> {
     }
 
     private TenaliAstNode getTabname(ASTNode node, boolean isTable) {
-        System.out.println("PARSE TABLENAME ....");
         String schemaName = null;
         String tableName;
         TenaliAstNode table;
@@ -356,19 +349,38 @@ public class HiveAstTransformer extends AstBaseVisitor<ASTNode, TenaliAstNode> {
         TenaliAstNodeList columns = new TenaliAstNodeList();
         TenaliAstNodeList groupBy = null;
         TenaliAstNodeList orderBy = null;
-        TenaliAstNodeList keywords = null;
+        TenaliAstNodeList keywords = new TenaliAstNodeList();
         TenaliAstNode having = null;
 
         for (org.apache.hadoop.hive.ql.lib.Node child : node.getChildren()) {
             if (child instanceof ASTNode) {
                 System.out.println("PARSE INSERT  #####....  " + ((ASTNode) child).getToken());
+                TenaliAstNodeList operands = new TenaliAstNodeList();
+
                 switch (((ASTNode) child).getToken().getType()) {
                     case HiveParser.TOK_DISTRIBUTEBY:
+                        ASTNode key = (ASTNode) ((ASTNode) ((ASTNode) child)).getChild(0);
+
+                        operands.add(new IdentifierNode(getTableOrCol(key)));
+                        keywords.add(new OperatorNode("DISTRIBUTED_BY", operands));
+                        break;
                     case HiveParser.TOK_DESTINATION:
-                    case HiveParser.TOK_SELEXPR:
+                        ASTNode destination = (ASTNode) ((ASTNode) ((ASTNode) child)).getChild(0);
+
+                        if(destination.getToken().getType() == HiveParser.TOK_TAB) {
+                            TenaliAstNode table = getTabname((ASTNode) destination.getChild(0), true);
+                            operands.add(table);
+
+                            if (destination.getChildCount() > 1) {
+                                TenaliAstNodeList partitions = getPartitions((ASTNode) destination.getChild(1));
+                                operands.add(new OperatorNode("PARTITIONS", partitions));
+                            }
+                            keywords.add(new OperatorNode("INSERT", operands));
+                        }
+                        break;
                     case HiveParser.TOK_LIMIT:
+                    case HiveParser.TOK_SELEXPR:
                     case HiveParser.TOK_INSERT_INTO:
-                        //No operation needed currently
                         break;
                     case HiveParser.TOK_SELECTDI:
                     case HiveParser.TOK_SELECT:
@@ -540,10 +552,11 @@ public class HiveAstTransformer extends AstBaseVisitor<ASTNode, TenaliAstNode> {
         String not = "";
         TenaliAstNodeList operands = new TenaliAstNodeList();
 
-        if (node.getType() == HiveParser.TOK_FUNCTION) {
-            operator = "FUNC";
-            operands = getOperandList(node.getChildren());
-        } else {
+        /*if (node.getType() == HiveParser.TOK_FUNCTION) {
+            List<org.apache.hadoop.hive.ql.lib.Node> children = node.getChildren();
+            operator = ((ASTNode)children.get(0)).getToken().getText();
+            operands = getOperandList(children.subList(1, children.size()));
+        } else {*/
             switch (((ASTNode) node.getChild(0)).getToken().getType()) {
                 case HiveParser.TOK_ISNULL:
                     operator = "IS NULL";
@@ -570,7 +583,7 @@ public class HiveAstTransformer extends AstBaseVisitor<ASTNode, TenaliAstNode> {
             operator = not + operator;
 
             operands = getOperandList(node.getChildren().subList(i, node.getChildren().size()));
-        }
+       // }
 
 
         if (node.getToken().getType() == HiveParser.TOK_FUNCTIONDI) {
@@ -731,9 +744,9 @@ public class HiveAstTransformer extends AstBaseVisitor<ASTNode, TenaliAstNode> {
         for (int child_pos = 0; child_pos < source.size(); child_pos++) {
             TenaliAstNode node = source.get(child_pos);
 
-            if (node instanceof IdentifierNode) {
+            if (node instanceof LiteralNode) {
                 try {
-                    int pos = Integer.parseInt(((IdentifierNode) node).name);
+                    int pos = Integer.parseInt(((LiteralNode) node).value);
                     node = target.get(pos-1);
 
                     if(node instanceof AsNode) {
@@ -748,5 +761,20 @@ public class HiveAstTransformer extends AstBaseVisitor<ASTNode, TenaliAstNode> {
         }
 
         return nodeList;
+    }
+
+
+    private TenaliAstNodeList getPartitions(ASTNode node) {
+        TenaliAstNodeList partitions = new TenaliAstNodeList();
+        if(node.getToken().getType() == HiveParser.TOK_PARTSPEC) {
+            for(Node child : node.getChildren()) {
+                String partition = ((ASTNode) ((ASTNode) child)
+                        .getChild(0)).getToken().getText();
+
+                partitions.add(new IdentifierNode(partition));
+            }
+        }
+
+        return partitions;
     }
 }

@@ -36,8 +36,10 @@ public class HiveAstTransformationTest {
 
     @Test
     public void testComplexJoinQuery2() throws Exception {
-        String command = "select s2.acc_id, tag1, s1.id from (select tab1.account_id acc_id, tab1.tag tag1, tab2.id from rstore.query_hists tab1 join rstore.cluster_nodes  tab2 on tab1.account_id=tab2.account_id where tab2.account_id>0) s1 " +
-                "join (select id, account_id as acc_id, created_at, deleted_at from rstore.clusters where id>100) s2 on s1.acc_id=s2.acc_id";
+        String command = "select s2.acc_id, tag1, s1.id from " +
+                "(select tab1.account_id acc_id, tab1.tag tag1, tab2.id from rstore.query_hists tab1 join rstore.cluster_nodes  tab2 on tab1.account_id=tab2.account_id where tab2.account_id>0) s1 " +
+                "join " +
+                "(select id, account_id as acc_id, created_at, deleted_at from rstore.clusters where id>100) s2 on s1.acc_id=s2.acc_id";
 
         //"{"type":"select","from":{"type":"as","aliasName":"TAB","value":{"type":"identifier","name":"TABLE1"}},"columns":{"type":"list","operandlist":[{"type":"identifier","name":"A"},{"type":"identifier","name":"TAB.B"}]},"vid":18868150}"
         //SqlCommandTestHelper.parseHive(command);
@@ -49,7 +51,7 @@ public class HiveAstTransformationTest {
     @Test
     public void testComplexJoinQuery3() throws Exception {
         String command = "SELECT account_id, count(*) as cnt FROM \n" +
-                "(SELECT h.id AS id, h.dt, h.account_id, h.status, coalesce(program, cmdline) as _sql FROM rstore.query_hists h JOIN rstore.spark_commands s ON h.command_id=s.id and h.dt=s.dt AND h.dt>='2019-02-01' AND status='done') y\n" +
+                "(SELECT h.id AS id, h.dt, h.account_id, h.status, coalesce(program, cmdline) as qsql FROM rstore.query_hists h JOIN rstore.spark_commands s ON h.command_id=s.id and h.dt=s.dt AND h.dt>='2019-02-01' AND status='done') y\n" +
                 "LEFT JOIN\n" +
                 "(SELECT DISTINCT query_hist_id, sql_app_id, command_id\n" +
                 "   FROM (SELECT account_id, command_id, cluster_id, cluster_inst_id, json_extract(event_data,'$.executedQueryInfo.applicationId') as sql_app_id,  \n" +
@@ -58,21 +60,29 @@ public class HiveAstTransformationTest {
                 "    (SELECT json_extract(event_data,'$.id') AS metric_app_id FROM processed_v2.spark WHERE event_date>='2019-02-01' AND \n" +
                 "     event_type='CLUSTER.SPARK.METRICS') t\n" +
                 "    ON s.sql_app_id = t.metric_app_id) x\n" +
-                "ON CAST(x.query_hist_id AS VARCHAR) = CAST(y.id AS VARCHAR)\n" +
-                "WHERE query_hist_id is not NULL and _sql is not null and length(_sql)>50\n" +
+                "ON x.query_hist_id = y.id \n" +
+                "WHERE query_hist_id is not NULL and qsql is not null and length(qsql)>50\n" +
                 "group by account_id\n" +
                 "order by 1 desc\n";
         //"{"type":"select","from":{"type":"as","aliasName":"TAB","value":{"type":"identifier","name":"TABLE1"}},"columns":{"type":"list","operandlist":[{"type":"identifier","name":"A"},{"type":"identifier","name":"TAB.B"}]},"vid":18868150}"
-        SqlCommandTestHelper.parsePrestoQuery(command);
+        SqlCommandTestHelper.transformHiveAst(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
     }
 
 
     @Test
     public void testMultipleJoinQuery() throws Exception {
-        String command = "SELECT id, get_json(u.json, 'location') as info, to_date(created_at) as dt FROM db_users u JOIN (SELECT by_date.location, dt, num_users * 1000.0 / total_users as frac_of_location, num_users, total_users FROM (SELECT get_json(json, 'location') as location, to_date(created_at) as dt, count(*) num_users FROM db_users WHERE to_date(created_at) >= '2016-08-13'  AND to_date(created_at) <= '2016-08-13'  AND LENGTH(get_json(json, 'location')) > 3  GROUP BY get_json(json, 'location'), to_date(created_at)) by_date JOIN (SELECT get_json(json, 'location') as location, count(*) total_users FROM db_users  WHERE LENGTH(get_json(json, 'location')) > 3  GROUP BY get_json(json, 'location')  HAVING count(*) > 5000) common_locations ON common_locations.location = by_date.location) loc_frac_by_date ON get_json(u.json, 'location') = loc_frac_by_date.location AND to_date(u.created_at) = loc_frac_by_date.dt WHERE loc_frac_by_date.frac_of_location > 7 DISTRIBUTE BY dt";
-
-
+        String command = "SELECT id, get_json(u.json, 'location') as info, to_date(created_at) as dt FROM db_users u JOIN " +
+                "(SELECT by_date.location, dt, num_users * 1000.0 / total_users as frac_of_location, num_users, total_users FROM " +
+                "(SELECT get_json(json, 'location') as location, to_date(created_at) as dt, count(*) num_users FROM db_users " +
+                "WHERE to_date(created_at) >= '2016-08-13'  AND to_date(created_at) <= '2016-08-13'  AND LENGTH(get_json(json, 'location')) > 3  " +
+                "GROUP BY get_json(json, 'location'), to_date(created_at)) by_date " +
+                "JOIN " +
+                "(SELECT get_json(json, 'location') as location, " +
+                "count(*) total_users FROM db_users  WHERE LENGTH(get_json(json, 'location')) > 3  GROUP BY get_json(json, 'location')  " +
+                "HAVING count(*) > 5000) common_locations ON common_locations.location = by_date.location) loc_frac_by_date " +
+                "ON get_json(u.json, 'location') = loc_frac_by_date.location AND to_date(u.created_at) = loc_frac_by_date.dt " +
+                "WHERE loc_frac_by_date.frac_of_location > 7 DISTRIBUTE BY dt limit 100";
 
         //SqlCommandTestHelper.parseHive(command);
         SqlCommandTestHelper.transformHiveAst(command);
@@ -82,8 +92,12 @@ public class HiveAstTransformationTest {
 
     @Test
     public void testPositionalOrdinates() throws Exception {
-        String command = "select s2.acc_id, tag1, count(DISTINCT acc_id) as cnt from (select tab1.account_id acc_id, tab1.tag tag1, tab2.id from rstore.query_hists tab1 join rstore.cluster_nodes  tab2 on tab1.account_id=tab2.account_id where tab2.account_id>0) s1 " +
-                "join (select id, account_id as acc_id, created_at, deleted_at from rstore.clusters where id>100) s2 on s1.acc_id=s2.acc_id group by 1,2 order by 3";
+        String command = "select s2.acc_id, tag1, count(DISTINCT acc_id) as cnt from " +
+                "(select tab1.account_id acc_id, tab1.tag tag1, tab2.id from rstore.query_hists tab1 join rstore.cluster_nodes  tab2 " +
+                "on tab1.account_id=tab2.account_id where tab2.account_id>0) s1 " +
+                "join " +
+                "(select id, account_id as acc_id, created_at, deleted_at from rstore.clusters where id>100) s2 on s1.acc_id=s2.acc_id " +
+                "group by 1,2 order by 3";
 
         //"{"type":"select","from":{"type":"as","aliasName":"TAB","value":{"type":"identifier","name":"TABLE1"}},"columns":{"type":"list","operandlist":[{"type":"identifier","name":"A"},{"type":"identifier","name":"TAB.B"}]},"vid":18868150}"
         //SqlCommandTestHelper.parseHive(command);
@@ -139,6 +153,39 @@ public class HiveAstTransformationTest {
                 "FROM Sales_CTE  \n" +
                 "GROUP BY SalesYear, SalesPersonID  \n" +
                 "ORDER BY SalesPersonID, SalesYear;  " ;
+        //Node node = evaluateJsonAndGetNode(resultDirPath.concat("/AST2.json"), query);
+        //assertThat("node is not a select node", node instanceof SelectNode);
+        //assertThat("from should be table node",
+        //        ((SelectNode) node).from.get(0) instanceof JoinNode);
+
+        SqlCommandTestHelper.transformHiveAst(query);
+    }
+
+
+    @Test
+    public void testCTAS() throws Exception {
+        String query = "CREATE TABLE myflightinfo2007 AS\n" +
+                "    SELECT Year, Month, DepTime, ArrTime, FlightNum, Origin, Dest FROM FlightInfo2007\n" +
+                "    WHERE (Month = 7 AND DayofMonth = 3) AND (Origin='JFK' AND Dest='ORD');" ;
+        //Node node = evaluateJsonAndGetNode(resultDirPath.concat("/AST2.json"), query);
+        //assertThat("node is not a select node", node instanceof SelectNode);
+        //assertThat("from should be table node",
+        //        ((SelectNode) node).from.get(0) instanceof JoinNode);
+
+        SqlCommandTestHelper.transformHiveAst(query);
+    }
+
+
+    @Test
+    public void testComplexJoin2() throws Exception {
+        String query = "SELECT matched_events.dt, 'api' AS environment, matched_events.account_id, COALESCE(total_events, 0) AS total_events, total_queries,  matched_queries " +
+                "FROM   (SELECT presto_queries.dt AS dt,  account_id, Count(*) AS total_queries,  Sum(CASE  WHEN presto_events.command_id IS NULL THEN 0  ELSE 1  END) AS matched_queries  " +
+                "        FROM   (SELECT dt, id, account_id  FROM   rstore.query_hists WHERE  dt >= '2019-02-21' AND dt <= '2019-02-28' AND command_type = 'PrestoCommand') presto_queries  " +
+                " LEFT JOIN (SELECT command_id AS command_id,  Count(*)  FROM   processed_v2.presto  WHERE  event_date >= '2019-02-21' AND event_date <= '2019-02-28' GROUP  BY event_date,  command_id,  account_id) presto_events  " +
+                "   ON presto_queries.id = presto_events.command_id  " +
+                "        GROUP  BY presto_queries.dt, presto_queries.account_id) matched_events  " +
+                "  LEFT JOIN (SELECT event_date,  account_id,  Count(*) AS total_events  FROM   processed_v2.presto  WHERE  event_date >= '2019-02-21' and event_date <= '2019-02-28' " +
+                "                  GROUP  BY account_id,  event_date) total_events  ON total_events.event_date = matched_events.dt  AND total_events.account_id = matched_events.account_id " ;
         //Node node = evaluateJsonAndGetNode(resultDirPath.concat("/AST2.json"), query);
         //assertThat("node is not a select node", node instanceof SelectNode);
         //assertThat("from should be table node",

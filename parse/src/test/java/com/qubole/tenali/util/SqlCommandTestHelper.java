@@ -1,14 +1,17 @@
 package com.qubole.tenali.util;
 
 import com.qubole.tenali.parse.AbstractCommandHandler;
+import com.qubole.tenali.parse.catalog.Catalog;
+import com.qubole.tenali.parse.catalog.CatalogResolver;
 import com.qubole.tenali.parse.sql.*;
 import com.qubole.tenali.parse.config.CommandContext;
 import com.qubole.tenali.parse.lexer.HiveCommandLexer;
 import com.qubole.tenali.parse.lexer.PrestoCommandLexer;
 import com.qubole.tenali.parse.lexer.SqlCommandLexer;
 import com.qubole.tenali.parse.config.CommandType;
-import com.qubole.tenali.parse.sql.alias.TenaliAstAliasResolver;
+import com.qubole.tenali.parse.sql.visitor.TenaliAstAliasResolver;
 import com.qubole.tenali.parse.sql.datamodel.TenaliAstNode;
+import com.qubole.tenali.parse.util.CachingMetastore;
 import org.apache.calcite.sql.SqlNode;
 
 import java.io.IOException;
@@ -18,26 +21,63 @@ import java.io.IOException;
  */
 public class SqlCommandTestHelper {
 
-    public static String transformHiveAst(String command) throws IOException {
-        CommandContext ctx = new AbstractCommandHandler
-                .CommandParserBuilder(CommandType.HIVE)
-                .setLexer(new HiveCommandLexer())
-                .setParser(new HiveSqlParser())
-                .setTransformer(new HiveAstTransformer())
-                .setTransformer(new TenaliAstAliasResolver())
-                .build(command);
+    public static String transformHiveAst(String command) {
+        Catalog catalog = null;
+        try {
+            //catalog = new CachingMetastore();
+            return transformHiveAst(command, catalog);
+        } catch(Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public static String transformHiveAst(String command, int accountId, String env,
+                                          String authToken, String cachingServerUrl) throws IOException {
+        try {
+            Catalog catalog = new CachingMetastore(accountId, env, authToken, cachingServerUrl);
+            return transformHiveAst(command, catalog);
+        } catch(Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public static String transformHiveAst(String command, Catalog catalog) throws IOException {
+        CommandContext ctx = null;
+        try {
+            ctx = new AbstractCommandHandler
+                    .CommandParserBuilder(CommandType.HIVE)
+                    .setLexer(new HiveCommandLexer())
+                    .setParser(new HiveSqlParser())
+                    .setTransformer(new HiveAstTransformer())
+                    .setTransformer(new TenaliAstAliasResolver(new CatalogResolver(catalog)))
+                    .build(command);
+        } catch(Exception ex) {
+            ex.printStackTrace();
+        }
 
         return ctx.getStmt();
     }
 
     public static String parseHive(String command) throws IOException {
-        CommandContext ctx = new AbstractCommandHandler
-                .CommandParserBuilder(CommandType.HIVE)
-                .setLexer(new HiveCommandLexer())
-                .setParser(new HiveSqlParser())
-                .setTransformer(new HiveAstTransformer())
-                .setTransformer(new TenaliAstAliasResolver())
-                .build(command);
+        CommandContext ctx = null;
+        try {
+            Catalog catalog = new CachingMetastore(5911, "api.qubole.com",
+                    "EnhW9CcvppxUXUPUesWxKnjxC5nSF5zcWR8szsQGTZe96VQNwWq13z1VqkU2W6qb",
+                    "mojave-redis.9qcbtf.0001.use1.cache.amazonaws.com");
+            ctx = new AbstractCommandHandler
+                    .CommandParserBuilder(CommandType.HIVE)
+                    .setLexer(new HiveCommandLexer())
+                    .setParser(new HiveSqlParser())
+                    .setTransformer(new HiveAstTransformer())
+                    .setTransformer(new TenaliAstAliasResolver(new CatalogResolver(catalog)))
+                    .build(command);
+        } catch(Exception ex) {
+            ex.printStackTrace();
+        }
 
         return ctx.getStmt();
     }
@@ -48,7 +88,7 @@ public class SqlCommandTestHelper {
                 .setLexer(new PrestoCommandLexer())
                 .setParser(new PrestoSqlParser())
                 .setTransformer(new CalciteAstTransformer())
-                .setTransformer(new TenaliAstAliasResolver())
+                //.setTransformer(new TenaliAstAliasResolver())
                 .build(command);
 
         return ctx.getQueryContext().getTenaliAst();

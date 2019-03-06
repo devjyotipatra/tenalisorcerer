@@ -23,6 +23,12 @@ public class AsNode extends TenaliAstNode {
         return value.accept(visitor);
     }
 
+    @Override
+    public String toString() {
+        return value.toString();
+    }
+
+
     public static class AsBuilder implements Builder<TenaliAstNode> {
         public String aliasName;
         public TenaliAstNode value;

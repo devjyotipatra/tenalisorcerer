@@ -23,13 +23,15 @@ public class TenaliAstNodeList extends TenaliAstNode implements Iterable<TenaliA
         add(nodeList);
     }
 
-    public void add(TenaliAstNode node) {
+    public TenaliAstNodeList add(TenaliAstNode node) {
         assert list != null;
         if(node instanceof TenaliAstNodeList) {
             list.addAll(((TenaliAstNodeList) node).getOperandlist());
         } else {
             list.add(node);
         }
+
+        return this;
     }
 
     public void add(TenaliAstNodeList nodeList) {
@@ -61,7 +63,7 @@ public class TenaliAstNodeList extends TenaliAstNode implements Iterable<TenaliA
 
     @Override
     public Object accept(TenaliAstBaseVisitor visitor) {
-        return null;
+        return visitor.visit(this);
     }
 
     public int size() {
@@ -76,7 +78,7 @@ public class TenaliAstNodeList extends TenaliAstNode implements Iterable<TenaliA
             Iterator iter = iterator();
             while(iter.hasNext()) {
                 TenaliAstNode node = (TenaliAstNode) iter.next();
-                sb.append(node.toString()).append(", ");
+                sb.append(node.toString()).append(",");
             }
         }
 

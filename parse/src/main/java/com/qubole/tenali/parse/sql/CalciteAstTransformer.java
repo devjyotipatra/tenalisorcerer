@@ -201,7 +201,7 @@ public class CalciteAstTransformer extends AstBaseVisitor<SqlNode, TenaliAstNode
     }
 
 
-    private TenaliAstNode extractLateral(SqlNode parent, List<SqlNode> children) {
+    /*private TenaliAstNode extractLateral(SqlNode parent, List<SqlNode> children) {
         LateralNode.LateralBuilder builder = new LateralNode.LateralBuilder();
 
         System.out.println("LATERAl 1 => " + children.get(0).getKind());
@@ -212,7 +212,7 @@ public class CalciteAstTransformer extends AstBaseVisitor<SqlNode, TenaliAstNode
         builder.setTable(table);
 
         return builder.build();
-    }
+    }*/
 
 
     private TenaliAstNode extractOrderby(SqlNode parent, List<SqlNode> children) {
@@ -285,7 +285,7 @@ public class CalciteAstTransformer extends AstBaseVisitor<SqlNode, TenaliAstNode
 
 
     @Override public TenaliAstNode visit(SqlLiteral literal) {
-        return new LiteralNode(literal.getValue());
+        return new LiteralNode(literal.getValue().toString());
     }
 
     @Override public TenaliAstNode visit(SqlCall call) {
@@ -305,7 +305,7 @@ public class CalciteAstTransformer extends AstBaseVisitor<SqlNode, TenaliAstNode
                     node = extractAs(call, call.getOperandList());
                     break;
                 case LATERAL:
-                    node = extractLateral(call, call.getOperandList());
+                    //node = extractLateral(call, call.getOperandList());
                     break;
                 case JOIN:
                     node = extractJoin((SqlJoin) call);

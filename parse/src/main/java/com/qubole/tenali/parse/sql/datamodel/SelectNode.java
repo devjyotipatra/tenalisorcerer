@@ -38,7 +38,7 @@ public class SelectNode extends TenaliAstNode {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public final TenaliAstNodeList windowDecls;
 
-    public static int vid = 0;
+    //public static int vid = 0;
 
     @JsonCreator
     SelectNode(@JsonProperty("where") TenaliAstNode where,
@@ -60,7 +60,7 @@ public class SelectNode extends TenaliAstNode {
         this.having = having;
         this.windowDecls = windowDecls;
 
-        vid = vid + 1;
+        //vid = vid + 1;
     }
 
 
@@ -99,10 +99,10 @@ public class SelectNode extends TenaliAstNode {
     }
 
 
-    public int getVid() {return vid;}
+    //public int getVid() {return vid;}
 
 
-    @Override
+    /*@Override
     public boolean equals(Object obj) {
         return vid == obj.hashCode();
     }
@@ -110,7 +110,7 @@ public class SelectNode extends TenaliAstNode {
     @Override
     public int hashCode() {
         return vid;
-    }
+    }*/
 
     @Override
     public String toString() {

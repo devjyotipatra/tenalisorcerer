@@ -11,7 +11,7 @@ import java.util.List;
 public class CachingMetastoreClientTest {
 
 
-    @Test
+   /* @Test
     public void testSimpleSelectQuery() throws Exception {
         String accountid = "5911";
         String dbName = "rstore";
@@ -24,5 +24,5 @@ public class CachingMetastoreClientTest {
             System.out.println("=======> " + column.getName());
         }
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
-    }
+    }*/
 }

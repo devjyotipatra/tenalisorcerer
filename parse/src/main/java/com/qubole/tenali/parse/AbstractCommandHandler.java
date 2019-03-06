@@ -5,25 +5,28 @@ import com.google.common.collect.ImmutableList;
 import com.qubole.tenali.parse.config.CommandType;
 import com.qubole.tenali.parse.config.CommandContext;
 import com.qubole.tenali.parse.config.QueryContext;
-import com.qubole.tenali.parse.config.QueryType;
 import com.qubole.tenali.parse.exception.TenaliSQLParseException;
 import com.qubole.tenali.parse.lexer.DummyLexer;
 import com.qubole.tenali.parse.sql.datamodel.TenaliAstNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 
 public final class AbstractCommandHandler {
 
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractCommandHandler.class);
+
     private AbstractCommandHandler() {  }
 
     private static void prepareLexer(String command) {
         TenaliLexer lexer = new DummyLexer();
-        lexer.prepare(command);
+        lexer.extract(command);
     }
 
     private static void prepareLexer(TenaliLexer lexer, String command) {
-        lexer.prepare(command);
+        lexer.extract(command);
     }
 
 
@@ -31,29 +34,6 @@ public final class AbstractCommandHandler {
         parser.prepare();
     }
 
-
-    private static QueryContext getQueryContext(QueryType queryType, TenaliAstNode ast) {
-        return new QueryContext(queryType, ast);
-    }
-
-
-
-  /*  public String getIthStatement(int index) {
-        int ctree = 0;
-        CommandContext.CommandContextIterator iter = rootCtx.iterator();
-
-        while(iter.hasNext()) {
-            ctree += 1;
-
-            CommandContext ctx = iter.next();
-
-            if(index - ctree == 0) {
-                return ctx.getStmt();
-            }
-        }
-
-        return null;
-    }*/
 
 
     public static class CommandParserBuilder {
@@ -94,8 +74,7 @@ public final class AbstractCommandHandler {
             if(lexer !=  null && lexer.getCommandType() == commandType) {
                 AbstractCommandHandler.prepareLexer(lexer, command);
             } else {
-                //if a lexer is  not defined, use dummy lexer
-                System.out.println("Incompatible Lexer for " + commandType.toString());
+                LOG.info("Lexer not provided or incompatible lexer given for " + commandType.toString());
                 AbstractCommandHandler.prepareLexer(command);
             }
 

@@ -11,7 +11,7 @@ public class DummyLexer implements TenaliLexer {
     CommandContext root;
 
     @Override
-    public void prepare(String command) {
+    public void extract(String command) {
         root = new CommandContext();
         root.setStmt(command);
     }

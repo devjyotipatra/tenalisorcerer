@@ -19,7 +19,15 @@ public class FunctionNode extends TenaliAstNode {
 
     @Override
     public Object accept(TenaliAstBaseVisitor visitor) {
-        return visitor.visit(arguments);
+        return visitor.visit(this);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(functionName).append("-");
+        sb.append(arguments.toString());
+        return sb.toString();
     }
 
     public static class  FunctionBuilder implements Builder<TenaliAstNode> {

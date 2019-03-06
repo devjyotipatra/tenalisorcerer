@@ -6,7 +6,7 @@ import com.qubole.tenali.parse.config.CommandType;
 public interface TenaliLexer<T> {
     public CommandContext getRootContext();
 
-    public void prepare(String command);
+    public void extract(String command);
 
     public CommandType getCommandType();
 }

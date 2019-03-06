@@ -19,14 +19,19 @@ public class OperatorNode extends TenaliAstNode {
 
     @Override
     public Object accept(TenaliAstBaseVisitor visitor) {
-        return visitor.visit(operands);
+        return visitor.visit(this);
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("operator: ").append(operator).append("\n")
-                .append("operands: ").append(operands.toString());
+        String operatorName = operator;
+        if(operatorName.length() == 1) {
+            operatorName = "TENALI_ARITHMATIC";
+        }
+
+        sb.append(operatorName).append("-");
+        sb.append(operands.toString());
         return sb.toString();
     }
 

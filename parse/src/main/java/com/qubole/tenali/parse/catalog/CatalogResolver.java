@@ -1,30 +1,25 @@
-package com.qubole.tenali.parse.sql.alias;
+package com.qubole.tenali.parse.catalog;
 
-import com.google.common.collect.ImmutableList;
-import com.qubole.tenali.parse.catalog.CatalogTable;
 import com.qubole.tenali.parse.sql.TenaliAstBaseVisitor;
 import com.qubole.tenali.parse.sql.datamodel.IdentifierNode;
-import com.qubole.tenali.parse.sql.datamodel.SelectNode;
 import com.qubole.tenali.parse.sql.datamodel.TenaliAstNode;
-import com.qubole.tenali.parse.util.CachingMetastore;
-
 import java.util.Collections;
 
 
-public class CatalogResolver extends TenaliAstBaseVisitor<CatalogTable> {
+public class CatalogResolver<T extends Catalog> extends TenaliAstBaseVisitor<CatalogTable> {
 
-    CachingMetastore metastore = null;
+    final T catalog;
 
-    public CatalogResolver() throws Exception{
-        metastore = new CachingMetastore();
+    public CatalogResolver(T catalog) throws Exception{
+        assert(catalog != null);
+        this.catalog = catalog;
     }
 
     public CatalogTable visit(TenaliAstNode root) {
-        CatalogTable catalog = null;
+        CatalogTable catalogTable = null;
 
         if(root instanceof IdentifierNode) {
             String tableName = ((IdentifierNode) root).name;
-            System.out.println("tableName => " + tableName);
 
             String dbName = defaultDb;
             String tabName;
@@ -38,14 +33,17 @@ public class CatalogResolver extends TenaliAstBaseVisitor<CatalogTable> {
             }
 
             try {
-                catalog = metastore.getSchema("5911", dbName, tabName);
+                System.out.println("tableName => " + tabName);
+                System.out.println("dbName => " + dbName);
+                //catalogTable = metastore.getSchema("5911", dbName.toLowerCase(), tabName.toLowerCase());
+                catalogTable = catalog.getSchema(dbName.toLowerCase(), tabName.toLowerCase());
             } catch(Exception ex) {
                 System.out.println(ex.getMessage() + "  " + ex.toString());
-                catalog = new CatalogTable(tableName, null, Collections.EMPTY_LIST);
+                catalogTable = new CatalogTable(tableName, null, Collections.EMPTY_LIST);
             }
         }
 
-        return catalog;
+        return catalogTable;
     }
 
 

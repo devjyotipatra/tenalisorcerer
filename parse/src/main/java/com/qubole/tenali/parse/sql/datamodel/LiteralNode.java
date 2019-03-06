@@ -5,15 +5,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qubole.tenali.parse.sql.TenaliAstBaseVisitor;
 
 public class LiteralNode extends TenaliAstNode {
-    public Object value;
+    public String value;
     @JsonCreator
-    public LiteralNode(@JsonProperty("value") Object value) {
+    public LiteralNode(@JsonProperty("value") String value) {
         this.value = value;
     }
 
     @Override
     public Object accept(TenaliAstBaseVisitor visitor) {
-        return value;
+        return visitor.visit(this);
     }
 
     @Override

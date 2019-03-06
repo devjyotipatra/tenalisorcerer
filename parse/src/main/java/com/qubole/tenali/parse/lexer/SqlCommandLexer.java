@@ -3,6 +3,7 @@ package com.qubole.tenali.parse.lexer;
 import antlr4.QDSCommandBaseVisitor;
 import antlr4.QDSCommandLexer;
 import antlr4.QDSCommandParser;
+import com.qubole.tenali.parse.AbstractCommandHandler;
 import com.qubole.tenali.parse.TenaliLexer;
 import com.qubole.tenali.parse.config.CommandType;
 import com.qubole.tenali.parse.config.QueryType;
@@ -14,6 +15,8 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -36,6 +39,8 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
      * @param ctx: Sql statement context from Antlr
      */
 
+    private static final Logger LOG = LoggerFactory.getLogger(SqlCommandLexer.class);
+
     CommandType commandType;
 
     CommandContext root;
@@ -52,7 +57,6 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
 
     @Override
     public CommandContext visitParse(antlr4.QDSCommandParser.ParseContext ctx) {
-        System.out.println("------ visit parse -----");
         if (ctx.getChild(0) == ctx.EOF()) {
             return null;
         }
@@ -69,8 +73,6 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
         int queryType = ctx.op.getType();
 
         qctx.setStmt(stmt);
-
-        System.out.println(" <=  visitSql_stmt  => " + stmt);
 
         switch (queryType) {
             case Q_SELECT:
@@ -139,7 +141,6 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
 
         for (int i = 0; i < n && this.shouldVisitNextChild(node, root); ++i) {
             ParseTree c = node.getChild(i);
-            System.out.println(i + " <=  visitChildren  => " + c.getText());
             CommandContext result = c.accept(this);
 
             if(result != null && result.getQueryType() != QueryType.UNKNOWN) {
@@ -164,7 +165,7 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
 
 
     @Override
-    public void prepare(String command) {
+    public void extract(String command) {
         try {
             InputStream antlrInputStream =
                     new ByteArrayInputStream(command.trim().getBytes(StandardCharsets.UTF_8));
