@@ -84,9 +84,6 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
             case Q_INSERT_OVERWRITE:
                 qctx.setQueryType(QueryType.INSERT_OVERWRITE);
                 break;
-            case Q_CTAS:
-                qctx.setQueryType(QueryType.CTAS);
-                break;
             case Q_CREATE_VIEW:
                 qctx.setQueryType(QueryType.CREATE_VIEW);
                 break;

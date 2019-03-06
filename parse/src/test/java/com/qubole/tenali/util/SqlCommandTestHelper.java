@@ -65,9 +65,7 @@ public class SqlCommandTestHelper {
     public static String parseHive(String command) throws IOException {
         CommandContext ctx = null;
         try {
-            Catalog catalog = new CachingMetastore(5911, "api.qubole.com",
-                    "EnhW9CcvppxUXUPUesWxKnjxC5nSF5zcWR8szsQGTZe96VQNwWq13z1VqkU2W6qb",
-                    "mojave-redis.9qcbtf.0001.use1.cache.amazonaws.com");
+            //Catalog catalog = new CachingMetastore();
             ctx = new AbstractCommandHandler
                     .CommandParserBuilder(CommandType.HIVE)
                     .setLexer(new HiveCommandLexer())

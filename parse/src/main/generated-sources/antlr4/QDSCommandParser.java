@@ -19,8 +19,8 @@ public class QDSCommandParser extends Parser {
 	public static final int
 		Q_SET=1, Q_ADD_JAR=2, Q_USE=3, Q_CREATE_FUNCTION=4, Q_INSERT_INTO=5, Q_INSERT_OVERWRITE=6, 
 		Q_SELECT=7, Q_DROP_TABLE=8, Q_DROP_VIEW=9, Q_ALTER_TABLE=10, Q_CREATE_TABLE=11, 
-		Q_CREATE_EXTERNAL_TABLE=12, Q_CTAS=13, Q_CREATE_VIEW=14, Q_CTE=15, TEXT=16, 
-		Q_SEMI=17, SIMPLE_COMMENT=18, BRACKETED_COMMENT=19, SPACES=20;
+		Q_CREATE_EXTERNAL_TABLE=12, Q_CREATE_VIEW=13, Q_CTE=14, TEXT=15, Q_SEMI=16, 
+		SIMPLE_COMMENT=17, BRACKETED_COMMENT=18, SPACES=19;
 	public static final int
 		RULE_parse = 0, RULE_sql_stmt = 1;
 	public static final String[] ruleNames = {
@@ -32,8 +32,8 @@ public class QDSCommandParser extends Parser {
 	private static final String[] _SYMBOLIC_NAMES = {
 		null, "Q_SET", "Q_ADD_JAR", "Q_USE", "Q_CREATE_FUNCTION", "Q_INSERT_INTO", 
 		"Q_INSERT_OVERWRITE", "Q_SELECT", "Q_DROP_TABLE", "Q_DROP_VIEW", "Q_ALTER_TABLE", 
-		"Q_CREATE_TABLE", "Q_CREATE_EXTERNAL_TABLE", "Q_CTAS", "Q_CREATE_VIEW", 
-		"Q_CTE", "TEXT", "Q_SEMI", "SIMPLE_COMMENT", "BRACKETED_COMMENT", "SPACES"
+		"Q_CREATE_TABLE", "Q_CREATE_EXTERNAL_TABLE", "Q_CREATE_VIEW", "Q_CTE", 
+		"TEXT", "Q_SEMI", "SIMPLE_COMMENT", "BRACKETED_COMMENT", "SPACES"
 	};
 	public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
 
@@ -149,7 +149,7 @@ public class QDSCommandParser extends Parser {
 				setState(13); 
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << Q_SET) | (1L << Q_ADD_JAR) | (1L << Q_USE) | (1L << Q_CREATE_FUNCTION) | (1L << Q_INSERT_INTO) | (1L << Q_INSERT_OVERWRITE) | (1L << Q_SELECT) | (1L << Q_DROP_TABLE) | (1L << Q_DROP_VIEW) | (1L << Q_ALTER_TABLE) | (1L << Q_CREATE_TABLE) | (1L << Q_CREATE_EXTERNAL_TABLE) | (1L << Q_CTAS) | (1L << Q_CREATE_VIEW) | (1L << Q_CTE))) != 0) );
+			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << Q_SET) | (1L << Q_ADD_JAR) | (1L << Q_USE) | (1L << Q_CREATE_FUNCTION) | (1L << Q_INSERT_INTO) | (1L << Q_INSERT_OVERWRITE) | (1L << Q_SELECT) | (1L << Q_DROP_TABLE) | (1L << Q_DROP_VIEW) | (1L << Q_ALTER_TABLE) | (1L << Q_CREATE_TABLE) | (1L << Q_CREATE_EXTERNAL_TABLE) | (1L << Q_CREATE_VIEW) | (1L << Q_CTE))) != 0) );
 			setState(15);
 			match(EOF);
 			}
@@ -180,7 +180,6 @@ public class QDSCommandParser extends Parser {
 		public TerminalNode Q_ALTER_TABLE() { return getToken(QDSCommandParser.Q_ALTER_TABLE, 0); }
 		public TerminalNode Q_CREATE_TABLE() { return getToken(QDSCommandParser.Q_CREATE_TABLE, 0); }
 		public TerminalNode Q_CREATE_EXTERNAL_TABLE() { return getToken(QDSCommandParser.Q_CREATE_EXTERNAL_TABLE, 0); }
-		public TerminalNode Q_CTAS() { return getToken(QDSCommandParser.Q_CTAS, 0); }
 		public TerminalNode Q_CREATE_VIEW() { return getToken(QDSCommandParser.Q_CREATE_VIEW, 0); }
 		public Sql_stmtContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -211,7 +210,7 @@ public class QDSCommandParser extends Parser {
 			setState(17);
 			((Sql_stmtContext)_localctx).op = _input.LT(1);
 			_la = _input.LA(1);
-			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << Q_SET) | (1L << Q_ADD_JAR) | (1L << Q_USE) | (1L << Q_CREATE_FUNCTION) | (1L << Q_INSERT_INTO) | (1L << Q_INSERT_OVERWRITE) | (1L << Q_SELECT) | (1L << Q_DROP_TABLE) | (1L << Q_DROP_VIEW) | (1L << Q_ALTER_TABLE) | (1L << Q_CREATE_TABLE) | (1L << Q_CREATE_EXTERNAL_TABLE) | (1L << Q_CTAS) | (1L << Q_CREATE_VIEW) | (1L << Q_CTE))) != 0)) ) {
+			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << Q_SET) | (1L << Q_ADD_JAR) | (1L << Q_USE) | (1L << Q_CREATE_FUNCTION) | (1L << Q_INSERT_INTO) | (1L << Q_INSERT_OVERWRITE) | (1L << Q_SELECT) | (1L << Q_DROP_TABLE) | (1L << Q_DROP_VIEW) | (1L << Q_ALTER_TABLE) | (1L << Q_CREATE_TABLE) | (1L << Q_CREATE_EXTERNAL_TABLE) | (1L << Q_CREATE_VIEW) | (1L << Q_CTE))) != 0)) ) {
 				((Sql_stmtContext)_localctx).op = (Token)_errHandler.recoverInline(this);
 			}
 			else {
@@ -233,10 +232,10 @@ public class QDSCommandParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\26\26\4\2\t\2\4\3"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\25\26\4\2\t\2\4\3"+
 		"\t\3\3\2\3\2\7\2\t\n\2\f\2\16\2\f\13\2\6\2\16\n\2\r\2\16\2\17\3\2\3\2"+
-		"\3\3\3\3\3\3\2\2\4\2\4\2\3\3\2\3\21\2\25\2\r\3\2\2\2\4\23\3\2\2\2\6\n"+
-		"\5\4\3\2\7\t\7\23\2\2\b\7\3\2\2\2\t\f\3\2\2\2\n\b\3\2\2\2\n\13\3\2\2\2"+
+		"\3\3\3\3\3\3\2\2\4\2\4\2\3\3\2\3\20\2\25\2\r\3\2\2\2\4\23\3\2\2\2\6\n"+
+		"\5\4\3\2\7\t\7\22\2\2\b\7\3\2\2\2\t\f\3\2\2\2\n\b\3\2\2\2\n\13\3\2\2\2"+
 		"\13\16\3\2\2\2\f\n\3\2\2\2\r\6\3\2\2\2\16\17\3\2\2\2\17\r\3\2\2\2\17\20"+
 		"\3\2\2\2\20\21\3\2\2\2\21\22\7\2\2\3\22\3\3\2\2\2\23\24\t\2\2\2\24\5\3"+
 		"\2\2\2\4\n\17";

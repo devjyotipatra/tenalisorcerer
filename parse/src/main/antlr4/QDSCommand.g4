@@ -24,10 +24,8 @@ sql_stmt
   |  Q_ALTER_TABLE
   |  Q_CREATE_TABLE
   |  Q_CREATE_EXTERNAL_TABLE
-  |  Q_CTAS
   |  Q_CREATE_VIEW)
   ;
-
 
 
 /*
