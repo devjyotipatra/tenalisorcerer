@@ -64,6 +64,7 @@ public class SqlCommandTestHelper {
 
     public static String parseHive(String command) throws IOException {
         CommandContext ctx = null;
+        Catalog catalog = null;
         try {
             //Catalog catalog = new CachingMetastore();
             ctx = new AbstractCommandHandler
