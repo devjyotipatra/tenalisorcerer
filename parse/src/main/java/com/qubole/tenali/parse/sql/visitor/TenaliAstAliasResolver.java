@@ -34,20 +34,27 @@ public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> 
     public TenaliAstNode visit(TenaliAstNode root) {
         try {
             if(root instanceof DDLNode) {
-                String ddlToken = ((DDLNode) root).ddlToken;
-                TenaliAstNode tableNode = ((DDLNode) root).tableNode;
+                DDLNode ddl = (DDLNode) root;
+                String ddlToken = ddl.ddlToken;
+                TenaliAstNode tableNode = ddl.tableNode;
 
-                if(tableNode != null && ((DDLNode) root).selectNode != null) {
-                    SelectNode select = (SelectNode) visitSelectNode(0,
-                            ((DDLNode) root).selectNode);
+                if(tableNode != null && ddl.selectNode != null) {
+                    if(ddl.selectNode instanceof SelectNode) {
+                        SelectNode select = (SelectNode) visitSelectNode(0, ddl.selectNode);
 
-                    TenaliAstNodeList keywords = select.keywords;
-                    keywords.add(new OperatorNode("CTAS",
-                            new TenaliAstNodeList().add(tableNode)));
+                        TenaliAstNodeList keywords = select.keywords;
+                        if(keywords == null) {
+                            keywords = new TenaliAstNodeList();
+                        }
+                        keywords.add(new OperatorNode("CTAS",
+                                new TenaliAstNodeList().add(tableNode)));
 
-                    SelectBuilder builder = new SelectBuilder(select);
-                    builder.setKeywords(keywords);
-                    return builder.build();
+                        SelectBuilder builder = new SelectBuilder(select);
+                        builder.setKeywords(keywords);
+                        return builder.build();
+                    } else if(ddl.selectNode instanceof OperatorNode) {
+                        return root;
+                    }
                 }
 
             } else if (root instanceof SelectNode) {
@@ -169,9 +176,9 @@ public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> 
             String joinType = join.joinType;
 
             List<Triple<String, String, List<String>>> catalogLeft = visitFromNode(scope, null, left);
-            System.out.println("###################################  1   ");
+            System.out.println(" ############### ########## ##########  1   ");
             List<Triple<String, String, List<String>>> catalogRight = visitFromNode(scope, null, right);
-            System.out.println("###################################  2  ");
+            System.out.println(" ############### ########## ##########  2   ");
 
             catalog.addAll(catalogLeft);
             catalog.addAll(catalogRight);
@@ -191,7 +198,7 @@ public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> 
             builder.setJoinCondition(resolveWhereCondition(condition, catalog));
 
             //TenaliAstNode resolvedJoin = resolveJoin(builder.build(), catalog);
-            System.out.println("########PUSING STACK JOIN ###########################   ");
+            System.out.println("######## PUSING STACK JOIN ###########################   ");
             //push(scope, resolvedJoin);
             push(scope, builder.build());
         } else if (from instanceof FunctionNode) {

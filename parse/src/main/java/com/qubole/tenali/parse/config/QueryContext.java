@@ -5,45 +5,18 @@ import com.qubole.tenali.parse.sql.datamodel.TenaliAstNode;
 
 public class QueryContext {
 
-    QueryType queryType = QueryType.UNKNOWN;
-
     Object parseAst;
 
     TenaliAstNode root;
 
+    String defaultDB = "default";
 
-    public QueryContext(QueryType queryType) {
-        this.queryType = queryType;
-    }
+    String errorMessage;
 
-    public QueryContext(QueryType queryType, Object parseAst) {
-        this.queryType = queryType;
+    public QueryContext() {}
+
+    public QueryContext(Object parseAst) {
         this.parseAst = parseAst;
-    }
-
-
-
-   /* public QueryContext(TenaliParser.ParseObject parseObject) {
-        queryType = parseObject.getQueryType();
-
-        Object obj = parseObject.getParseObject();
-        if(obj != null) {
-            ast = (T) obj;
-        }
-    }
-
-    public QueryContext(T ast) {
-        this.ast = ast;
-    }
-
-    public QueryContext(QueryType queryType, T ast) {
-        this.queryType = queryType;
-        this.ast = ast;
-    }*/
-
-
-    public QueryType getQueryType() {
-        return queryType;
     }
 
 
@@ -61,5 +34,21 @@ public class QueryContext {
 
     public void setParseAst(Object parseAst) {
         this.parseAst = parseAst;
+    }
+
+    public String getDefaultDB() {
+        return defaultDB;
+    }
+
+    public void setDefaultDB(String db) {
+        defaultDB = db;
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
     }
 }

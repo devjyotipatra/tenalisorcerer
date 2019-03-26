@@ -6,7 +6,7 @@ grammar QDSCommand;
 
 
 parse
- : ( sql_stmt Q_SEMI* )+ EOF
+ : SPACES* sql_stmt EOF
  ;
 
 
@@ -111,7 +111,7 @@ BRACKETED_COMMENT
 
 
 SPACES
- : [ \u000B\t\r\n]+
+ : [ \t\r\n]+
  ;
 
 

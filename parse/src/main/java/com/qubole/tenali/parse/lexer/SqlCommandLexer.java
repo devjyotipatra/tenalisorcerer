@@ -3,7 +3,6 @@ package com.qubole.tenali.parse.lexer;
 import antlr4.QDSCommandBaseVisitor;
 import antlr4.QDSCommandLexer;
 import antlr4.QDSCommandParser;
-import com.qubole.tenali.parse.AbstractCommandHandler;
 import com.qubole.tenali.parse.TenaliLexer;
 import com.qubole.tenali.parse.config.CommandType;
 import com.qubole.tenali.parse.config.QueryType;
@@ -41,9 +40,11 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
 
     private static final Logger LOG = LoggerFactory.getLogger(SqlCommandLexer.class);
 
-    CommandType commandType;
+    CommandType commandType = CommandType.UNKNOWN;
 
     CommandContext root;
+
+    CommandContext currentContext;
 
 
     public SqlCommandLexer() {
@@ -53,6 +54,7 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
     public SqlCommandLexer(CommandType commandType) {
         this.commandType = commandType;
     }
+
 
 
     @Override
@@ -71,6 +73,8 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
 
         String stmt = ctx.getText().trim();
         int queryType = ctx.op.getType();
+
+        System.out.println("LEXINg => " + stmt);
 
         qctx.setStmt(stmt);
 
@@ -96,6 +100,7 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
                 break;
             case Q_DROP_TABLE:
                 qctx.setQueryType(QueryType.DROP_TABLE);
+                break;
             case Q_DROP_VIEW:
                 qctx.setQueryType(QueryType.DROP_VIEW);
                 break;
@@ -132,56 +137,62 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
 
     @Override
     public CommandContext visitChildren(RuleNode node) {
-        CommandContext cctx = null;
-
-        int n = node.getChildCount();
-
-        for (int i = 0; i < n && this.shouldVisitNextChild(node, root); ++i) {
-            ParseTree c = node.getChild(i);
-            CommandContext result = c.accept(this);
-
-            if(result != null && result.getQueryType() != QueryType.UNKNOWN) {
-                if(root == null) {
-                    result.setAsRootNode();
-                    root = result;
-                    cctx = result;
-                } else {
-                    cctx = this.aggregateResult(root.getCurrentContext(), result);
-                }
-            }
-        }
-
-        return cctx;
+        ParseTree c = node.getChild(node.getChildCount() - 2);
+        return c.accept(this);
     }
 
     @Override
-    public CommandContext aggregateResult(CommandContext currentContext, CommandContext result) {
-        currentContext.appendNewContext(result);
+    public CommandContext aggregateResult(CommandContext ctx, CommandContext result) {
+        ctx.appendNewContext(result);
+        currentContext = result;
         return result;
     }
 
 
+
     @Override
     public void extract(String command) {
-        try {
-            InputStream antlrInputStream =
-                    new ByteArrayInputStream(command.trim().getBytes(StandardCharsets.UTF_8));
+        if(command == null) {
+            return;
+        }
 
-            QDSCommandLexer lexer =
-                    new QDSCommandLexer(CharStreams.fromStream(antlrInputStream, StandardCharsets.UTF_8));
+        String[] commandTokens = command.split(";");
+        for(String query : commandTokens) {
+            try {
+                query = query.replaceAll("\u0006", "").trim();
+                System.out.println("Query => " + query);
+                if(query.length() > 0) {
+                    InputStream antlrInputStream =
+                            new ByteArrayInputStream(query.getBytes(StandardCharsets.UTF_8));
 
-            QDSCommandParser parser = new QDSCommandParser(new CommonTokenStream(lexer));
-            parser.setBuildParseTree(true);
-            parser.removeErrorListeners();
-            parser.addErrorListener(new CommandErrorListener());
+                    QDSCommandLexer lexer =
+                            new QDSCommandLexer(CharStreams.fromStream(antlrInputStream, StandardCharsets.UTF_8));
 
-            ParseTree tree = parser.parse();
-            visit(tree);
+                    QDSCommandParser parser = new QDSCommandParser(new CommonTokenStream(lexer));
+                    parser.setBuildParseTree(true);
+                    parser.removeErrorListeners();
+                    parser.addErrorListener(new CommandErrorListener());
 
-        } catch (CommandParseError e) {
-            throw new SQLSyntaxError(e);
-        } catch (IOException io) {
+                    ParseTree tree = parser.parse();
+                    CommandContext ctx = visit(tree);
 
+                    if (ctx != null && ctx.getQueryType() != QueryType.UNKNOWN) {
+                        if (root == null) {
+                            root = ctx;
+                            root.setAsRootNode();
+                            currentContext = root;
+                        } else {
+                            this.aggregateResult(currentContext, ctx);
+                        }
+                    }
+
+                }
+
+            } catch (CommandParseError e) {
+                System.out.println(e.getMessage());
+            } catch (IOException ie) {
+                //throw new SQLSyntaxError(ie);
+            }
         }
     }
 
@@ -199,6 +210,7 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
 
     public boolean isSupportedDDL(int type) {
         return type == Q_CREATE_TABLE
+                || type == Q_DROP_TABLE
                 || type == Q_CREATE_VIEW
                 || type == Q_DROP_VIEW;
     }

@@ -1,6 +1,6 @@
 package com.qubole.tenali.util;
 
-import com.qubole.tenali.parse.AbstractCommandHandler;
+import com.qubole.tenali.parse.SqlCommandHandler;
 import com.qubole.tenali.parse.catalog.Catalog;
 import com.qubole.tenali.parse.catalog.CatalogResolver;
 import com.qubole.tenali.parse.sql.*;
@@ -24,7 +24,9 @@ public class SqlCommandTestHelper {
     public static String transformHiveAst(String command) {
         Catalog catalog = null;
         try {
-            //catalog = new CachingMetastore();
+            catalog = catalog = new CachingMetastore(5911, "api.qubole.com",
+                    "xxxx",
+                    "mojave-redis.9qcbtf.0001.use1.cache.amazonaws.com");
             return transformHiveAst(command, catalog);
         } catch(Exception ex) {
             ex.printStackTrace();
@@ -48,8 +50,7 @@ public class SqlCommandTestHelper {
     public static String transformHiveAst(String command, Catalog catalog) throws IOException {
         CommandContext ctx = null;
         try {
-            ctx = new AbstractCommandHandler
-                    .CommandParserBuilder(CommandType.HIVE)
+            ctx = new SqlCommandHandler(CommandType.HIVE)
                     .setLexer(new HiveCommandLexer())
                     .setParser(new HiveSqlParser())
                     .setTransformer(new HiveAstTransformer())
@@ -64,11 +65,11 @@ public class SqlCommandTestHelper {
 
     public static String parseHive(String command) throws IOException {
         CommandContext ctx = null;
-        Catalog catalog = null;
         try {
-            //Catalog catalog = new CachingMetastore();
-            ctx = new AbstractCommandHandler
-                    .CommandParserBuilder(CommandType.HIVE)
+            Catalog catalog = new CachingMetastore(5911, "api.qubole.com",
+                    "xxxx",
+                    "mojave-redis.9qcbtf.0001.use1.cache.amazonaws.com");
+            ctx =  new SqlCommandHandler(CommandType.HIVE)
                     .setLexer(new HiveCommandLexer())
                     .setParser(new HiveSqlParser())
                     .setTransformer(new HiveAstTransformer())
@@ -82,8 +83,7 @@ public class SqlCommandTestHelper {
     }
 
     public static TenaliAstNode transformPrestoQuery(String command) throws IOException {
-        CommandContext ctx  = new AbstractCommandHandler
-                .CommandParserBuilder(CommandType.PRESTO)
+        CommandContext ctx  =  new SqlCommandHandler(CommandType.PRESTO)
                 .setLexer(new PrestoCommandLexer())
                 .setParser(new PrestoSqlParser())
                 .setTransformer(new CalciteAstTransformer())
@@ -95,8 +95,7 @@ public class SqlCommandTestHelper {
 
 
     public static SqlNode parsePrestoQuery(String command) throws IOException {
-        CommandContext ctx  = new AbstractCommandHandler
-                .CommandParserBuilder(CommandType.PRESTO)
+        CommandContext ctx  = new SqlCommandHandler(CommandType.PRESTO)
                 .setLexer(new PrestoCommandLexer())
                 .setParser(new TenaliBabelParser())
                 .build(command);
@@ -107,8 +106,7 @@ public class SqlCommandTestHelper {
     }
 
     public static String parseSparkSql(String command) throws IOException {
-        CommandContext ctx = new AbstractCommandHandler
-                .CommandParserBuilder(CommandType.SPARK_SQL)
+        CommandContext ctx = new SqlCommandHandler(CommandType.SPARK_SQL)
                 .setLexer(new SqlCommandLexer())
                 .setParser(new HiveSqlParser())
                 .build(command);

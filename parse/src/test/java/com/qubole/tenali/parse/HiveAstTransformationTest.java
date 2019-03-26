@@ -21,7 +21,7 @@ public class HiveAstTransformationTest {
 
     @Test
     public void testSlightlyComplexLateralView() throws Exception {
-        String command = //"insert overwrite table tenaliV2.usagemap partition (submit_time, source)\n" +
+        String command = "insert overwrite table tenaliV2.usagemap partition (submit_time, source)\n" +
                 "                        select  sub.query, sub.q_id, usagetable.tbl, usagetable.col, usagetable.usg, sub.account_id,\n" +
                 "                        sub.submit_time, sub.source as source from (select n.query as query, n.query_hists_id as q_id,\n" +
                 "                        n.q_ast as q_ast, n.account_id as account_id, n.submit_time as submit_time, n.source as source from tenaliV2.galaxy\n" +
@@ -194,4 +194,113 @@ public class HiveAstTransformationTest {
         SqlCommandTestHelper.transformHiveAst(query);
     }
 
+
+    @Test
+    public void testDropTable() throws Exception {
+        String query = "use mydefault;\u0006drop table if exists tmp_klynch_ebay_conversions_1550485623;\u0006drop table if exists tmp_klynch_ebay_conversions_1550485742;\u0006drop table if exists tmp_klynch_ebay_conversions_1550485862;\u0006drop table if exists gap_gdx_unique_staging_21404_1550506236;\u0006drop table if exists gap_gdx_unique_staging_22881_1550507276;\u0006drop table if exists gap_gdx_unique_staging_24201_1550508248;\u0006drop table if exists gap_gdx_unique_staging_25288_1550509187" ;
+        //Node node = evaluateJsonAndGetNode(resultDirPath.concat("/AST2.json"), query);
+        //assertThat("node is not a select node", node instanceof SelectNode);
+        //assertThat("from should be table node",
+        //        ((SelectNode) node).from.get(0) instanceof JoinNode);
+
+        SqlCommandTestHelper.transformHiveAst(query);
     }
+
+    @Test
+    public void testSample1() throws Exception {
+        String query = "\u0006alter table mm_viewability_events_test recover partitions;\u0006\u0006select \u0006    report_timestamp,\u0006    to_date(report_timestamp) as impression_date,\u0006    campaign_name, \u0006    a.campaign_id, \u0006    strat.goal_type as strategy_goal_type,\u0006 case when length(delphi_metadata)<1 then 'tree brain'\u0006   when delphi_metadata like '%_sb%' then 'shared brain'\u0006   when delphi_metadata like '%_tf%' then 'log brain' else delphi_metadata end as brain_type, \u0006    case when watermark=0 then 'Non-Watermark' else 'Watermark' end as wm_flag,\u0006 is_viewable as viewable_impressions, \u0006 is_measurable as measurable_impressions, \u0006    1 as impressions,\u0006 clicks as clicks, \u0006 total_spend_cpm/1000 as spend, \u0006-- sum(total_spend_cpm)/count(a.auction_id) as cpm, \u0006-- coalesce(sum(total_spend_cpm)/sum(is_viewable),0) as vcpm, \u0006-- coalesce(sum(in_view_100)/sum(is_measurable),0) as in_view_rate, \u0006-- coalesce(sum(clicks)/count(a.auction_id),0) as ctr, \u0006-- coalesce(sum(total_spend_cpm/1000)/ sum(clicks),0) as cpc, \u0006    video_start as video_start, \u0006    video_complete as video_complete, \u0006    pv_conversions, \u0006    pc_conversions, \u0006    pv_revenue, \u0006    pc_revenue, \u0006    device, \u0006    case when channel_type in (8,9) then 'in-app' else 'web' end as inventory_type\u0006-- coalesce(sum(video_complete)/sum(video_start),0) as vcr\u0006\u0006 from \u0006\u0006 (select \u0006            report_timestamp,\u0006   delphi_metadata,\u0006   auction_id,\u0006   campaign_id, \u0006   campaign_name, \u0006            strategy_id,\u0006   watermark, \u0006   total_spend_cpm, \u0006            device,\u0006            channel_type\u0006from \u0006 mm_impressions_ct imp\u0006 where organization_id = 100977\u0006 and impression_date between date_sub('2019-03-04',1) and date_add('2019-03-05',1)\u0006    and to_date(report_timestamp) between '2019-03-04' and '2019-03-05'\u0006 and campaign_id in (614838,617477)\u0006 ) a \u0006join t1_meta_strategy_rs strat on a.strategy_id = strat.id\u0006\u0006left join \u0006\u0006  (\u0006  select \u0006  imp_auction_id, \u0006     event_timestamp_gmt,\u0006  case when viewability_event_name = 'is_viewable' then 1 else 0 end as is_viewable, \u0006    case when viewability_event_name = 'is_measurable' then 1 else 0 end as is_measurable, \u0006    case when viewability_event_name = 'is_viewable_100%' then 1 else 0 end as in_view_100\u0006 \u0006 from \u0006  mm_viewability_events_test \u0006 where organization_id in (100977)\u0006 and event_date between date_sub('2019-03-04',1) and date_add('2019-03-05',1)\u0006    and to_date(event_report_timestamp) between '2019-03-04' and '2019-03-05'\u0006 and campaign_id in (614838,617477)\u0006 ) b\u0006\u0006on a.auction_id = b.imp_auction_id\u0006\u0006left join \u0006(\u0006  select \u0006  imp_auction_id, \u0006  sum(case when event_subtype = 'q4' then 1 else 0 end) as video_complete,\u0006  sum(case when event_subtype = 'vst' then 1 else 0 end) as video_start, \u0006  sum(case when event_type = 'click' then 1 else 0 end) as clicks, \u0006        sum(case when event_type = 'conversion' and pv_pc_flag = 'V' then 1 else 0 end) as pv_conversions, \u0006         sum(case when event_type = 'conversion' and pv_pc_flag = 'C' then 1 else 0 end) as pc_conversions, \u0006        sum(case when pv_pc_flag = 'V' then mm_v1 else 0 end) as pv_revenue, \u0006        sum(case when pv_pc_flag = 'C' then mm_v1 else 0 end) as pc_revenue\u0006 from \u0006  mm_attributed_events_ct\u0006 where organization_id in (100977)\u0006 and event_date between date_sub('2019-03-04',1) and date_add('2019-03-05',1)\u0006    and to_date(event_report_timestamp) between '2019-03-04' and '2019-03-05'\u0006 and campaign_id in (614838,617477)\u0006    \u0006    group by imp_auction_id\u0006 ) c \u0006\u0006 on a.auction_id = c.imp_auction_id\u0006\u0006\u0006\u0006\n";
+
+        //Node node = evaluateJsonAndGetNode(resultDirPath.concat("/AST2.json"), query);
+        //assertThat("node is not a select node", node instanceof SelectNode);
+        //assertThat("from should be table node",
+        //        ((SelectNode) node).from.get(0) instanceof JoinNode);
+
+        SqlCommandTestHelper.transformHiveAst(query);
+    }
+
+
+    @Test
+    public void testSample2() throws Exception {
+        String query = "select      report_timestamp,     to_date(report_timestamp) as impression_date,     campaign_name,      a.campaign_id,      strat.goal_type as strategy_goal_type,  \n" +
+                "case when length(delphi_metadata)<1 then 'tree brain'    \n" +
+                "when delphi_metadata like '%_sb%' then 'shared brain'    \n" +
+                "when delphi_metadata like '%_tf%' then 'log brain' else delphi_metadata end as brain_type,      \n" +
+                "case when watermark=0 then 'Non-Watermark' else 'Watermark' end as wm_flag,  \n" +
+                "is_viewable as viewable_impressions,   is_measurable as measurable_impressions,      1 as impressions,  clicks as clicks,   total_spend_cpm/1000 as spend,  \n" +
+                "-- sum(total_spend_cpm)/count(a.auction_id) as cpm,  -- coalesce(sum(total_spend_cpm)/sum(is_viewable),0) as vcpm,  -- coalesce(sum(in_view_100)/sum(is_measurable),0) as in_view_rate,  \n" +
+                "-- coalesce(sum(clicks)/count(a.auction_id),0) as ctr,  -- coalesce(sum(total_spend_cpm/1000)/ sum(clicks),0) as cpc,      video_start as video_start,      \n" +
+                "video_complete as video_complete,      pv_conversions,      pc_conversions,      pv_revenue,      pc_revenue,      device,      \n" +
+                "case when channel_type in (8,9) then 'in-app' else 'web' end as inventory_type \n" +
+                "-- coalesce(sum(video_complete)/sum(video_start),0) as vcr \n  " +
+                "from \u0006\u0006 " +
+                "(select \u0006  report_timestamp,\u0006   delphi_metadata,\u0006   auction_id,\u0006   campaign_id, " +
+                "\u0006   campaign_name, \u0006            strategy_id,\u0006   watermark, \u0006   total_spend_cpm, \u0006            " +
+                "device,\u0006            channel_type\u0006from \u0006 mm_impressions_ct imp\u0006 where organization_id = 100977\u0006 " +
+                "and impression_date between date_sub('2019-03-04',1) and date_add('2019-03-05',1)\u0006    and to_date(report_timestamp) " +
+                "between '2019-03-04' and '2019-03-05'\u0006 and campaign_id in (614838,617477)\u0006 ) a \u0006" +
+                "" +
+                "join t1_meta_strategy_rs strat on a.strategy_id = strat.id\u0006\u0006" +
+                "" +
+                "left join \u0006\u0006  (\u0006  select \u0006  imp_auction_id, \u0006     event_timestamp_gmt,\u0006  case when viewability_event_name = 'is_viewable' then 1 " +
+                "else 0 end as is_viewable, \u0006    case when viewability_event_name = 'is_measurable' then 1 else 0 end as is_measurable, \u0006    " +
+                "case when viewability_event_name = 'is_viewable_100%' then 1 else 0 end as in_view_100\u0006 \u0006 from \u0006  mm_viewability_events_test \u0006 where organization_id in (100977)\u0006 " +
+                "and event_date between date_sub('2019-03-04',1) and date_add('2019-03-05',1)\u0006    and to_date(event_report_timestamp) between '2019-03-04' and '2019-03-05'\u0006 and campaign_id in (614838,617477)\u0006 ) b\u0006\u0006" +
+                "on a.auction_id = b.imp_auction_id\u0006\u0006" +
+                "" +
+                "left join \u0006(\u0006  select \u0006  imp_auction_id, \u0006  sum(case when event_subtype = 'q4' then 1 else 0 end) as video_complete,\u0006  sum(case when event_subtype = 'vst' then 1 else 0 end) as video_start, " +
+                "\u0006  sum(case when event_type = 'click' then 1 else 0 end) as clicks, \u0006        sum(case when event_type = 'conversion' and pv_pc_flag = 'V' then 1 else 0 end) as pv_conversions, \u0006         sum(case when event_type = 'conversion' and pv_pc_flag = 'C' then 1 else 0 end) as pc_conversions, \u0006        " +
+                "sum(case when pv_pc_flag = 'V' then mm_v1 else 0 end) as pv_revenue, \u0006        sum(case when pv_pc_flag = 'C' then mm_v1 else 0 end) as pc_revenue\u0006 from \u0006  mm_attributed_events_ct\u0006 where organization_id in (100977)\u0006 and event_date between date_sub('2019-03-04',1) and date_add('2019-03-05',1)\u0006    " +
+                "and to_date(event_report_timestamp) between '2019-03-04' and '2019-03-05'\u0006 and campaign_id in (614838,617477)\u0006    \u0006    group by imp_auction_id\u0006 ) c \u0006\u0006 on a.auction_id = c.imp_auction_id\u0006";
+
+
+        //Node node = evaluateJsonAndGetNode(resultDirPath.concat("/AST2.json"), query);
+        //assertThat("node is not a select node", node instanceof SelectNode);
+        //assertThat("from should be table node",
+        //        ((SelectNode) node).from.get(0) instanceof JoinNode);
+
+        SqlCommandTestHelper.transformHiveAst(query);
+    }
+
+
+    @Test
+    public void testSample3() throws Exception {
+        String query = "\u0006  select\u0006   at.pv_time_lag,\u0006 at.pixel_id,\u0006 e.v10,\u0006 at.campaign_id,\u0006 at.event_report_timestamp,\u0006 at.device_type,\u0006 at.campaign_name,\u0006 at.event_timestamp_gmt,\u0006 e.s9,\u0006 e.s8,\u0006 at.pixel_name,\u0006 e.s2,\u0006 e.s1,\u0006 e.s7,\u0006 e.s6,\u0006 e.s5,\u0006 e.s4,\u0006 at.organization_name,\u0006 at.strategy_name,\u0006 at.event_date,\u0006 e.s10,\u0006 at.agency_id,\u0006 at.organization_id,\u0006 e.v1,\u0006 at.agency_name,\u0006 e.v3,\u0006 e.v4,\u0006 e.v5,\u0006 e.v6,\u0006 e.v7,\u0006 e.v8,\u0006 e.v9,\u0006 at.impression_timestamp_gmt,\u0006 at.advertiser_id,\u0006 at.pc_time_lag,\u0006 at.country,\u0006 e.v2,\u0006 e.s3,\u0006 at.strategy_id,\u0006 at.browser\u0006  from\u0006   (\u0006     select * from\u0006     mm_events \u0006   ) e\u0006   join \u0006   (\u0006     select * from\u0006     mm_attributed_events_ac\u0006   ) at\u0006   on \u0006      e.pixel_id = at.pixel_id \u0006      and e.mm_uuid = at.mm_uuid\u0006      and e.timestamp_gmt = at.event_timestamp_gmt\u0006  where\u0006   at.advertiser_id in (206401)\u0006 and at.organization_id in (101607) and e.organization_id in (101607)\u0006 and at.agency_id in (117415)\u0006 and at.pixel_id in (1299912)\u0006 and at.event_type = 'conversion'\u0006 and at.event_date between '2019-03-04' and '2019-03-04'\u0006 and e.event_date between '2019-03-04' and '2019-03-04'\u0006\n";
+
+
+        //Node node = evaluateJsonAndGetNode(resultDirPath.concat("/AST2.json"), query);
+        //assertThat("node is not a select node", node instanceof SelectNode);
+        //assertThat("from should be table node",
+        //        ((SelectNode) node).from.get(0) instanceof JoinNode);
+
+        SqlCommandTestHelper.transformHiveAst(query);
+    }
+
+
+    @Test
+    public void testSample4() throws Exception {
+        String query = "set hive.cli.print.header=false;set hive.resultset.use.unique.column.names=false; " +
+                "select  customer,  cluster,  data,  dt,  ingestedtime  from   (select  customer,  cluster,  data,  dt,  ingestedtime,  row_number() over (partition by get_json_object(cluster,'$.clusterid') order by cast(regexp_replace(regexp_replace(ingestedtime, 'T',' '),'Z','') as timestamp) desc) rnum   from dsa_production.aiq_raw_optimized  where dt='2018-01-23'  and source='get_compute_inventory') a   where rnum=1; ";
+        SqlCommandTestHelper.transformHiveAst(query);
+    }
+
+    @Test
+    public void testSample5() throws Exception {
+        String query = " SELECT    logdate as the_date,    hour as the_hour,    campaign_key,    campaign_placement_id,    campaign_placement_name,    campaign_placement_key,    stats.ad_key,    a.ad_template,    opt_metric,    threshold,    SUM(complete100) AS Complete100,    SUM(streams_viewed) AS Streams_viewed  FROM    \n" +
+                "(       SELECT          logdate,          hour,          campaign_key,          placement_key,          ad_key,          IF(Isnull(streams_viewed), 0, streams_viewed) AS Streams_viewed,          IF(Isnull(complete100), 0, complete100) AS Complete100        FROM          core.stats_log        WHERE          logdate = '2019-03-10'           and hour = '11'     )    stats     \n" +
+                "join       \n" +
+                "(          SELECT             campaign_placement.campaign_placement_key AS campaign_placement_key,             campaign_placement.campaign_placement_id AS campaign_placement_id,             campaign_placement.campaign_placement_name AS campaign_placement_name,             opt_metric,             threshold           FROM             promo2.campaign_placement             \n" +
+                " join                \n" +
+                "(                   SELECT                      campaign_placement_id,                      opt_metric,                      threshold                    FROM                      promo2.campaign_placement_optimization_filter                    WHERE                      upper(opt_metric) LIKE '%COMPLETIONS_KPI%'                       AND status = 'Active'                )                selected_placements                \n" +
+                " ON campaign_placement.campaign_placement_id = selected_placements.campaign_placement_id       )       selected_placements_decorated       \n" +
+                " ON selected_placements_decorated.campaign_placement_key = stats.placement_key     \n" +
+                "join       promo2.ad a        ON stats.ad_key = a.ad_key     GROUP BY    logdate,    hour,    campaign_key,    campaign_placement_id,    campaign_placement_name,    campaign_placement_key,    stats.ad_key,    a.ad_template,    opt_metric,    threshold";
+        //Node node = evaluateJsonAndGetNode(resultDirPath.concat("/AST2.json"), query);
+        //assertThat("node is not a select node", node instanceof SelectNode);
+        //assertThat("from should be table node",
+        //        ((SelectNode) node).from.get(0) instanceof JoinNode);
+
+        SqlCommandTestHelper.transformHiveAst(query);
+    }
+
+
+}

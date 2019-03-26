@@ -2,6 +2,7 @@ package com.qubole.tenali.parse.sql;
 
 
 import com.qubole.tenali.parse.TenaliParser;
+import com.qubole.tenali.parse.config.QueryContext;
 import com.qubole.tenali.parse.config.QueryType;
 import com.qubole.tenali.parse.config.CommandType;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
@@ -19,16 +20,22 @@ public class HiveSqlParser implements TenaliParser {
         parseDriver = new ParseDriver();
     }
 
-    public ParseObject<ASTNode> parse(QueryType queryType, String sql) throws IOException {
-        ParseObject parseObj = new ParseObject(CommandType.HIVE, queryType);
-        try {
-            ASTNode root = parseDriver.parse(sql);
+    public QueryContext parse(QueryType queryType, String sql) throws IOException {
+        QueryContext parseObj = new QueryContext();
 
-            if(root != null) {
-                parseObj.setParseObject((ASTNode) root.getChild(0));
+        if(queryType == QueryType.USE) {
+            String[] tokens = sql.split("[\\s]+");
+            parseObj.setDefaultDB(tokens[1]);
+        } else {
+            try {
+                ASTNode root = parseDriver.parse(sql);
+
+                if (root != null) {
+                    parseObj.setParseAst(root.getChild(0));
+                }
+            } catch (Exception e) {
+                throw new IOException("Parse failed for: " + sql + " Exception: " + e.getMessage());
             }
-        } catch (Exception e) {
-            throw new IOException("Parse failed for: " + sql + " Exception: " +  e.getMessage());
         }
 
         return parseObj;

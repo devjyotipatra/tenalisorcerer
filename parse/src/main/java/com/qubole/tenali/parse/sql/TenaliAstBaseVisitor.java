@@ -25,13 +25,14 @@ public abstract class TenaliAstBaseVisitor<T> extends AstBaseVisitor<TenaliAstNo
         T root = null;
         this.ctx = ctx;
 
-        QueryType queryType = ctx.getQueryContext().getQueryType();
-
+        QueryType queryType = ctx.getQueryType();
 
         if(queryType == QueryType.SELECT
                 || queryType == QueryType.CTE
                 || queryType == QueryType.INSERT_OVERWRITE
-                || queryType == QueryType.CREATE_TABLE) {
+                || queryType == QueryType.CREATE_TABLE
+                || queryType == QueryType.DROP_TABLE
+                || queryType == QueryType.ALTER_TABLE) {
             root = visit(ast);
         }
 
@@ -53,7 +54,7 @@ public abstract class TenaliAstBaseVisitor<T> extends AstBaseVisitor<TenaliAstNo
         } else {
             columns = (TenaliAstNodeList) column;
         }
-
+        System.out.println("===== ENTERING RESOLVE COLUMNS ====  " );
         Set<TenaliAstNode> resolvedColumns = new HashSet();
         Set<TenaliAstNode> unResolvedColumns = new HashSet();
 
@@ -63,6 +64,7 @@ public abstract class TenaliAstBaseVisitor<T> extends AstBaseVisitor<TenaliAstNo
             List<String> columnNames = cat.getRight();
 
             Map<String, String> tableColumns =  getColumnMap(tableName, columnNames);
+            System.out.println(tableColumns + " =========================== ====  " + tableAlias);
 
             for (TenaliAstNode col : columns.getOperandlist()) {
                 String name = null;
@@ -86,10 +88,12 @@ public abstract class TenaliAstBaseVisitor<T> extends AstBaseVisitor<TenaliAstNo
                 if(unresColumn instanceof FunctionNode || unresColumn instanceof OperatorNode) {
                     if(unresColumn instanceof FunctionNode) {
                         resolvedColumn =  unresColumn.accept(new FunctionResolver(catalog, columnAliasMap));
-                        addColumnAlias(alias, tableAlias, ((FunctionNode) resolvedColumn).functionName, columnAliasMap);
+                        addColumnAlias(alias, tableAlias, name,
+                                ((FunctionNode) resolvedColumn).functionName, columnAliasMap);
                     } else {
                         resolvedColumn =  unresColumn.accept(new OperatorResolver(catalog, columnAliasMap));
-                        addColumnAlias(alias, tableAlias, ((OperatorNode) resolvedColumn).operator, columnAliasMap);
+                        addColumnAlias(alias, tableAlias, name,
+                                ((OperatorNode) resolvedColumn).operator, columnAliasMap);
                     }
 
                 } else if (columnAliasMap.containsKey(name)) {
@@ -110,8 +114,6 @@ public abstract class TenaliAstBaseVisitor<T> extends AstBaseVisitor<TenaliAstNo
                     }
                 } else if(tableColumns.containsKey(name)) {
                     resolvedColumn = tableColumns.get(name);
-                } else {
-                    unResolvedColumns.add(unresColumn);
                 }
 
                 System.out.println(" :  Lookup Name : " + name + " ::::  " +   " ResolvedName  " + resolvedColumn);
@@ -124,12 +126,13 @@ public abstract class TenaliAstBaseVisitor<T> extends AstBaseVisitor<TenaliAstNo
                     } else {
                         normalizedColumns.add(new IdentifierNode(resolvedColumn.toString()));
                     }
+                } else {
+                    unResolvedColumns.add(unresColumn);
                 }
 
-                addColumnAlias(alias, tableAlias, resolvedColumn, columnAliasMap);
+                addColumnAlias(alias, tableAlias, name, resolvedColumn, columnAliasMap);
             }
         }
-
 
         for(TenaliAstNode col : unResolvedColumns) {
             if (!resolvedColumns.contains(col)) {
@@ -143,13 +146,16 @@ public abstract class TenaliAstBaseVisitor<T> extends AstBaseVisitor<TenaliAstNo
     }
 
 
-    private void addColumnAlias(String alias, String tableAlias, Object resolvedColumn,
+    private void addColumnAlias(String alias, String tableAlias, String name,
+                                Object resolvedColumn,
                                 Map<String, Object> columnAliasMap) {
+        Object aliasResolvedColumn = resolvedColumn != null ? resolvedColumn : name;
+
         if (alias != null) {
-            columnAliasMap.put(alias, resolvedColumn);
+            columnAliasMap.put(alias, aliasResolvedColumn);
 
             if (tableAlias != null) {
-                columnAliasMap.put(tableAlias + "." + alias, resolvedColumn);
+                columnAliasMap.put(tableAlias + "." + alias, aliasResolvedColumn);
             }
         }
     }
@@ -161,8 +167,10 @@ public abstract class TenaliAstBaseVisitor<T> extends AstBaseVisitor<TenaliAstNo
             if(column.contains(".")) {
                 String[] tokens = column.split("\\.");
                 tableColumns.put(tokens[tokens.length - 1], column);
-            } else {
+            } else if(tableName != null) {
                 tableColumns.put(column, tableName + "." + column);
+            } else {
+                tableColumns.put(column, column);
             }
         }
 

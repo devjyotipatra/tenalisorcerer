@@ -1,9 +1,8 @@
 package com.qubole.tenali.parse;
 
-import com.qubole.tenali.parse.TenaliParser;
 import com.qubole.tenali.parse.config.CommandType;
-import com.qubole.tenali.parse.sql.AnsiSqlParser;
 import com.qubole.tenali.parse.sql.HiveSqlParser;
+import com.qubole.tenali.parse.sql.PrestoSqlParser;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,7 +30,7 @@ public final class SqlParser {
                 case SQL:
                 case PRESTO:
                     System.out.println("Creating Ansi Sql Parser ");
-                    parser = new AnsiSqlParser();
+                    parser = new PrestoSqlParser();
                     break;
             }
 

@@ -157,6 +157,7 @@
                                 <includes>
                                     <include>org.antlr</include>
                                     <include>org.apache.calcite</include>
+                                    <include>com.qubole.tenali</include>
                                 </includes>
                             </artifactSet>
 

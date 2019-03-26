@@ -85,16 +85,13 @@ public class QDSCommandParser extends Parser {
 		_interp = new ParserATNSimulator(this,_ATN,_decisionToDFA,_sharedContextCache);
 	}
 	public static class ParseContext extends ParserRuleContext {
+		public Sql_stmtContext sql_stmt() {
+			return getRuleContext(Sql_stmtContext.class,0);
+		}
 		public TerminalNode EOF() { return getToken(QDSCommandParser.EOF, 0); }
-		public List<Sql_stmtContext> sql_stmt() {
-			return getRuleContexts(Sql_stmtContext.class);
-		}
-		public Sql_stmtContext sql_stmt(int i) {
-			return getRuleContext(Sql_stmtContext.class,i);
-		}
-		public List<TerminalNode> Q_SEMI() { return getTokens(QDSCommandParser.Q_SEMI); }
-		public TerminalNode Q_SEMI(int i) {
-			return getToken(QDSCommandParser.Q_SEMI, i);
+		public List<TerminalNode> SPACES() { return getTokens(QDSCommandParser.SPACES); }
+		public TerminalNode SPACES(int i) {
+			return getToken(QDSCommandParser.SPACES, i);
 		}
 		public ParseContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -122,35 +119,23 @@ public class QDSCommandParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(11); 
+			setState(7);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			do {
+			while (_la==SPACES) {
 				{
 				{
 				setState(4);
-				sql_stmt();
-				setState(8);
+				match(SPACES);
+				}
+				}
+				setState(9);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-				while (_la==Q_SEMI) {
-					{
-					{
-					setState(5);
-					match(Q_SEMI);
-					}
-					}
-					setState(10);
-					_errHandler.sync(this);
-					_la = _input.LA(1);
-				}
-				}
-				}
-				setState(13); 
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << Q_SET) | (1L << Q_ADD_JAR) | (1L << Q_USE) | (1L << Q_CREATE_FUNCTION) | (1L << Q_INSERT_INTO) | (1L << Q_INSERT_OVERWRITE) | (1L << Q_SELECT) | (1L << Q_DROP_TABLE) | (1L << Q_DROP_VIEW) | (1L << Q_ALTER_TABLE) | (1L << Q_CREATE_TABLE) | (1L << Q_CREATE_EXTERNAL_TABLE) | (1L << Q_CREATE_VIEW) | (1L << Q_CTE))) != 0) );
-			setState(15);
+			}
+			setState(10);
+			sql_stmt();
+			setState(11);
 			match(EOF);
 			}
 		}
@@ -207,7 +192,7 @@ public class QDSCommandParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(17);
+			setState(13);
 			((Sql_stmtContext)_localctx).op = _input.LT(1);
 			_la = _input.LA(1);
 			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << Q_SET) | (1L << Q_ADD_JAR) | (1L << Q_USE) | (1L << Q_CREATE_FUNCTION) | (1L << Q_INSERT_INTO) | (1L << Q_INSERT_OVERWRITE) | (1L << Q_SELECT) | (1L << Q_DROP_TABLE) | (1L << Q_DROP_VIEW) | (1L << Q_ALTER_TABLE) | (1L << Q_CREATE_TABLE) | (1L << Q_CREATE_EXTERNAL_TABLE) | (1L << Q_CREATE_VIEW) | (1L << Q_CTE))) != 0)) ) {
@@ -232,13 +217,11 @@ public class QDSCommandParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\25\26\4\2\t\2\4\3"+
-		"\t\3\3\2\3\2\7\2\t\n\2\f\2\16\2\f\13\2\6\2\16\n\2\r\2\16\2\17\3\2\3\2"+
-		"\3\3\3\3\3\3\2\2\4\2\4\2\3\3\2\3\20\2\25\2\r\3\2\2\2\4\23\3\2\2\2\6\n"+
-		"\5\4\3\2\7\t\7\22\2\2\b\7\3\2\2\2\t\f\3\2\2\2\n\b\3\2\2\2\n\13\3\2\2\2"+
-		"\13\16\3\2\2\2\f\n\3\2\2\2\r\6\3\2\2\2\16\17\3\2\2\2\17\r\3\2\2\2\17\20"+
-		"\3\2\2\2\20\21\3\2\2\2\21\22\7\2\2\3\22\3\3\2\2\2\23\24\t\2\2\2\24\5\3"+
-		"\2\2\2\4\n\17";
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\25\22\4\2\t\2\4\3"+
+		"\t\3\3\2\7\2\b\n\2\f\2\16\2\13\13\2\3\2\3\2\3\2\3\3\3\3\3\3\2\2\4\2\4"+
+		"\2\3\3\2\3\20\2\20\2\t\3\2\2\2\4\17\3\2\2\2\6\b\7\25\2\2\7\6\3\2\2\2\b"+
+		"\13\3\2\2\2\t\7\3\2\2\2\t\n\3\2\2\2\n\f\3\2\2\2\13\t\3\2\2\2\f\r\5\4\3"+
+		"\2\r\16\7\2\2\3\16\3\3\2\2\2\17\20\t\2\2\2\20\5\3\2\2\2\3\t";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

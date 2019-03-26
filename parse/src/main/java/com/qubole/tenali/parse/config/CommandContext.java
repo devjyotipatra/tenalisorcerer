@@ -10,9 +10,9 @@ public class CommandContext {
 
     String stmt;
 
-    String defaultSchema;
-
     QueryContext qCtx;
+
+    QueryType queryType;
 
     CommandContext parent;
 
@@ -65,32 +65,13 @@ public class CommandContext {
     }
 
 
-    public String getDefaultSchema() {
-        return defaultSchema;
-    }
-
-    /*public void setQueryType(QueryType type) {
-        if(qCtx == null) {
-            qCtx = new QueryContext(type);
-        } else {
-            qCtx.setQueryType(type);
-        }
-    }*/
 
     public QueryType getQueryType() {
-        return qCtx.getQueryType();
+        return queryType;
     }
 
     public void setQueryType(QueryType queryType) {
-        this.qCtx = new QueryContext(queryType);
-        if(queryType == QueryType.USE) {
-            String[] tokens = stmt.split("[\\s]+");
-            if(tokens.length > 1) {
-                defaultSchema = tokens[1].replace(";", "").trim();
-            }
-        } else {
-            defaultSchema = getParent() != null ? getParent().getDefaultSchema() : "default";
-        }
+        this.queryType = queryType;
     }
 
 
@@ -113,7 +94,7 @@ public class CommandContext {
 
 
     public CommandContext cloneContext() {
-        CommandContext ctx = new CommandContext(qCtx.queryType);
+        CommandContext ctx = new CommandContext(queryType);
         ctx.setStmt(stmt);
         return ctx;
     }
@@ -129,17 +110,11 @@ public class CommandContext {
         return qctx;
     }
 
-    public void appendNewContext(CommandContext qctx) {
-        CommandContext cctx = this;
-        appendNewContext(cctx, qctx);
+    public void appendNewContext(CommandContext cctx) {
+        setChild(cctx);
+        cctx.setParent(this);
     }
 
-
-
-    private void appendNewContext(CommandContext cctx, CommandContext qctx) {
-        qctx.setChild(cctx);
-        cctx.setParent(qctx);
-    }
 
 
     public void setIsDDLQuery() {
@@ -166,7 +141,7 @@ public class CommandContext {
             return false;
         }
         CommandContext context = (CommandContext) other;
-        return qCtx.getQueryType() == context.getQueryType() &&
+        return getQueryType() == context.getQueryType() &&
                 Objects.equals(parent, context.parent);
     }
 
@@ -177,7 +152,7 @@ public class CommandContext {
     }
 
 
-    public CommandContextIterator iterator() {
+    /*public CommandContextIterator iterator() {
         return new CommandContextIterator(this);
     }
 
@@ -218,5 +193,5 @@ public class CommandContext {
             return ctx;
         }
 
-    }
+    }*/
 }

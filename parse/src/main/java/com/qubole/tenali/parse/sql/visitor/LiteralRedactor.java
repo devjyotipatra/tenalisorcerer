@@ -8,7 +8,6 @@ import com.qubole.tenali.parse.sql.datamodel.TenaliAstNode;
 public class LiteralRedactor extends TenaliAstBaseVisitor<TenaliAstNode> {
 
     public TenaliAstNode visit(TenaliAstNode node) {
-        System.out.println("INSIDE  Literal Redactor ## " + node.getClass());
         if(node instanceof LiteralNode) {
             return new LiteralNode("TENALI_LITERAL");
         }

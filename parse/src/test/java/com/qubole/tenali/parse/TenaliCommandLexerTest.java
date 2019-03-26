@@ -71,9 +71,9 @@ public class TenaliCommandLexerTest {
         String command = "; ; SELECT logdate, site_key, survey_id, placement_key, question_id" +
                 " FROM ( select count(*) from marketing.stats_log_survey " +
             "WHERE survey_id='ZmOwqVvLFKtWroPKX5VN' AND event IN ('svyresp','svystart','svycomp') " +
-            "AND logdate>'2015-09-01') GROUP BY logdate, site_key, survey_id;";
+            "AND logdate>'2015-09-01') s  GROUP BY logdate, site_key, survey_id;";
 
-        SqlCommandTestHelper.parseHive(command);
+        //SqlCommandTestHelper.parseHive(command);
         SqlCommandTestHelper.parsePrestoQuery(command);
         //assertThat("correct number of queries is 1", cctx.getListQueryContext().size()==1);
     }
@@ -81,7 +81,7 @@ public class TenaliCommandLexerTest {
 
     @Test
     public void testSingleCommentSingleQuery() throws Exception {
-        String command = "-- some random * comment here\n" +
+        String command = "--some random * comment here" +
             "\n\n\n  use tenaliv2; " +
             "add jar s3://something_here/some_more_thing.jar; " +
             " SELECT logdate, site_key, survey_id, placement_key, question_id, answer_id, " +
@@ -112,7 +112,7 @@ public class TenaliCommandLexerTest {
     public void testBlockCommentMultipleQueries() throws Exception {
         String command = "/* some random comments \n\n here */" +
             "-- some random * comment here \n\r\n SELECT logdate, site_key, survey_id, placement_key, question_id, answer_id, " +
-            "tm_client_id, auction_id, exposed, correct FROM marketing.stats_log_survey " +
+            "tm_client_id, auction_id, exposed, correct FROM marketing. stats_log_survey " +
             "WHERE survey_id='ZmOwqVvLFKtWroPKX5VN' AND event IN ('svyresp','svystart','svycomp') " +
             "AND logdate>'2015-09-01' GROUP BY logdate, site_key, survey_id, placement_key, " +
             "question_id, answer_id, tm_client_id, auction_id, exposed, correct;\n\r\n\n\r\n" +
@@ -127,7 +127,7 @@ public class TenaliCommandLexerTest {
             "order by dt asc";
 
         SqlCommandTestHelper.parseHive(command);
-        SqlCommandTestHelper.parsePrestoQuery(command);
+        //SqlCommandTestHelper.parsePrestoQuery(command);
         //assertThat("correct number of queries is 3", cctx.getListQueryContext().size()==3);
     }
 

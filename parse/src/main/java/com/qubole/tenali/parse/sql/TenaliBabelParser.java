@@ -1,6 +1,8 @@
 package com.qubole.tenali.parse.sql;
 
+import com.qubole.tenali.parse.TenaliParser;
 import com.qubole.tenali.parse.config.CommandType;
+import com.qubole.tenali.parse.config.QueryContext;
 import com.qubole.tenali.parse.config.QueryType;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
@@ -15,7 +17,7 @@ import java.io.IOException;
 
 import static org.apache.calcite.sql.parser.SqlParser.configBuilder;
 
-public class TenaliBabelParser extends AnsiSqlParser {
+public class TenaliBabelParser implements TenaliParser {
 
     final Planner planner;
 
@@ -31,15 +33,17 @@ public class TenaliBabelParser extends AnsiSqlParser {
     }
 
     @Override
-    public ParseObject<SqlNode> parse(QueryType queryType, String command) throws IOException {
-        ParseObject parseObject = new ParseObject(CommandType.PRESTO, queryType);
+    public QueryContext parse(QueryType queryType, String command) throws IOException {
+        QueryContext parseObject = new QueryContext();
 
         try {
-            parseObject.setParseObject(planner.parse(command));
+            parseObject.setParseAst(planner.parse(command));
         } catch (SqlParseException ex) {
-            parseObject.setParseErrorMessage("Parsing Error From Babel parser  " + ex.getMessage());
+            //parseObject.setParseErrorMessage("Parsing Error From Babel parser  " + ex.getMessage());
         }
 
         return parseObject;
     }
+
+    public void prepare() {}
 }

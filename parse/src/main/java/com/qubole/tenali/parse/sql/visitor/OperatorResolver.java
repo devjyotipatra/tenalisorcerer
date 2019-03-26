@@ -29,9 +29,9 @@ public class OperatorResolver extends TenaliAstBaseVisitor<TenaliAstNode> {
         for (TenaliAstNode nn : operator.operands) {
             TenaliAstNode tn = visitNode(nn);
 
-            if(tn instanceof TenaliAstNodeList) {
+            /*if(tn instanceof TenaliAstNodeList) {
                 tn = ((TenaliAstNodeList) tn).getOperandlist().get(0);
-            }
+            }*/
 
             operands.add(tn);
         }
@@ -46,7 +46,7 @@ public class OperatorResolver extends TenaliAstBaseVisitor<TenaliAstNode> {
         } else if(node instanceof FunctionNode) {
             return (TenaliAstNode) node.accept(new FunctionResolver(catalog, columnAliasMap));
         } else if(node instanceof OperatorNode) {
-            return (TenaliAstNode) node.accept(this);
+            return (TenaliAstNode) node.accept(new OperatorResolver(catalog, columnAliasMap));
         }
 
         return resolveColumns(node, catalog, columnAliasMap);

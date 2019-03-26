@@ -1,6 +1,7 @@
 package com.qubole.tenali.parse;
 
 import com.qubole.tenali.parse.config.CommandType;
+import com.qubole.tenali.parse.config.QueryContext;
 import com.qubole.tenali.parse.config.QueryType;
 
 import java.io.IOException;
@@ -9,13 +10,15 @@ import java.util.Objects;
 /**
  * Created by devjyotip on 5/28/18.
  */
-public interface TenaliParser<T> {
+public interface TenaliParser {
 
-    ParseObject<T> parse(QueryType queryType, String command) throws IOException;
+    //ParseObject<T> parse(QueryType queryType, String command) throws IOException;
+
+    QueryContext parse(QueryType queryType, String command) throws IOException;
 
     void prepare();
 
-    public static class ParseObject<T> {
+    /*public static class ParseObject<T> {
         T obj;
 
         CommandType commandType;
@@ -96,5 +99,5 @@ public interface TenaliParser<T> {
 
             return str;
         }
-    }
+    }*/
 }
