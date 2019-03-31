@@ -11,11 +11,15 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 
 public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> {
+
+    private static final Logger LOG = LoggerFactory.getLogger(TenaliAstAliasResolver.class);
 
     List<Stack<TenaliAstNode>> subQueryStack = new ArrayList();
 
@@ -64,7 +68,7 @@ public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> 
                 join.accept(this);
             }
         } catch(Exception ex) {
-            System.out.println(ex.getMessage());
+            LOG.error(ex.getMessage());
             ex.printStackTrace();
         }
 
@@ -73,8 +77,6 @@ public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> 
 
 
     public TenaliAstNode visitSelectNode(int scope, TenaliAstNode select) throws Exception {
-        System.out.println("TenaliAstAliasResolver => ");
-
         SelectBuilder selectBuilder = new SelectBuilder();
 
         List<Triple<String, String, List<String>>> catalog = new ArrayList();
@@ -96,7 +98,7 @@ public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> 
         // FROM
         for (TenaliAstNode ast : sNode.from) {
             catalog.addAll(visitFromNode(scope, null, ast));
-            System.out.println("SELECT  CATALOG " + catalog);
+            LOG.info("CATALOG  =>  " + catalog);
         }
 
         while (!subQueryStack.get(scope).empty()) {
@@ -138,7 +140,7 @@ public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> 
         }
 
 
-        System.out.println("~~~~~~~~ RETURNING  FROM  SELECT --- " );
+        LOG.debug("~~~~~~~~ RETURNING  FROM  SELECT --- " );
 
         TenaliAstNode resolvedSelect = selectBuilder.build();
         return resolvedSelect;
@@ -148,14 +150,13 @@ public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> 
     // (table/subq alias, table name (null in case of subq), list of selection columns)
     public List<Triple<String, String, List<String>>> visitFromNode(
             int scope, String alias, TenaliAstNode from) throws Exception {
-        System.out.println("visitFromNode #############  " + from.getClass());
         List<Triple<String, String, List<String>>> catalog = new ArrayList<>();
 
         TenaliAstNode select = null;
 
         if (from instanceof IdentifierNode) {
             catalog = ImmutableList.of(getCatalog(alias, ((IdentifierNode) from).name, from));
-            System.out.println("########PUSING STACK TABLE ###########################   ");
+            LOG.debug("PUSHING STACK TABLE ..");
             push(scope, from);
         } else if (from instanceof AsNode) {
             AsNode t = ((AsNode) from);
@@ -164,7 +165,7 @@ public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> 
         } else if (from instanceof SelectNode) {
             select = visitSelectNode(scope + 1, from);
             catalog = ImmutableList.of(getCatalog(alias, null, select));
-            System.out.println("########PUSING STACK SELECT ###########################   ");
+            LOG.debug("PUSHING STACK SELECT ..");
             push(scope, select);
         } else if (from instanceof JoinNode) {
             //joinMap.put(root, from);
@@ -176,9 +177,9 @@ public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> 
             String joinType = join.joinType;
 
             List<Triple<String, String, List<String>>> catalogLeft = visitFromNode(scope, null, left);
-            System.out.println(" ############### ########## ##########  1   ");
+            LOG.debug("JOIN LEFT DONE ..");
             List<Triple<String, String, List<String>>> catalogRight = visitFromNode(scope, null, right);
-            System.out.println(" ############### ########## ##########  2   ");
+            LOG.debug("JOIN RIGHT DONE ..");
 
             catalog.addAll(catalogLeft);
             catalog.addAll(catalogRight);
@@ -192,24 +193,21 @@ public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> 
                 builder.setLeftNode(subQueryStack.get(scope).pop());
             }
 
-            System.out.println("Join  catalog ::::::: " + catalog);
+            LOG.debug("Join  catalog = " + catalog);
 
             builder.setJoinType(joinType);
             builder.setJoinCondition(resolveWhereCondition(condition, catalog));
 
-            //TenaliAstNode resolvedJoin = resolveJoin(builder.build(), catalog);
-            System.out.println("######## PUSING STACK JOIN ###########################   ");
-            //push(scope, resolvedJoin);
+            LOG.debug("PUSING STACK JOIN..");
             push(scope, builder.build());
         } else if (from instanceof FunctionNode) {
             FunctionNode func = (FunctionNode) from;
             TenaliAstNode ast = (TenaliAstNode) from.accept(new FunctionResolver(catalog, columnAliasMap));
             catalog = ImmutableList.of(getCatalog(alias, func.functionName, func.arguments));
-            System.out.println("########PUSING STACK FUNCTION ###########################   " + ast.toString());
             push(scope, ast);
+            LOG.debug("PUSHING STACK FUNCTION ..");
         }
 
-        System.out.println("FROM  CATALOG " + catalog);
         return catalog;
     }
 

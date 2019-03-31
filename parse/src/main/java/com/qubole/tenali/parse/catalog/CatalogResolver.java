@@ -3,10 +3,15 @@ package com.qubole.tenali.parse.catalog;
 import com.qubole.tenali.parse.sql.TenaliAstBaseVisitor;
 import com.qubole.tenali.parse.sql.datamodel.IdentifierNode;
 import com.qubole.tenali.parse.sql.datamodel.TenaliAstNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Collections;
 
 
 public class CatalogResolver<T extends Catalog> extends TenaliAstBaseVisitor<CatalogTable> {
+
+    private static final Logger LOG = LoggerFactory.getLogger(CatalogResolver.class);
 
     final T catalog;
 
@@ -33,12 +38,10 @@ public class CatalogResolver<T extends Catalog> extends TenaliAstBaseVisitor<Cat
             }
 
             try {
-                System.out.println("tableName => " + tabName);
-                System.out.println("dbName => " + dbName);
-                //catalogTable = metastore.getSchema("5911", dbName.toLowerCase(), tabName.toLowerCase());
+                LOG.info(String.format("Calling Metastore API for resolving  %s.%s ", dbName, tabName));
                 catalogTable = catalog.getSchema(dbName.toLowerCase(), tabName.toLowerCase());
             } catch(Exception ex) {
-                System.out.println(ex.getMessage() + "  " + ex.toString());
+                LOG.error(ex.getMessage() + "  " + ex.toString());
                 catalogTable = new CatalogTable(tableName, null, Collections.EMPTY_LIST);
             }
         }

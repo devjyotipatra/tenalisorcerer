@@ -1,16 +1,17 @@
 package com.qubole.tenali.parse.sql;
 
 
-import com.qubole.tenali.parse.TenaliParser;
 import com.qubole.tenali.parse.config.QueryContext;
 import com.qubole.tenali.parse.config.QueryType;
-import com.qubole.tenali.parse.config.CommandType;
+import com.qubole.tenali.parse.exception.TenaliSQLParseException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.ParseDriver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 
-public class HiveSqlParser implements TenaliParser {
+public class HiveSqlParser extends TenaliSqlParser {
+    private static final Logger LOG = LoggerFactory.getLogger(HiveSqlParser.class);
 
     static ParseDriver parseDriver;
 
@@ -20,12 +21,11 @@ public class HiveSqlParser implements TenaliParser {
         parseDriver = new ParseDriver();
     }
 
-    public QueryContext parse(QueryType queryType, String sql) throws IOException {
+    public QueryContext parse(QueryType queryType, String sql) throws TenaliSQLParseException {
         QueryContext parseObj = new QueryContext();
 
         if(queryType == QueryType.USE) {
-            String[] tokens = sql.split("[\\s]+");
-            parseObj.setDefaultDB(tokens[1]);
+            parseObj.setDefaultDB(parseUseStmt(sql));
         } else {
             try {
                 ASTNode root = parseDriver.parse(sql);
@@ -34,7 +34,9 @@ public class HiveSqlParser implements TenaliParser {
                     parseObj.setParseAst(root.getChild(0));
                 }
             } catch (Exception e) {
-                throw new IOException("Parse failed for: " + sql + " Exception: " + e.getMessage());
+                String message = String.format("Parse failed for: %s  \n Exception: ", sql, e.getMessage());
+                LOG.error(message);
+                throw new TenaliSQLParseException(e);
             }
         }
 

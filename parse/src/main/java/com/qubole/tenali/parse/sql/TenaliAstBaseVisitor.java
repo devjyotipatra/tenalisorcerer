@@ -7,10 +7,13 @@ import com.qubole.tenali.parse.sql.datamodel.*;
 import com.qubole.tenali.parse.sql.visitor.FunctionResolver;
 import com.qubole.tenali.parse.sql.visitor.OperatorResolver;
 import org.apache.commons.lang3.tuple.Triple;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 public abstract class TenaliAstBaseVisitor<T> extends AstBaseVisitor<TenaliAstNode, T> {
+    private static final Logger LOG = LoggerFactory.getLogger(TenaliAstBaseVisitor.class);
 
     protected String defaultDb = "default";
 
@@ -54,7 +57,7 @@ public abstract class TenaliAstBaseVisitor<T> extends AstBaseVisitor<TenaliAstNo
         } else {
             columns = (TenaliAstNodeList) column;
         }
-        System.out.println("===== ENTERING RESOLVE COLUMNS ====  " );
+        LOG.debug("ENTERING RESOLVE COLUMNS ..  " );
         Set<TenaliAstNode> resolvedColumns = new HashSet();
         Set<TenaliAstNode> unResolvedColumns = new HashSet();
 
@@ -64,7 +67,6 @@ public abstract class TenaliAstBaseVisitor<T> extends AstBaseVisitor<TenaliAstNo
             List<String> columnNames = cat.getRight();
 
             Map<String, String> tableColumns =  getColumnMap(tableName, columnNames);
-            System.out.println(tableColumns + " =========================== ====  " + tableAlias);
 
             for (TenaliAstNode col : columns.getOperandlist()) {
                 String name = null;
@@ -116,7 +118,7 @@ public abstract class TenaliAstBaseVisitor<T> extends AstBaseVisitor<TenaliAstNo
                     resolvedColumn = tableColumns.get(name);
                 }
 
-                System.out.println(" :  Lookup Name : " + name + " ::::  " +   " ResolvedName  " + resolvedColumn);
+                LOG.debug(" :  Lookup Name : " + name + " ::::  " +   " ResolvedName  " + resolvedColumn);
 
                 if (resolvedColumn != null) {
                     resolvedColumns.add(unresColumn);
@@ -140,7 +142,7 @@ public abstract class TenaliAstBaseVisitor<T> extends AstBaseVisitor<TenaliAstNo
             }
         }
 
-        System.out.println("normalizedColumns ====  " + normalizedColumns);
+        LOG.debug("normalizedColumns =  " + normalizedColumns);
 
         return normalizedColumns;
     }

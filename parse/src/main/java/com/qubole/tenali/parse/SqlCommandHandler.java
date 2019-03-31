@@ -6,10 +6,8 @@ import com.qubole.tenali.parse.config.CommandType;
 import com.qubole.tenali.parse.config.CommandContext;
 import com.qubole.tenali.parse.config.QueryContext;
 import com.qubole.tenali.parse.config.QueryType;
-import com.qubole.tenali.parse.exception.SQLSyntaxError;
 import com.qubole.tenali.parse.exception.TenaliSQLParseException;
 import com.qubole.tenali.parse.sql.datamodel.TenaliAstNode;
-import jline.internal.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +24,7 @@ public final class SqlCommandHandler extends CommandHandler {
 
     @Override
     public CommandContext build(String command) {
+        ImmutableList<AstTransformer> transformers = transformerBuilder.build();
 
         if (lexer != null && lexer.getCommandType() == commandType) {
             extractQueries(lexer, command);
@@ -36,61 +35,51 @@ public final class SqlCommandHandler extends CommandHandler {
 
         CommandContext rootCtx = lexer.getRootContext();
         if(rootCtx == null) {
-            ///
+            LOG.error("Lexer could not find a vaid SQL query string");
+            return rootCtx;
         }
-
-        LOG.info("Lexing successful for the query ");
 
         CommandContext commandContext = rootCtx;
         prepareParser(parser);
-
-        QueryContext prevContext = null;
 
         while (rootCtx != null) {
             QueryType queryType = rootCtx.getQueryType();
 
             if (isParsableCommand(queryType)) {
                 try {
-                    System.out.println("Parsing ==> " +  rootCtx.getStmt());
                     QueryContext context = parser.parse(queryType, rootCtx.getStmt());
                     rootCtx.setQueryContext(context);
 
-                    if (prevContext != null) {
-                        context.setDefaultDB(prevContext.getDefaultDB());
+                    if (rootCtx.hasParent()) {
+                        context.setDefaultDB(rootCtx.getParent().getQueryContext().getDefaultDB());
                     }
 
-                    prevContext = context;
+                    Object ast = context.getParseAst();
 
-                    if (context.getParseAst() == null) {
-                        if (context.getErrorMessage() != null) {
-                            throw new TenaliSQLParseException(context.getErrorMessage());
+                    LOG.debug("TENALI AST  << .. =>  " + context.toString());
+
+                    if (transformers.size() > 0) {
+                        for (AstTransformer transformer : transformers) {
+                            Class clazz = Class.forName(transformer.getType().getCanonicalName());
+                            ast = transformer.transform(clazz.cast(ast), rootCtx);
+
+                            ObjectMapper objectMapper = new ObjectMapper();
+                            LOG.info(String.format("Transformed using %s => %s", transformer.getIdentifier(),
+                                    objectMapper.writeValueAsString(ast)));
                         }
-                    } else {
-                        Object ast = context.getParseAst();
 
-                        System.out.println("TENALI AST  << =>  " + context.toString());
-
-                        ImmutableList<AstTransformer> transformers = this.transformerBuilder.build();
-
-                        if (transformers.size() > 0) {
-                            for (AstTransformer transformer : transformers) {
-                                System.out.println("TENALI transformer  << =>  " + transformer.getIdentifier());
-                                Class clazz = Class.forName(transformer.getType().getCanonicalName());
-                                ast = transformer.transform(clazz.cast(ast), rootCtx);
-
-                                ObjectMapper objectMapper = new ObjectMapper();
-                                System.out.println("======~~~~~~~~~>>" + objectMapper.writeValueAsString(ast));
-                            }
-
-                            context.setTenaliAst((TenaliAstNode) ast);
-                        }
+                        context.setTenaliAst((TenaliAstNode) ast);
                     }
                 } catch (ClassNotFoundException ex) {
-                    System.out.println(String.format("Transformation Error: Class not found for ",
+                    LOG.error(String.format("Transformation Error: Class not found for ",
                             rootCtx.getStmt(), ex.getMessage()));
                 } catch (ClassCastException ex) {
-                    System.out.println("Transformation Error:  " + ex.getMessage());
+                    LOG.error("Transformation Error:  " + ex.getMessage());
+                } catch (TenaliSQLParseException ep) {
+                    LOG.error("Parse Exception:  " + ep.getMessage());
+                    ep.printStackTrace();
                 } catch (IOException io) {
+                    LOG.error("Parse Exception:  " + io.getMessage());
                     io.printStackTrace();
                 }
             }
@@ -104,7 +93,8 @@ public final class SqlCommandHandler extends CommandHandler {
 
     private boolean isParsableCommand(QueryType queryType) {
         if(queryType == QueryType.SET
-                || queryType == QueryType.ADD_JAR) {
+                || queryType == QueryType.ADD_JAR
+                || queryType == QueryType.ALTER_TABLE) {
             return false;
         }
 

@@ -29,10 +29,6 @@ public class OperatorResolver extends TenaliAstBaseVisitor<TenaliAstNode> {
         for (TenaliAstNode nn : operator.operands) {
             TenaliAstNode tn = visitNode(nn);
 
-            /*if(tn instanceof TenaliAstNodeList) {
-                tn = ((TenaliAstNodeList) tn).getOperandlist().get(0);
-            }*/
-
             operands.add(tn);
         }
 

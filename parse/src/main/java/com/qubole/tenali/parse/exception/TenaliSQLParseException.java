@@ -5,9 +5,6 @@ package com.qubole.tenali.parse.exception;
  */
 public class TenaliSQLParseException extends RuntimeException {
 
-  private final org.slf4j.Logger logger =
-      org.slf4j.LoggerFactory.getLogger(TenaliSQLParseException.class);
-
   /**
    * SQL Parser Error Types
    */

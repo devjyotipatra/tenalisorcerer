@@ -6,9 +6,9 @@ import com.qubole.tenali.parse.config.QueryType;
 
 public interface AstTransformer<S, T> {
 
-    public T transform(S ast, CommandContext ctx);
+    T transform(S ast, CommandContext ctx);
 
-    public String getIdentifier();
+    String getIdentifier();
 
-    public Class getType();
+    Class getType();
 }

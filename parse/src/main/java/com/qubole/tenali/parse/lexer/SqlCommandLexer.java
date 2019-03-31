@@ -8,8 +8,9 @@ import com.qubole.tenali.parse.config.CommandType;
 import com.qubole.tenali.parse.config.QueryType;
 import com.qubole.tenali.parse.exception.CommandErrorListener;
 import com.qubole.tenali.parse.exception.CommandParseError;
-import com.qubole.tenali.parse.exception.SQLSyntaxError;
 import com.qubole.tenali.parse.config.CommandContext;
+import com.qubole.tenali.parse.exception.SQLSyntaxError;
+import jline.internal.Log;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -73,10 +74,9 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
 
         String stmt = ctx.getText().trim();
         int queryType = ctx.op.getType();
-
-        System.out.println("LEXINg => " + stmt);
-
         qctx.setStmt(stmt);
+
+        Log.info(String.format("lexing now  %s ", stmt));
 
         switch (queryType) {
             case Q_SELECT:
@@ -137,8 +137,14 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
 
     @Override
     public CommandContext visitChildren(RuleNode node) {
-        ParseTree c = node.getChild(node.getChildCount() - 2);
-        return c.accept(this);
+        switch(node.getChildCount()) {
+            case 2:
+                return node.getChild(0).accept(this);
+            case 3:
+                return node.getChild(1).accept(this);
+        }
+
+        return null;
     }
 
     @Override
@@ -160,7 +166,6 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
         for(String query : commandTokens) {
             try {
                 query = query.replaceAll("\u0006", "").trim();
-                System.out.println("Query => " + query);
                 if(query.length() > 0) {
                     InputStream antlrInputStream =
                             new ByteArrayInputStream(query.getBytes(StandardCharsets.UTF_8));
@@ -185,13 +190,12 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
                             this.aggregateResult(currentContext, ctx);
                         }
                     }
-
                 }
 
             } catch (CommandParseError e) {
-                System.out.println(e.getMessage());
+                throw new SQLSyntaxError(e);
             } catch (IOException ie) {
-                //throw new SQLSyntaxError(ie);
+                throw new SQLSyntaxError(ie);
             }
         }
     }
