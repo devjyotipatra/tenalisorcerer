@@ -32,6 +32,7 @@ public abstract class TenaliAstBaseVisitor<T> extends AstBaseVisitor<TenaliAstNo
 
         if(queryType == QueryType.SELECT
                 || queryType == QueryType.CTE
+                || queryType == QueryType.CTAS
                 || queryType == QueryType.INSERT_OVERWRITE
                 || queryType == QueryType.CREATE_TABLE
                 || queryType == QueryType.DROP_TABLE

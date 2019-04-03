@@ -1,10 +1,11 @@
 package com.qubole.tenali.parse.sql;
 
 import com.qubole.tenali.parse.TenaliParser;
-import com.qubole.tenali.parse.config.CommandType;
 import com.qubole.tenali.parse.config.QueryContext;
 import com.qubole.tenali.parse.config.QueryType;
 import com.qubole.tenali.parse.config.TenaliConformance;
+import com.qubole.tenali.parse.exception.TenaliSQLParseException;
+import com.qubole.tenali.parse.sql.datamodel.MetaNode;
 import org.apache.calcite.avatica.util.Casing;
 import org.apache.calcite.avatica.util.Quoting;
 import org.apache.calcite.sql.SqlNode;
@@ -12,22 +13,33 @@ import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.parser.impl.SqlParserImpl;
 import org.apache.calcite.sql.validate.SqlConformance;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class PrestoSqlParser implements TenaliParser {
+public class PrestoSqlParser extends TenaliSqlParser {
+
+    private static final Logger LOG = LoggerFactory.getLogger(PrestoSqlParser.class);
 
     SqlParser sqlParser = null;
 
     @Override
-    public QueryContext parse(QueryType queryType, String sql) throws IOException {
+    public QueryContext parse(QueryType queryType, String sql) throws TenaliSQLParseException {
         QueryContext parseObj = new QueryContext();
 
-        if(queryType == QueryType.USE) {
-            String[] tokens = sql.split("[\\s]+");
-            parseObj.setDefaultDB(tokens[1]);
-        } else {
-            parseObj.setParseAst(parse(sql));
+        try {
+            if (queryType == QueryType.USE) {
+                MetaNode node = parseUseStmt(sql);
+                parseObj.setDefaultDB(node.statement);
+                parseObj.setParseAst(node);
+            } else {
+                parseObj.setParseAst(parse(sql));
+            }
+        } catch(IOException e) {
+            String message = String.format("Parse failed for: %s  \n Exception: ", sql, e.getMessage());
+            LOG.error(message);
+            throw new TenaliSQLParseException(e);
         }
 
         return parseObj;

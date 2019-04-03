@@ -5,25 +5,26 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qubole.tenali.parse.sql.TenaliAstBaseVisitor;
 
-public class MetaNode extends TenaliAstNode {
+public class SetNode extends TenaliAstNode {
 
-    public String statement;
+    public String key;
+    public String value;
 
     @JsonCreator
-    public MetaNode(@JsonProperty("statement") String statement) {
+    public SetNode(@JsonProperty("key") String key, @JsonProperty("value") String value) {
         super();
-        this.statement = statement;
-
+        this.key = key;
+        this.value = value;
     }
 
     @Override
     public Object accept(TenaliAstBaseVisitor visitor) {
-        return statement;
+        return key + "." + value;
     }
 
     @Override
     public String toString() {
-        return statement;
+        return key + "." + value;
     }
 
 }

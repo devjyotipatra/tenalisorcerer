@@ -1,10 +1,8 @@
 package com.qubole.tenali.parse.sql;
 
-import com.qubole.tenali.parse.TenaliParser;
-import com.qubole.tenali.parse.config.CommandType;
 import com.qubole.tenali.parse.config.QueryContext;
 import com.qubole.tenali.parse.config.QueryType;
-import org.apache.calcite.sql.SqlNode;
+import com.qubole.tenali.parse.exception.TenaliSQLParseException;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.parser.babel.SqlBabelParserImpl;
@@ -12,12 +10,16 @@ import org.apache.calcite.sql.validate.SqlConformanceEnum;
 import org.apache.calcite.tools.FrameworkConfig;
 import org.apache.calcite.tools.Frameworks;
 import org.apache.calcite.tools.Planner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+
 
 import static org.apache.calcite.sql.parser.SqlParser.configBuilder;
 
-public class TenaliBabelParser implements TenaliParser {
+public class TenaliBabelParser extends TenaliSqlParser {
+
+    private static final Logger LOG = LoggerFactory.getLogger(TenaliBabelParser.class);
 
     final Planner planner;
 
@@ -33,13 +35,15 @@ public class TenaliBabelParser implements TenaliParser {
     }
 
     @Override
-    public QueryContext parse(QueryType queryType, String command) throws IOException {
+    public QueryContext parse(QueryType queryType, String sql) throws TenaliSQLParseException {
         QueryContext parseObject = new QueryContext();
 
         try {
-            parseObject.setParseAst(planner.parse(command));
-        } catch (SqlParseException ex) {
-            //parseObject.setParseErrorMessage("Parsing Error From Babel parser  " + ex.getMessage());
+            parseObject.setParseAst(planner.parse(sql));
+        } catch (SqlParseException e) {
+            String message = String.format("Parse failed for: %s  \n Exception: ", sql, e.getMessage());
+            LOG.error(message);
+            throw new TenaliSQLParseException(e);
         }
 
         return parseObject;

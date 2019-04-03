@@ -7,12 +7,12 @@ import com.qubole.tenali.parse.sql.TenaliAstBaseVisitor;
 public class DDLNode extends TenaliAstNode {
     public String ddlToken;
     public TenaliAstNode selectNode;
-    public TenaliAstNode tableNode;
+    public IdentifierNode tableNode;
 
     @JsonCreator
     public DDLNode(@JsonProperty("ddlToken") String token,
                    @JsonProperty("selectNode") TenaliAstNode selectNode,
-                   @JsonProperty("tableNode") TenaliAstNode tableNode) {
+                   @JsonProperty("tableNode") IdentifierNode tableNode) {
         this.ddlToken = token;
         this.selectNode = selectNode;
         this.tableNode = tableNode;
@@ -22,7 +22,7 @@ public class DDLNode extends TenaliAstNode {
         return selectNode;
     }
 
-    public TenaliAstNode getTableNode() {
+    public IdentifierNode getTableNode() {
         return tableNode;
     }
 

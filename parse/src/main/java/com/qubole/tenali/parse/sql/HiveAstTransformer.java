@@ -7,11 +7,15 @@ import com.qubole.tenali.parse.sql.datamodel.*;
 import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 
 public class HiveAstTransformer extends AstBaseVisitor<ASTNode, TenaliAstNode> {
+
+    private static final Logger LOG = LoggerFactory.getLogger(HiveAstTransformer.class);
 
     CommandContext ctx;
 
@@ -27,6 +31,8 @@ public class HiveAstTransformer extends AstBaseVisitor<ASTNode, TenaliAstNode> {
             return new DDLNode(ast.toString(), null, null);
         }
 
+        LOG.debug("Hive AST => " + ast.dump());
+
         return parse(ast);
     }
 
@@ -35,9 +41,9 @@ public class HiveAstTransformer extends AstBaseVisitor<ASTNode, TenaliAstNode> {
         return ((operator >= HiveParser.TOK_ALTERDATABASE_OWNER)
                 && (operator <= HiveParser.TOK_ALTERVIEW_RENAME))
                 || ((operator >= HiveParser.TOK_CREATEDATABASE)
-                && (operator <= HiveParser.TOK_CREATEVIEW))
+                && (operator < HiveParser.TOK_CREATEVIEW))
                 || ((operator >= HiveParser.TOK_DROPDATABASE)
-                && (operator <= HiveParser.TOK_DROPVIEW))
+                && (operator < HiveParser.TOK_DROPVIEW))
                 || ((operator >= HiveParser.TOK_SHOWCOLUMNS)
                 && (operator <= HiveParser.TOK_SHOW_TRANSACTIONS))
                 || ((operator >= HiveParser.TOK_GRANT)
@@ -51,9 +57,7 @@ public class HiveAstTransformer extends AstBaseVisitor<ASTNode, TenaliAstNode> {
     public boolean isSupportedDDL(int operator) {
         return operator == HiveParser.TOK_CREATETABLE
                 || operator == HiveParser.TOK_CREATEVIEW
-                || operator == HiveParser.TOK_DROPTABLE
-                || operator == HiveParser.TOK_DROPVIEW
-                || operator == HiveParser.TOK_ALTERTABLE;
+                || operator == HiveParser.TOK_DROPTABLE;
     }
 
 
@@ -207,23 +211,31 @@ public class HiveAstTransformer extends AstBaseVisitor<ASTNode, TenaliAstNode> {
 
     private TenaliAstNode parseCreate(ASTNode node) {
         TenaliAstNode selectNode = null;
-        TenaliAstNode tableNode = null;
+        IdentifierNode tableNode = null;
         String ddlToken = node.toString();
-        for (org.apache.hadoop.hive.ql.lib.Node child : node.getChildren()) {
-            if (child instanceof ASTNode
-                    && ((ASTNode) child).getToken().getType() == HiveParser.TOK_QUERY) {
-                selectNode = parseQuery((ASTNode) child);
+        try {
+            for (org.apache.hadoop.hive.ql.lib.Node child : node.getChildren()) {
+                if (child instanceof ASTNode
+                        && ((ASTNode) child).getToken().getType() == HiveParser.TOK_QUERY) {
+                    selectNode = parseQuery((ASTNode) child);
+                    /*child = (ASTNode) ((ASTNode) child).getChild(0);
+                    if (((ASTNode) child).getToken().getType() == HiveParser.TOK_INSERT) {
+                        selectNode = parseInsert((ASTNode) child);
+                    }*/
+                }
+                if (child instanceof ASTNode
+                        && ((ASTNode) child).getToken().getType() == HiveParser.TOK_TABNAME) {
+                    tableNode = getTabname((ASTNode) child, true);
+                }
             }
-            if (child instanceof ASTNode
-                    && ((ASTNode) child).getToken().getType() == HiveParser.TOK_TABNAME) {
-                tableNode = getTabname((ASTNode) child, true);
-            }
+        } catch(Exception ex) {
+            return new ErrorNode("Issue in parsing CTAS or table name");
         }
         return new DDLNode(ddlToken, selectNode, tableNode);
     }
 
     private TenaliAstNode parseDrop(ASTNode node) throws Exception {
-        TenaliAstNode tableNode = null;
+        IdentifierNode tableNode = null;
         String ddlToken = node.toString();
         ddlToken = ddlToken.equals("TOK_DROPTABLE") ? QueryType.DROP_TABLE.name() :
                 (ddlToken.equals("TOK_DROPVIEW") ? QueryType.DROP_VIEW.name() : QueryType.UNKNOWN.name());
@@ -238,7 +250,7 @@ public class HiveAstTransformer extends AstBaseVisitor<ASTNode, TenaliAstNode> {
     }
 
     private TenaliAstNode parseAlterTable(ASTNode node) throws Exception {
-        TenaliAstNode tableNode = null;
+        IdentifierNode tableNode = null;
         String ddlToken = "ALTER_TABLE";
         TenaliAstNodeList partitions = null;
 
@@ -327,10 +339,10 @@ public class HiveAstTransformer extends AstBaseVisitor<ASTNode, TenaliAstNode> {
         return tableName.toUpperCase();
     }
 
-    private TenaliAstNode getTabname(ASTNode node, boolean isTable) {
+    private IdentifierNode getTabname(ASTNode node, boolean isTable) {
         String schemaName = null;
         String tableName;
-        TenaliAstNode table;
+        IdentifierNode table;
 
         if (!isTable) {
             tableName = getColName(node);
