@@ -42,17 +42,15 @@ public final class SqlCommandHandler extends CommandHandler {
 
         while (rootCtx != null) {
             QueryType queryType = rootCtx.getQueryType();
-            QueryContext context = null;
-            Object ast = null;
             try {
-                context = parser.parse(queryType, rootCtx.getStmt());
+                QueryContext context = parser.parse(queryType, rootCtx.getStmt());
                 rootCtx.setQueryContext(context);
 
                 if (rootCtx.hasParent() && rootCtx.getParent().getQueryContext() != null) {
                     context.setDefaultDB(rootCtx.getParent().getQueryContext().getDefaultDB());
                 }
 
-                ast = context.getParseAst();
+                Object ast = context.getParseAst();
 
                 LOG.debug("TENALI AST  << .. =>  " + ast.toString());
 
@@ -77,7 +75,7 @@ public final class SqlCommandHandler extends CommandHandler {
             } catch (TenaliSQLParseException ep) {
                 LOG.error("Parsing Error:  " + ep.getMessage());
             } catch (Exception ee) {
-                LOG.error("Json Error:  " + ee.getMessage());
+                LOG.error("Json Conversion Error:  " + ee.getMessage());
             }
 
             rootCtx = rootCtx.getChild();
