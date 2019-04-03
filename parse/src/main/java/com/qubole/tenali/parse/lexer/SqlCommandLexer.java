@@ -63,7 +63,6 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
         if (ctx.getChild(0) == ctx.EOF()) {
             return null;
         }
-
         return visitChildren(ctx);
     }
 
@@ -72,12 +71,12 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
     public CommandContext visitSql_stmt(antlr4.QDSCommandParser.Sql_stmtContext ctx) {
         CommandContext qctx = new CommandContext();
 
-        String stmt = ctx.getText().trim();
-        int queryType = ctx.op.getType();
+        String stmt = ctx.getText();
         qctx.setStmt(stmt);
 
         Log.info(String.format("lexing now  %s ", stmt));
 
+        int queryType = ctx.op.getType();
         switch (queryType) {
             case Q_SELECT:
                 qctx.setQueryType(QueryType.SELECT);
@@ -125,10 +124,7 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
                 //cctx.addJarPath(getJar(stmt));
                 break;
             default:
-                qctx.setIsDDLQuery();
-                if(isSupportedDDL(queryType)) {
-                    qctx.setIsSupportedDDLQuery();
-                }
+                qctx.setQueryType(QueryType.UNKNOWN);
         }
 
         return qctx;
@@ -165,7 +161,9 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
         String[] commandTokens = command.split(";");
         for(String query : commandTokens) {
             try {
-                query = query.replaceAll("\u0006", "").trim();
+                query = query.replaceAll("\u0006", " ")
+                            .replaceAll("`", "").trim();
+
                 if(query.length() > 0) {
                     InputStream antlrInputStream =
                             new ByteArrayInputStream(query.getBytes(StandardCharsets.UTF_8));

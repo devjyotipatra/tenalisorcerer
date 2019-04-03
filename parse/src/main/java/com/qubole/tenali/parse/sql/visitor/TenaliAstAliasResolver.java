@@ -40,22 +40,14 @@ public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> 
             if(root instanceof DDLNode) {
                 DDLNode ddl = (DDLNode) root;
                 String ddlToken = ddl.ddlToken;
-                TenaliAstNode tableNode = ddl.tableNode;
+                IdentifierNode tableNode = ddl.tableNode;
 
                 if(tableNode != null && ddl.selectNode != null) {
                     if(ddl.selectNode instanceof SelectNode) {
-                        SelectNode select = (SelectNode) visitSelectNode(0, ddl.selectNode);
+                        SelectNode selectNode = (SelectNode) visitSelectNode(0, ddl.selectNode);
 
-                        TenaliAstNodeList keywords = select.keywords;
-                        if(keywords == null) {
-                            keywords = new TenaliAstNodeList();
-                        }
-                        keywords.add(new OperatorNode("CTAS",
-                                new TenaliAstNodeList().add(tableNode)));
+                        return new DDLNode(ddlToken, selectNode, tableNode);
 
-                        SelectBuilder builder = new SelectBuilder(select);
-                        builder.setKeywords(keywords);
-                        return builder.build();
                     } else if(ddl.selectNode instanceof OperatorNode) {
                         return root;
                     }
@@ -79,13 +71,17 @@ public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> 
     public TenaliAstNode visitSelectNode(int scope, TenaliAstNode select) throws Exception {
         SelectBuilder selectBuilder = new SelectBuilder();
 
+        SelectNode sNode = (SelectNode) select;
+
+        if(sNode.from == null) {
+            return select;
+        }
+
+
         List<Triple<String, String, List<String>>> catalog = new ArrayList();
         while (!catalogStack.isEmpty()) {
             catalog.addAll(catalogStack.pop());
         }
-
-
-        SelectNode sNode = (SelectNode) select;
 
         // WITH
         TenaliAstNodeList with = sNode.with;

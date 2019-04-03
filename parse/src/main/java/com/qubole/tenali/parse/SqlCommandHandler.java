@@ -11,8 +11,6 @@ import com.qubole.tenali.parse.sql.datamodel.TenaliAstNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-
 
 public final class SqlCommandHandler extends CommandHandler {
 
@@ -35,7 +33,7 @@ public final class SqlCommandHandler extends CommandHandler {
 
         CommandContext rootCtx = lexer.getRootContext();
         if(rootCtx == null) {
-            LOG.error("Lexer could not find a vaid SQL query string");
+            LOG.error("Lexer could not find a valid SQL query string");
             return rootCtx;
         }
 
@@ -44,60 +42,47 @@ public final class SqlCommandHandler extends CommandHandler {
 
         while (rootCtx != null) {
             QueryType queryType = rootCtx.getQueryType();
+            QueryContext context = null;
+            Object ast = null;
+            try {
+                context = parser.parse(queryType, rootCtx.getStmt());
+                rootCtx.setQueryContext(context);
 
-            if (isParsableCommand(queryType)) {
-                try {
-                    QueryContext context = parser.parse(queryType, rootCtx.getStmt());
-                    rootCtx.setQueryContext(context);
-
-                    if (rootCtx.hasParent()) {
-                        context.setDefaultDB(rootCtx.getParent().getQueryContext().getDefaultDB());
-                    }
-
-                    Object ast = context.getParseAst();
-
-                    LOG.debug("TENALI AST  << .. =>  " + context.toString());
-
-                    if (transformers.size() > 0) {
-                        for (AstTransformer transformer : transformers) {
-                            Class clazz = Class.forName(transformer.getType().getCanonicalName());
-                            ast = transformer.transform(clazz.cast(ast), rootCtx);
-
-                            ObjectMapper objectMapper = new ObjectMapper();
-                            LOG.info(String.format("Transformed using %s => %s", transformer.getIdentifier(),
-                                    objectMapper.writeValueAsString(ast)));
-                        }
-
-                        context.setTenaliAst((TenaliAstNode) ast);
-                    }
-                } catch (ClassNotFoundException ex) {
-                    LOG.error(String.format("Transformation Error: Class not found for ",
-                            rootCtx.getStmt(), ex.getMessage()));
-                } catch (ClassCastException ex) {
-                    LOG.error("Transformation Error:  " + ex.getMessage());
-                } catch (TenaliSQLParseException ep) {
-                    LOG.error("Parse Exception:  " + ep.getMessage());
-                    ep.printStackTrace();
-                } catch (IOException io) {
-                    LOG.error("Parse Exception:  " + io.getMessage());
-                    io.printStackTrace();
+                if (rootCtx.hasParent() && rootCtx.getParent().getQueryContext() != null) {
+                    context.setDefaultDB(rootCtx.getParent().getQueryContext().getDefaultDB());
                 }
+
+                ast = context.getParseAst();
+
+                LOG.debug("TENALI AST  << .. =>  " + ast.toString());
+
+                if (transformers.size() > 0) {
+                    for (AstTransformer transformer : transformers) {
+                        Class clazz = Class.forName(transformer.getType().getCanonicalName());
+                        ast = transformer.transform(clazz.cast(ast), rootCtx);
+
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        LOG.info(String.format("Transformed using %s => %s", transformer.getIdentifier(),
+                                objectMapper.writeValueAsString(ast)));
+                    }
+                }
+
+                context.setTenaliAst((TenaliAstNode) ast);
+
+            } catch (ClassNotFoundException ex) {
+                LOG.error(String.format("Transformation Error: Class not found for ",
+                        rootCtx.getStmt(), ex.getMessage()));
+            } catch (ClassCastException ex) {
+                LOG.error("Transformation Error:  " + ex.getMessage());
+            } catch (TenaliSQLParseException ep) {
+                LOG.error("Parsing Error:  " + ep.getMessage());
+            } catch (Exception ee) {
+                LOG.error("Json Error:  " + ee.getMessage());
             }
 
             rootCtx = rootCtx.getChild();
         }
 
         return commandContext;
-    }
-
-
-    private boolean isParsableCommand(QueryType queryType) {
-        if(queryType == QueryType.SET
-                || queryType == QueryType.ADD_JAR
-                || queryType == QueryType.ALTER_TABLE) {
-            return false;
-        }
-
-        return true;
     }
 }
