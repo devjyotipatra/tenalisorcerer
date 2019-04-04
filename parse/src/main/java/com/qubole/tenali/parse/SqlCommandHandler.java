@@ -7,6 +7,9 @@ import com.qubole.tenali.parse.config.CommandContext;
 import com.qubole.tenali.parse.config.QueryContext;
 import com.qubole.tenali.parse.config.QueryType;
 import com.qubole.tenali.parse.exception.TenaliSQLParseException;
+import com.qubole.tenali.parse.sql.datamodel.ErrorNode;
+import com.qubole.tenali.parse.sql.datamodel.MetaNode;
+import com.qubole.tenali.parse.sql.datamodel.SetNode;
 import com.qubole.tenali.parse.sql.datamodel.TenaliAstNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,16 +55,10 @@ public final class SqlCommandHandler extends CommandHandler {
 
                 Object ast = context.getParseAst();
 
-                LOG.debug("TENALI AST  << .. =>  " + ast.toString());
-
-                if (transformers.size() > 0) {
+                if (!(ast instanceof MetaNode || ast instanceof SetNode)) {
                     for (AstTransformer transformer : transformers) {
                         Class clazz = Class.forName(transformer.getType().getCanonicalName());
                         ast = transformer.transform(clazz.cast(ast), rootCtx);
-
-                        ObjectMapper objectMapper = new ObjectMapper();
-                        LOG.info(String.format("Transformed using %s => %s", transformer.getIdentifier(),
-                                objectMapper.writeValueAsString(ast)));
                     }
                 }
 
@@ -72,10 +69,10 @@ public final class SqlCommandHandler extends CommandHandler {
                         rootCtx.getStmt(), ex.getMessage()));
             } catch (ClassCastException ex) {
                 LOG.error("Transformation Error:  " + ex.getMessage());
+                ex.printStackTrace();
             } catch (TenaliSQLParseException ep) {
                 LOG.error("Parsing Error:  " + ep.getMessage());
-            } catch (Exception ee) {
-                LOG.error("Json Conversion Error:  " + ee.getMessage());
+                rootCtx.setQueryContext(new QueryContext(new ErrorNode("ParseException, " + ep.getMessage())));
             }
 
             rootCtx = rootCtx.getChild();

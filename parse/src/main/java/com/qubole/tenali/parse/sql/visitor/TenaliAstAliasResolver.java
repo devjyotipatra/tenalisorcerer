@@ -36,6 +36,7 @@ public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> 
 
 
     public TenaliAstNode visit(TenaliAstNode root) {
+        int scope = 0;
         try {
             if(root instanceof DDLNode) {
                 DDLNode ddl = (DDLNode) root;
@@ -44,7 +45,7 @@ public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> 
 
                 if(tableNode != null && ddl.selectNode != null) {
                     if(ddl.selectNode instanceof SelectNode) {
-                        SelectNode selectNode = (SelectNode) visitSelectNode(0, ddl.selectNode);
+                        SelectNode selectNode = (SelectNode) visitSelectNode(scope, ddl.selectNode);
 
                         return new DDLNode(ddlToken, selectNode, tableNode);
 
@@ -54,7 +55,7 @@ public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> 
                 }
 
             } else if (root instanceof SelectNode) {
-                return visitSelectNode(0, root);
+                return visitSelectNode(scope, root);
             } else if (root instanceof JoinNode) {
                 JoinNode join = (JoinNode) root;
                 join.accept(this);
@@ -87,13 +88,15 @@ public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> 
         TenaliAstNodeList with = sNode.with;
         if (with != null) {
             for (TenaliAstNode ast : with) {
-                catalog.addAll(visitFromNode(scope, null, ast));
+                TenaliAstNode sel = visitSelectNode(scope, ((AsNode) ast).value);
+                catalog = ImmutableList.of(getCatalog(((AsNode) ast).aliasName, null, sel));
             }
         }
 
+
         // FROM
         for (TenaliAstNode ast : sNode.from) {
-            catalog.addAll(visitFromNode(scope, null, ast));
+            catalog.addAll(visitFromNode(catalog, scope, null, ast));
             LOG.info("CATALOG  =>  " + catalog);
         }
 
@@ -145,19 +148,21 @@ public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> 
 
     // (table/subq alias, table name (null in case of subq), list of selection columns)
     public List<Triple<String, String, List<String>>> visitFromNode(
-            int scope, String alias, TenaliAstNode from) throws Exception {
-        List<Triple<String, String, List<String>>> catalog = new ArrayList<>();
+                                List<Triple<String, String, List<String>>> catalog,
+                                int scope,
+                                String alias,
+                                TenaliAstNode from) throws Exception {
 
         TenaliAstNode select = null;
 
         if (from instanceof IdentifierNode) {
-            catalog = ImmutableList.of(getCatalog(alias, ((IdentifierNode) from).name, from));
+            catalog = ImmutableList.of(getCatalog(catalog, alias, from));
             LOG.debug("PUSHING STACK TABLE ..");
             push(scope, from);
         } else if (from instanceof AsNode) {
             AsNode t = ((AsNode) from);
 
-            catalog = visitFromNode(scope, t.aliasName, t.value);
+            catalog = visitFromNode(catalog, scope, t.aliasName, t.value);
         } else if (from instanceof SelectNode) {
             select = visitSelectNode(scope + 1, from);
             catalog = ImmutableList.of(getCatalog(alias, null, select));
@@ -172,9 +177,9 @@ public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> 
             TenaliAstNode condition = join.joinCondition;
             String joinType = join.joinType;
 
-            List<Triple<String, String, List<String>>> catalogLeft = visitFromNode(scope, null, left);
+            List<Triple<String, String, List<String>>> catalogLeft = visitFromNode(catalog, scope, null, left);
             LOG.debug("JOIN LEFT DONE ..");
-            List<Triple<String, String, List<String>>> catalogRight = visitFromNode(scope, null, right);
+            List<Triple<String, String, List<String>>> catalogRight = visitFromNode(catalog, scope, null, right);
             LOG.debug("JOIN RIGHT DONE ..");
 
             catalog.addAll(catalogLeft);
@@ -210,6 +215,9 @@ public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> 
 
     private TenaliAstNode resolveWhereCondition(TenaliAstNode operator,
                                                 List<Triple<String, String, List<String>>> catalog) {
+        if(operator instanceof FunctionNode) {
+            return (TenaliAstNode) operator.accept(new FunctionResolver(catalog, columnAliasMap));
+        }
         return (TenaliAstNode) operator.accept(new OperatorResolver(catalog, columnAliasMap));
     }
 
@@ -244,7 +252,28 @@ public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> 
     }
 
 
-    private Triple<String, String, List<String>> getCatalog(String alias, String tableName, TenaliAstNode node) throws Exception {
+
+    private Triple<String, String, List<String>> getCatalog(List<Triple<String, String, List<String>>> catalog,
+                                                            String tableAlias, TenaliAstNode node) {
+        Triple<String, String, List<String>> retVal = null;
+        if(node instanceof IdentifierNode) {
+            String tableName = ((IdentifierNode) node).name;
+            for(Triple<String, String, List<String>> cat : catalog) {
+                if (cat.getMiddle().equals(tableName)) {
+                    return ImmutableTriple.of(tableAlias, "CTE_" + tableName, cat.getRight());
+                }
+            }
+
+            retVal = getCatalog(tableAlias, tableName, node);
+
+        }
+
+        return retVal;
+    }
+
+
+
+    private Triple<String, String, List<String>> getCatalog(String alias, String tableName, TenaliAstNode node) {
         Triple<String, String, List<String>> retVal;
         if (node instanceof TenaliAstNodeList) {
             List<String> tableMeta = getCatalogColumns((TenaliAstNodeList) node);

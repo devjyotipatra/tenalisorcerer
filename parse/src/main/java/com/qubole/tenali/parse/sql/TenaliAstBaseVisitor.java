@@ -58,7 +58,7 @@ public abstract class TenaliAstBaseVisitor<T> extends AstBaseVisitor<TenaliAstNo
         } else {
             columns = (TenaliAstNodeList) column;
         }
-        LOG.debug("ENTERING RESOLVE COLUMNS ..  " );
+        LOG.debug("ENTERING RESOLVE COLUMNS ..  " + catalog);
         Set<TenaliAstNode> resolvedColumns = new HashSet();
         Set<TenaliAstNode> unResolvedColumns = new HashSet();
 

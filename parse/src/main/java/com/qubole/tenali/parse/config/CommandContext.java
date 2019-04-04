@@ -48,6 +48,27 @@ public class CommandContext {
         return child != null;
     }
 
+    public CommandContext getChild(int index) {
+        CommandContext ctx = this;
+
+        while(hasParent()) {
+            ctx = ctx.getParent();
+        }
+
+        if(index == 0) {
+            return ctx;
+        }
+
+        int i=1;
+        while(i <= index) {
+            assert(ctx != null);
+
+            ctx = ctx.getChild();
+            i = i + 1;
+        }
+        return ctx;
+    }
+
     public CommandContext getChild() {
         return child;
     }
