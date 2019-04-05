@@ -16,7 +16,7 @@ the transformer functions that have been implemented.
 3. TenaliAstAliasResolver .  Transforms the TenaliAst with raw names to an TenaliAst over resolved names. It requires 
 as input the full list of columns in every table and the full list of tables in every schema, 
 otherwise known as "catalog information". This is currently available through Qubole's Metastore API's. But we will be adding 
-support for reading catalog through local DB soon. 
+support for reading catalog through local filesystem soon. 
 
 
 Usage
