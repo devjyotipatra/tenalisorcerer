@@ -89,7 +89,9 @@ public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> 
         if (with != null) {
             for (TenaliAstNode ast : with) {
                 TenaliAstNode sel = visitSelectNode(scope, ((AsNode) ast).value);
-                catalog = ImmutableList.of(getCatalog(((AsNode) ast).aliasName, null, sel));
+                catalog.add(getCatalog(((AsNode) ast).aliasName, null, sel));
+
+                selectBuilder.getWith().add(sel);
             }
         }
 
@@ -100,13 +102,12 @@ public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> 
             LOG.info("CATALOG  =>  " + catalog);
         }
 
+        catalogStack.push(catalog);
+
         while (!subQueryStack.get(scope).empty()) {
             TenaliAstNode node = subQueryStack.get(scope).pop();
             selectBuilder.getFrom().add(node);
         }
-
-
-        catalogStack.push(catalog);
 
         // Columns
         TenaliAstNodeList columns = sNode.columns;
@@ -156,9 +157,10 @@ public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> 
         TenaliAstNode select = null;
 
         if (from instanceof IdentifierNode) {
-            catalog = ImmutableList.of(getCatalog(catalog, alias, from));
+            Triple<String, String, List<String>> cat = getCatalog(catalog, alias, from);
+            catalog = ImmutableList.of(cat);
             LOG.debug("PUSHING STACK TABLE ..");
-            push(scope, from);
+            push(scope, new IdentifierNode(cat.getMiddle()));
         } else if (from instanceof AsNode) {
             AsNode t = ((AsNode) from);
 
@@ -166,11 +168,9 @@ public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> 
         } else if (from instanceof SelectNode) {
             select = visitSelectNode(scope + 1, from);
             catalog = ImmutableList.of(getCatalog(alias, null, select));
-            LOG.debug("PUSHING STACK SELECT ..");
+            LOG.debug("PUSHING STACK SELECT ..  ");
             push(scope, select);
         } else if (from instanceof JoinNode) {
-            //joinMap.put(root, from);
-
             JoinNode join = (JoinNode) from;
             TenaliAstNode left = join.leftNode;
             TenaliAstNode right = join.rightNode;
@@ -259,13 +259,12 @@ public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> 
         if(node instanceof IdentifierNode) {
             String tableName = ((IdentifierNode) node).name;
             for(Triple<String, String, List<String>> cat : catalog) {
-                if (cat.getMiddle().equals(tableName)) {
-                    return ImmutableTriple.of(tableAlias, "CTE_" + tableName, cat.getRight());
+                if (cat.getMiddle() != null && cat.getMiddle().equals(tableName)) {
+                    return ImmutableTriple.of(tableAlias, tableName, cat.getRight());
                 }
             }
 
             retVal = getCatalog(tableAlias, tableName, node);
-
         }
 
         return retVal;

@@ -59,6 +59,10 @@ public final class SqlCommandHandler extends CommandHandler {
                     for (AstTransformer transformer : transformers) {
                         Class clazz = Class.forName(transformer.getType().getCanonicalName());
                         ast = transformer.transform(clazz.cast(ast), rootCtx);
+
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        String res = objectMapper.writeValueAsString(ast);
+                        System.out.println(res);
                     }
                 }
 
@@ -73,6 +77,9 @@ public final class SqlCommandHandler extends CommandHandler {
             } catch (TenaliSQLParseException ep) {
                 LOG.error("Parsing Error:  " + ep.getMessage());
                 rootCtx.setQueryContext(new QueryContext(new ErrorNode("ParseException, " + ep.getMessage())));
+            } catch (Exception ee) {
+                rootCtx.setQueryContext(new QueryContext(new ErrorNode("ParseException, " + ee.getMessage())));
+                LOG.error("Runtime Error:  " + ee.getMessage());
             }
 
             rootCtx = rootCtx.getChild();

@@ -236,6 +236,9 @@ public class SelectNode extends TenaliAstNode {
         }
 
         public TenaliAstNodeList getWith() {
+            if(with == null) {
+                with = new TenaliAstNodeList();
+            }
             return with;
         }
 

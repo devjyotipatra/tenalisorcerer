@@ -112,7 +112,7 @@
             <plugin>
                 <groupId>org.antlr</groupId>
                 <artifactId>antlr4-maven-plugin</artifactId>
-                <version>4.7</version>
+                <version>${antlr4.version}</version>
                 <configuration>
                     <sourceDirectory>src/main</sourceDirectory>
                     <outputDirectory>src/main/generated-sources</outputDirectory>
@@ -161,7 +161,7 @@
                                 </includes>
                             </artifactSet>
 
-                           <!-- <relocations>
+                           <!--<relocations>
                                 <relocation>
                                     <pattern>org.apache.calcite.</pattern>
                                     <shadedPattern>com.qubole.tenali.calcite.</shadedPattern>

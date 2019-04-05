@@ -143,6 +143,10 @@ public abstract class TenaliAstBaseVisitor<T> extends AstBaseVisitor<TenaliAstNo
             }
         }
 
+        if(normalizedColumns.size() == 0) {
+            normalizedColumns.add(column);
+        }
+
         LOG.debug("normalizedColumns =  " + normalizedColumns);
 
         return normalizedColumns;

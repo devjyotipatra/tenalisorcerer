@@ -161,7 +161,7 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
         String[] commandTokens = command.split(";");
         for(String query : commandTokens) {
             try {
-                query = query.replaceAll("\u0006", " ")
+                query = query.replaceAll("\u0006", "\n")
                             .replaceAll("`", "").trim();
 
                 if(query.length() > 0) {

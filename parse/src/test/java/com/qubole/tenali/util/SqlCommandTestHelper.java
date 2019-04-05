@@ -1,5 +1,6 @@
 package com.qubole.tenali.util;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qubole.tenali.parse.SqlCommandHandler;
 import com.qubole.tenali.parse.catalog.Catalog;
 import com.qubole.tenali.parse.catalog.CatalogResolver;
@@ -21,11 +22,11 @@ import java.io.IOException;
  */
 public class SqlCommandTestHelper {
 
-    public static String transformHiveAst(String command) {
+    public static CommandContext transformHiveAst(String command) {
         Catalog catalog = null;
         try {
             catalog = catalog = new CachingMetastore(5911, "api.qubole.com",
-                    "xxxx",
+                    "xxxxxx",
                     "mojave-redis.9qcbtf.0001.use1.cache.amazonaws.com");
             return transformHiveAst(command, catalog);
         } catch(Exception ex) {
@@ -35,7 +36,7 @@ public class SqlCommandTestHelper {
         return null;
     }
 
-    public static String transformHiveAst(String command, int accountId, String env,
+    public static CommandContext transformHiveAst(String command, int accountId, String env,
                                           String authToken, String cachingServerUrl) throws IOException {
         try {
             Catalog catalog = new CachingMetastore(accountId, env, authToken, cachingServerUrl);
@@ -47,7 +48,7 @@ public class SqlCommandTestHelper {
         return null;
     }
 
-    public static String transformHiveAst(String command, Catalog catalog) throws IOException {
+    public static CommandContext transformHiveAst(String command, Catalog catalog) throws IOException {
         CommandContext ctx = null;
         try {
             ctx = new SqlCommandHandler(CommandType.HIVE)
@@ -60,14 +61,14 @@ public class SqlCommandTestHelper {
             ex.printStackTrace();
         }
 
-        return ctx.getStmt();
+        return ctx;
     }
 
-    public static String parseHive(String command) throws IOException {
+    public static CommandContext parseHive(String command) throws IOException {
         CommandContext ctx = null;
         try {
             Catalog catalog = new CachingMetastore(5911, "api.qubole.com",
-                    "xxxx",
+                    "xxxxxx",
                     "mojave-redis.9qcbtf.0001.use1.cache.amazonaws.com");
             ctx =  new SqlCommandHandler(CommandType.HIVE)
                     .setLexer(new HiveCommandLexer())
@@ -79,8 +80,9 @@ public class SqlCommandTestHelper {
             ex.printStackTrace();
         }
 
-        return ctx.getStmt();
+        return ctx;
     }
+
 
     public static TenaliAstNode transformPrestoQuery(String command) throws IOException {
         CommandContext ctx  =  new SqlCommandHandler(CommandType.PRESTO)
