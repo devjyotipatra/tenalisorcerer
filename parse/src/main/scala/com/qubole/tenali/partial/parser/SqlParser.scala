@@ -178,9 +178,9 @@ class SQLParser extends StandardTokenParsers {
   def relations: Parser[Seq[SqlRelation]] = "from" ~> rep1sep(relation, ",")
 
   def relation: Parser[SqlRelation] =
-    simple_relation ~ rep(opt(join_type) ~ "join" ~ simple_relation ~ "on" ~ expr ^^
+    simple_relation ~ rep(opt(join_type) ~ "join" ~ simple_relation ~ opt("on") ~ opt(expr) ^^
       { case tpe ~ _ ~ r ~ _ ~ e => (tpe.getOrElse(InnerJoin), r, e)}) ^^ {
-      case r ~ elems => elems.foldLeft(r) { case (x, r) => JoinRelation(x, r._2, r._1, r._3) }
+      case r ~ elems => elems.foldLeft(r) { case (x, r) => JoinRelation(x, r._2, r._1, r._3.getOrElse(null)) }
     }
 
   def join_type: Parser[JoinType] =
@@ -191,6 +191,7 @@ class SQLParser extends StandardTokenParsers {
       "inner" ^^^ (InnerJoin)
 
   def simple_relation: Parser[SqlRelation] =
+    ident ~ opt(ident) ^^ {case ident ~ alias => TableRelationAST(ident, alias)} |
     ident ~ opt("as") ~ opt(ident) ^^ {
       case ident ~ _ ~ alias => TableRelationAST(ident, alias)
     } |
