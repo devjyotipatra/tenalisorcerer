@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qubole.tenali.parse.config.CommandContext;
 import com.qubole.tenali.parse.sql.datamodel.TenaliAstNode;
 import com.qubole.tenali.util.SqlCommandTestHelper;
-import org.apache.calcite.sql.SqlNode;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
