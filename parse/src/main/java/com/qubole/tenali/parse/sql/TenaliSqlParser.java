@@ -3,7 +3,6 @@ package com.qubole.tenali.parse.sql;
 import com.qubole.tenali.parse.TenaliParser;
 import com.qubole.tenali.parse.sql.datamodel.MetaNode;
 import com.qubole.tenali.parse.sql.datamodel.SetNode;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,7 +23,7 @@ public abstract class TenaliSqlParser implements TenaliParser {
         Matcher m = setPattern.matcher(sql);
 
         if(m.find()) {
-            node = new SetNode(m.group(2), m.group(2));
+            node = new SetNode(m.group(1), m.group(2));
         }
 
         return node;

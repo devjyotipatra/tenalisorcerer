@@ -55,6 +55,12 @@ public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> 
                     }
                 }
 
+            } else if(root instanceof InsertNode) {
+                TenaliAstNode select = visitSelectNode(scope, ((InsertNode) root).from);
+
+                InsertNode.InsertBuilder builder = new InsertNode.InsertBuilder((InsertNode) root);
+                builder.setFrom(select);
+                return builder.build();
             } else if (root instanceof SelectNode) {
                 return visitSelectNode(scope, root);
             } else if (root instanceof JoinNode) {

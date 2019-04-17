@@ -9,8 +9,6 @@ import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -32,7 +30,7 @@ public class HiveAstTransformer extends AstBaseVisitor<ASTNode, TenaliAstNode> {
             return new DDLNode(ast.toString(), null, null);
         }
 
-        LOG.debug("Hive AST => " + ast.dump());
+        LOG.info("Hive AST => " + ast.dump());
 
         return parse(ast);
     }
@@ -127,6 +125,19 @@ public class HiveAstTransformer extends AstBaseVisitor<ASTNode, TenaliAstNode> {
                             break;
                         case HiveParser.TOK_INSERT:
                             node = parseInsert((ASTNode) child);
+
+                            if(node instanceof InsertNode) {
+                                TenaliAstNode fromInsert = ((InsertNode) node).from;
+
+                                if (fromInsert instanceof SelectNode) {
+                                    fromInsert = getSelect((SelectNode) fromInsert, from, with);
+                                }
+
+                                InsertNode.InsertBuilder builder =
+                                        new InsertNode.InsertBuilder((InsertNode) node);
+                                builder.setFrom(fromInsert);
+                                node = builder.build();
+                            }
                             break;
                         case HiveParser.TOK_CTE:
                             with = parseCTE((ASTNode) child);
@@ -143,14 +154,19 @@ public class HiveAstTransformer extends AstBaseVisitor<ASTNode, TenaliAstNode> {
         }
 
         if (node instanceof SelectNode) {
-            SelectNode select = (SelectNode) node;
-            SelectNode.SelectBuilder builder = new SelectNode.SelectBuilder(select);
-            builder.getFrom().add(from);
-            builder.setWith(with);
-            node = builder.build();
+            node = getSelect((SelectNode) node, from, with);
         }
 
         return node;
+    }
+
+
+    private TenaliAstNode getSelect(SelectNode node, TenaliAstNode from, TenaliAstNodeList with) {
+        SelectNode select = (SelectNode) node;
+        SelectNode.SelectBuilder builder = new SelectNode.SelectBuilder(select);
+        builder.getFrom().add(from);
+        builder.setWith(with);
+        return builder.build();
     }
 
 
@@ -261,7 +277,7 @@ public class HiveAstTransformer extends AstBaseVisitor<ASTNode, TenaliAstNode> {
                 tableNode = getTabname((ASTNode) child, true);
             } else if(child instanceof ASTNode
                     && ((ASTNode) child).getToken().getType() == HiveParser.TOK_ALTERTABLE_ADDPARTS) {
-                partitions = getPartitions((ASTNode) child);
+                partitions = getPartitions((ASTNode) child, true);
             }
         }
 
@@ -313,6 +329,7 @@ public class HiveAstTransformer extends AstBaseVisitor<ASTNode, TenaliAstNode> {
 
         return new JoinNode(getJoinType(type), left, right, joinCondition);
     }
+
 
     private TenaliAstNode parseTabref(ASTNode node) {
         TenaliAstNode tableNode = getTabname((ASTNode) node.getChild(0), true);
@@ -378,36 +395,40 @@ public class HiveAstTransformer extends AstBaseVisitor<ASTNode, TenaliAstNode> {
     }
 
     private TenaliAstNode parseInsert(ASTNode node) throws Exception {
+        InsertNode insert = null;
         TenaliAstNode where = null;
         TenaliAstNodeList columns = new TenaliAstNodeList();
         TenaliAstNodeList groupBy = null;
         TenaliAstNodeList orderBy = null;
-        TenaliAstNodeList keywords = new TenaliAstNodeList();
+        TenaliAstNodeList keywords = null;
         TenaliAstNode having = null;
 
         for (org.apache.hadoop.hive.ql.lib.Node child : node.getChildren()) {
             if (child instanceof ASTNode) {
-                TenaliAstNodeList operands = new TenaliAstNodeList();
-
                 switch (((ASTNode) child).getToken().getType()) {
                     case HiveParser.TOK_DISTRIBUTEBY:
-                        ASTNode key = (ASTNode) ((ASTNode) ((ASTNode) child)).getChild(0);
+                        ASTNode key = (ASTNode) ((ASTNode) child).getChild(0);
 
+                        TenaliAstNodeList operands = new TenaliAstNodeList();
                         operands.add(new IdentifierNode(getTableOrCol(key)));
+
+                        keywords = new TenaliAstNodeList();
                         keywords.add(new OperatorNode("DISTRIBUTED_BY", operands));
                         break;
                     case HiveParser.TOK_DESTINATION:
-                        ASTNode destination = (ASTNode) ((ASTNode) ((ASTNode) child)).getChild(0);
+                        ASTNode destination = (ASTNode) ((ASTNode) (child)).getChild(0);
 
                         if(destination.getToken().getType() == HiveParser.TOK_TAB) {
-                            TenaliAstNode table = getTabname((ASTNode) destination.getChild(0), true);
-                            operands.add(table);
+                            IdentifierNode table = getTabname((ASTNode) destination.getChild(0), true);
+                            TenaliAstNodeList staticPartitions = null;
+                            TenaliAstNodeList dynamicPartitions = null;
 
                             if (destination.getChildCount() > 1) {
-                                TenaliAstNodeList partitions = getPartitions(destination);
-                                operands.add(new OperatorNode("PARTITIONS", partitions));
+                                staticPartitions = getPartitions(destination, true);
+                                dynamicPartitions = getPartitions(destination, false);
                             }
-                            keywords.add(new OperatorNode("INSERT", operands));
+
+                            insert =  new InsertNode(table, staticPartitions, dynamicPartitions, null);
                         }
                         break;
                     case HiveParser.TOK_LIMIT:
@@ -459,7 +480,15 @@ public class HiveAstTransformer extends AstBaseVisitor<ASTNode, TenaliAstNode> {
         builder.setColumns(columns);
         builder.setKeywords(keywords);
         builder.setHaving(having);
-        return builder.build();
+        TenaliAstNode select = builder.build();
+
+        if(insert != null) {
+            InsertNode.InsertBuilder insertBuilder = new InsertNode.InsertBuilder(insert);
+            insertBuilder.setFrom(select);
+            return insertBuilder.build();
+        }
+
+        return select;
     }
 
     private TenaliAstNodeList parseGroupBy(ASTNode node) {
@@ -800,7 +829,7 @@ public class HiveAstTransformer extends AstBaseVisitor<ASTNode, TenaliAstNode> {
     }
 
 
-    private TenaliAstNodeList getPartitions(ASTNode node) {
+    private TenaliAstNodeList getPartitions(ASTNode node, boolean staticPartitions) {
         TenaliAstNodeList partitions = new TenaliAstNodeList();
 
         for(Node child : node.getChildren()) {
@@ -810,14 +839,23 @@ public class HiveAstTransformer extends AstBaseVisitor<ASTNode, TenaliAstNode> {
                 for (Node grandChild : n.getChildren()) {
                     ASTNode t = ((ASTNode) grandChild);
 
-                    partitions.add(new IdentifierNode(((ASTNode) t.getChild(0)).getToken().getText()));
+                    if(staticPartitions && t.getChildCount() == 2) {
+                        partitions.add(
+                                new IdentifierNode(((ASTNode) t.getChild(0)).getToken().getText()));
 
-                    if(((ASTNode) t).getChildCount() == 2) {
-                        partitions.add(new LiteralNode(((ASTNode) t.getChild(1)).getToken().getText()));
+                        partitions.add(
+                                new LiteralNode(((ASTNode) t.getChild(1)).getToken().getText()));
+                    } else if(!staticPartitions) {
+                        partitions.add(
+                                new IdentifierNode(((ASTNode) t.getChild(0)).getToken().getText()));
                     }
                 }
                 break;
             }
+        }
+
+        if(partitions.size() == 0) {
+            return null;
         }
 
         return partitions;
