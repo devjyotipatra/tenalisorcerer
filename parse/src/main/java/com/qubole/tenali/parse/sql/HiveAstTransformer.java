@@ -105,7 +105,7 @@ public class HiveAstTransformer extends SqlAstBaseTransformer<ASTNode> {
                     node = new UnsupportedNode("Could not handle in parse  " + root.getToken());
             }
         } catch(Exception ex) {
-            System.out.println(" Error in Parse => " + ex.getMessage());
+            LOG.error(" Error in Parse => " + ex.getMessage());
         }
 
         return node;
@@ -264,6 +264,7 @@ public class HiveAstTransformer extends SqlAstBaseTransformer<ASTNode> {
                 tableNode = getTabname((ASTNode) child, true);
             }
         }
+
         return new DDLNode(ddlToken, null, tableNode);
     }
 
@@ -371,7 +372,6 @@ public class HiveAstTransformer extends SqlAstBaseTransformer<ASTNode> {
                     node.getChild(0).toString();
 
             tableName = tableName.toUpperCase();
-
 
             if(node.getChildren().size() == 2) {
                 schemaName = node.getChild(0).toString();

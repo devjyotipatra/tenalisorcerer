@@ -62,8 +62,8 @@ public final class SqlCommandHandler extends TenaliCommandHandler {
                         Class clazz = Class.forName(transformer.getType().getCanonicalName());
                         ast = transformer.transform(clazz.cast(ast), rootCtx);
 
-                        ObjectMapper objectMapper = new ObjectMapper();
-                        String res = objectMapper.writeValueAsString(ast);
+                        //ObjectMapper objectMapper = new ObjectMapper();
+                        //String res = objectMapper.writeValueAsString(ast);
                     }
                 }
 

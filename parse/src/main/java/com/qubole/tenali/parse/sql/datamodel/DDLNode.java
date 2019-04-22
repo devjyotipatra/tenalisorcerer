@@ -29,11 +29,19 @@ public class DDLNode extends TenaliAstNode {
 
     @Override
     public Object accept(TenaliAstBaseTransformer visitor) {
-        System.out.println(visitor);
         if(selectNode != null) {
             return selectNode.accept(visitor);
         }
 
-        return this;
+        return null;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(ddlToken).append(" == ").append(selectNode.toString())
+                .append(" == ").append(tableNode.toString());
+
+        return sb.toString();
     }
 }

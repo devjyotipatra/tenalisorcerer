@@ -1,7 +1,6 @@
 package com.qubole.tenali.util;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.qubole.tenali.parse.SqlCommandHandler;
+import com.qubole.tenali.parse.sql.SqlCommandHandler;
 import com.qubole.tenali.parse.catalog.Catalog;
 import com.qubole.tenali.parse.catalog.CatalogResolver;
 import com.qubole.tenali.parse.sql.*;
@@ -26,7 +25,7 @@ public class SqlCommandTestHelper {
         Catalog catalog = null;
         try {
             catalog = catalog = new CachingMetastore(5911, "api.qubole.com",
-                    "xxxxxx",
+                    "EnhW9CcvppxUXUPUesWxKnjxC5nSF5zcWR8szsQGTZe96VQNwWq13z1VqkU2W6qb",
                     "mojave-redis.9qcbtf.0001.use1.cache.amazonaws.com");
             return transformHiveAst(command, catalog);
         } catch(Exception ex) {
@@ -68,7 +67,7 @@ public class SqlCommandTestHelper {
         CommandContext ctx = null;
         try {
             Catalog catalog = new CachingMetastore(5911, "api.qubole.com",
-                    "xxxxxx",
+                    "xxxxx",
                     "mojave-redis.9qcbtf.0001.use1.cache.amazonaws.com");
             ctx =  new SqlCommandHandler(CommandType.HIVE)
                     .setLexer(new HiveCommandLexer())

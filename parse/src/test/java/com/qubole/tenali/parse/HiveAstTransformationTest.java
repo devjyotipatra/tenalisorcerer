@@ -251,12 +251,12 @@ public class HiveAstTransformationTest {
 
     @Test
     public void testDropTable() throws Exception {
-        String command = "use mydefault;\u0006drop table if exists tmp_klynch_ebay_conversions_1550485623;\u0006drop table if exists tmp_klynch_ebay_conversions_1550485742;\u0006drop table if exists tmp_klynch_ebay_conversions_1550485862;\u0006drop table if exists gap_gdx_unique_staging_21404_1550506236;\u0006drop table if exists gap_gdx_unique_staging_22881_1550507276;\u0006drop table if exists gap_gdx_unique_staging_24201_1550508248;\u0006drop table if exists gap_gdx_unique_staging_25288_1550509187" ;
+        String command = "use mydefault;\u0006drop table tmp_klynch_ebay_conversions_1550485623;\u0006drop table if exists tmp_klynch_ebay_conversions_1550485742;" ;
 
 
-        String result = "{\"type\":\"meta\",\"statement\":\"mydefault\"}";
+        String result = "{\"type\":\"ddl\",\"ddlToken\":\"DROP_TABLE\",\"selectNode\":null,\"tableNode\":{\"type\":\"identifier\",\"name\":\"MYDEFAULT.TMP_KLYNCH_EBAY_CONVERSIONS_1550485623\"}}";
         CommandContext ctx = SqlCommandTestHelper.parseHive(command);
-        CommandContext cctx = ctx.getChild(0);
+        CommandContext cctx = ctx.getChild(1);
 
         Object ast = cctx.getQueryContext().getTenaliAst();
         assertEquals(result, getTransformedString(ast));

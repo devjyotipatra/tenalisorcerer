@@ -21,7 +21,7 @@ support for reading catalog through local filesystem soon.
 
 Usage
 ```
-import com.qubole.tenali.parse.SqlCommandHandler;
+import com.qubole.tenali.parse.sql.SqlCommandHandler;
 import com.qubole.tenali.parse.catalog.Catalog;
 import com.qubole.tenali.parse.catalog.CatalogResolver;
 import com.qubole.tenali.parse.sql.*;
