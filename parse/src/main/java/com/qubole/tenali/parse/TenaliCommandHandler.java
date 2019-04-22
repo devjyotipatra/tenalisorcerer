@@ -5,7 +5,7 @@ import com.qubole.tenali.parse.config.CommandContext;
 import com.qubole.tenali.parse.config.CommandType;
 import com.qubole.tenali.parse.lexer.DummyLexer;
 
-public abstract class CommandHandler {
+public abstract class TenaliCommandHandler {
 
     CommandType commandType;
 
@@ -13,9 +13,9 @@ public abstract class CommandHandler {
 
     TenaliParser parser;
 
-    ImmutableList.Builder<AstTransformer> transformerBuilder = new ImmutableList.Builder();
+    ImmutableList.Builder<TenaliTransformer> transformerBuilder = new ImmutableList.Builder();
 
-    public CommandHandler(CommandType commandType) {
+    public TenaliCommandHandler(CommandType commandType) {
         this.commandType = commandType;
     }
 
@@ -34,17 +34,17 @@ public abstract class CommandHandler {
         parser.prepare();
     }
 
-    public CommandHandler setLexer(TenaliLexer lexer) {
+    public TenaliCommandHandler setLexer(TenaliLexer lexer) {
         this.lexer = lexer;
         return this;
     }
 
-    public CommandHandler setParser(TenaliParser parser) {
+    public TenaliCommandHandler setParser(TenaliParser parser) {
         this.parser = parser;
         return this;
     }
 
-    public CommandHandler setTransformer(AstTransformer transformer) {
+    public TenaliCommandHandler setTransformer(TenaliTransformer transformer) {
         this.transformerBuilder.add(transformer);
         return this;
     }

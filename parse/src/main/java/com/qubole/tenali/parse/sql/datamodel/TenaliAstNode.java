@@ -3,7 +3,7 @@ package com.qubole.tenali.parse.sql.datamodel;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.qubole.tenali.parse.sql.TenaliAstBaseVisitor;
+import com.qubole.tenali.parse.TenaliTransformer;
 
 
 @JsonTypeInfo(
@@ -11,6 +11,9 @@ import com.qubole.tenali.parse.sql.TenaliAstBaseVisitor;
         include = JsonTypeInfo.As.PROPERTY,
         property = "type")
 @JsonSubTypes({
+        @JsonSubTypes.Type(value = MetaNode.class, name = "meta"),
+        @JsonSubTypes.Type(value = SetNode.class, name = "set"),
+        @JsonSubTypes.Type(value = InsertNode.class, name = "insert"),
         @JsonSubTypes.Type(value = SelectNode.class, name = "select"),
         @JsonSubTypes.Type(value = DDLNode.class, name = "ddl"),
         @JsonSubTypes.Type(value = FunctionNode.class, name = "function"),
@@ -23,7 +26,7 @@ import com.qubole.tenali.parse.sql.TenaliAstBaseVisitor;
         @JsonSubTypes.Type(value = ErrorNode.class, name = "error")})
 public abstract class TenaliAstNode implements Cloneable {
 
-    public abstract Object accept(TenaliAstBaseVisitor visitor);
+    public abstract Object accept(TenaliTransformer visitor);
 
     @Override
     public int hashCode() {

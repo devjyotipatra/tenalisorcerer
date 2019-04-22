@@ -1,15 +1,15 @@
 package com.qubole.tenali.parse.catalog;
 
-import com.qubole.tenali.parse.sql.TenaliAstBaseVisitor;
 import com.qubole.tenali.parse.sql.datamodel.IdentifierNode;
 import com.qubole.tenali.parse.sql.datamodel.TenaliAstNode;
+import com.qubole.tenali.parse.sql.visitor.SqlBaseTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 
 
-public class CatalogResolver<T extends Catalog> extends TenaliAstBaseVisitor<CatalogTable> {
+public class CatalogResolver<T extends Catalog> extends SqlBaseTransformer<CatalogTable> {
 
     private static final Logger LOG = LoggerFactory.getLogger(CatalogResolver.class);
 

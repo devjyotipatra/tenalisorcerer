@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public final class SqlCommandHandler extends CommandHandler {
+public final class SqlCommandHandler extends TenaliCommandHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(SqlCommandHandler.class);
 
@@ -25,7 +25,7 @@ public final class SqlCommandHandler extends CommandHandler {
 
     @Override
     public CommandContext build(String command) {
-        ImmutableList<AstTransformer> transformers = transformerBuilder.build();
+        ImmutableList<TenaliTransformer> transformers = transformerBuilder.build();
 
         if (lexer != null && lexer.getCommandType() == commandType) {
             extractQueries(lexer, command);
@@ -56,7 +56,7 @@ public final class SqlCommandHandler extends CommandHandler {
                 Object ast = context.getParseAst();
 
                 if (!(ast instanceof MetaNode || ast instanceof SetNode)) {
-                    for (AstTransformer transformer : transformers) {
+                    for (TenaliTransformer transformer : transformers) {
                         Class clazz = Class.forName(transformer.getType().getCanonicalName());
                         ast = transformer.transform(clazz.cast(ast), rootCtx);
 

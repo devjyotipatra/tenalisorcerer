@@ -1,25 +1,23 @@
-package com.qubole.tenali.parse.sql;
+package com.qubole.tenali.parse.sql.visitor;
 
-import com.qubole.tenali.parse.AstBaseVisitor;
+import com.qubole.tenali.parse.TenaliTransformer;
 import com.qubole.tenali.parse.config.CommandContext;
 import com.qubole.tenali.parse.config.QueryType;
 import com.qubole.tenali.parse.sql.datamodel.*;
-import com.qubole.tenali.parse.sql.visitor.FunctionResolver;
-import com.qubole.tenali.parse.sql.visitor.OperatorResolver;
 import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-public abstract class TenaliAstBaseVisitor<T> extends AstBaseVisitor<TenaliAstNode, T> {
-    private static final Logger LOG = LoggerFactory.getLogger(TenaliAstBaseVisitor.class);
+public abstract class SqlBaseTransformer<T> extends TenaliTransformer<TenaliAstNode, T> {
+    private static final Logger LOG = LoggerFactory.getLogger(SqlBaseTransformer.class);
 
     protected String defaultDb = "default";
 
     protected CommandContext ctx;
 
-    public TenaliAstBaseVisitor() {
+    public SqlBaseTransformer() {
         super(TenaliAstNode.class);
     }
 
@@ -50,14 +48,20 @@ public abstract class TenaliAstBaseVisitor<T> extends AstBaseVisitor<TenaliAstNo
     protected TenaliAstNodeList resolveColumns(final TenaliAstNode column,
                                                List<Triple<String, String, List<String>>> catalog,
                                                Map<String, Object> columnAliasMap) {
+        TenaliAstNodeList columns = new TenaliAstNodeList();
+        if(!(column instanceof TenaliAstNodeList)) {
+            columns = columns.add(column);
+        }
+
+        return resolveColumns(columns, catalog, columnAliasMap);
+    }
+
+
+    protected TenaliAstNodeList resolveColumns(final TenaliAstNodeList columns,
+                                               List<Triple<String, String, List<String>>> catalog,
+                                               Map<String, Object> columnAliasMap) {
         TenaliAstNodeList normalizedColumns = new TenaliAstNodeList();
 
-        TenaliAstNodeList columns;
-        if(!(column instanceof TenaliAstNodeList)) {
-            columns = new TenaliAstNodeList().add(column);
-        } else {
-            columns = (TenaliAstNodeList) column;
-        }
         LOG.debug("ENTERING RESOLVE COLUMNS ..  " + catalog);
         Set<TenaliAstNode> resolvedColumns = new HashSet();
         Set<TenaliAstNode> unResolvedColumns = new HashSet();
@@ -144,7 +148,7 @@ public abstract class TenaliAstBaseVisitor<T> extends AstBaseVisitor<TenaliAstNo
         }
 
         if(normalizedColumns.size() == 0) {
-            normalizedColumns.add(column);
+            normalizedColumns.add(columns);
         }
 
         LOG.debug("normalizedColumns =  " + normalizedColumns);

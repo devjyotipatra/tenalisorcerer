@@ -5,7 +5,6 @@ import com.qubole.tenali.parse.catalog.CatalogColumn;
 import com.qubole.tenali.parse.catalog.CatalogTable;
 import com.qubole.tenali.parse.catalog.CatalogResolver;
 import com.qubole.tenali.parse.sql.datamodel.*;
-import com.qubole.tenali.parse.sql.TenaliAstBaseVisitor;
 import com.qubole.tenali.parse.sql.datamodel.SelectNode.SelectBuilder;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
@@ -17,7 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 
 
-public class TenaliAstAliasResolver extends TenaliAstBaseVisitor<TenaliAstNode> {
+public class TenaliAstAliasResolver extends SqlBaseTransformer<TenaliAstNode> {
 
     private static final Logger LOG = LoggerFactory.getLogger(TenaliAstAliasResolver.class);
 

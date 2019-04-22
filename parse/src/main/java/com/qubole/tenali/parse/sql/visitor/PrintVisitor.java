@@ -1,9 +1,8 @@
 package com.qubole.tenali.parse.sql.visitor;
 
-import com.qubole.tenali.parse.sql.TenaliAstBaseVisitor;
 import com.qubole.tenali.parse.sql.datamodel.*;
 
-public class PrintVisitor extends TenaliAstBaseVisitor<String> {
+public class PrintVisitor extends SqlBaseTransformer<String> {
 
     StringBuilder sb = new StringBuilder();
 

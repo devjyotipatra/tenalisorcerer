@@ -1,12 +1,10 @@
 package com.qubole.tenali.parse;
 
-import java.lang.reflect.Type;
 
-
-public abstract class AstBaseVisitor<S, T> implements AstTransformer<S, T> {
+public abstract class TenaliTransformer<S, T> implements TenaliBaseVisitor<S, T> {
     private final Class<S> type;
 
-    protected AstBaseVisitor(Class<S> type) {
+    protected TenaliTransformer(Class<S> type) {
         this.type = type;
     }
 

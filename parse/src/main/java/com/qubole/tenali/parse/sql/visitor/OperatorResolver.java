@@ -1,13 +1,12 @@
 package com.qubole.tenali.parse.sql.visitor;
 
-import com.qubole.tenali.parse.sql.TenaliAstBaseVisitor;
 import com.qubole.tenali.parse.sql.datamodel.*;
 import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.List;
 import java.util.Map;
 
-public class OperatorResolver extends TenaliAstBaseVisitor<TenaliAstNode> {
+public class OperatorResolver extends SqlBaseTransformer<TenaliAstNode> {
 
     List<Triple<String, String, List<String>>> catalog;
 

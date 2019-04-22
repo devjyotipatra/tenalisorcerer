@@ -1,10 +1,9 @@
 package com.qubole.tenali.parse.sql.visitor;
 
-import com.qubole.tenali.parse.sql.TenaliAstBaseVisitor;
 import com.qubole.tenali.parse.sql.datamodel.DDLNode;
 import com.qubole.tenali.parse.sql.datamodel.TenaliAstNode;
 
-public class DdlBaseVisitor extends TenaliAstBaseVisitor {
+public class DdlBaseVisitor extends SqlBaseTransformer {
 
     @Override
     public TenaliAstNode visit(TenaliAstNode node) {
