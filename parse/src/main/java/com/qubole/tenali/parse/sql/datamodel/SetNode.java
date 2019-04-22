@@ -3,7 +3,8 @@ package com.qubole.tenali.parse.sql.datamodel;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qubole.tenali.parse.sql.TenaliAstBaseVisitor;
+import com.qubole.tenali.parse.TenaliAstBaseTransformer;
+
 
 public class SetNode extends TenaliAstNode {
 
@@ -18,7 +19,7 @@ public class SetNode extends TenaliAstNode {
     }
 
     @Override
-    public Object accept(TenaliAstBaseVisitor visitor) {
+    public Object accept(TenaliAstBaseTransformer visitor) {
         return key + "." + value;
     }
 

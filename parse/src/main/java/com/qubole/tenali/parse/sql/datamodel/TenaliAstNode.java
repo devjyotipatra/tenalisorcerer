@@ -3,7 +3,7 @@ package com.qubole.tenali.parse.sql.datamodel;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.qubole.tenali.parse.TenaliTransformer;
+import com.qubole.tenali.parse.TenaliAstBaseTransformer;
 
 
 @JsonTypeInfo(
@@ -26,7 +26,7 @@ import com.qubole.tenali.parse.TenaliTransformer;
         @JsonSubTypes.Type(value = ErrorNode.class, name = "error")})
 public abstract class TenaliAstNode implements Cloneable {
 
-    public abstract Object accept(TenaliTransformer visitor);
+    public abstract Object accept(TenaliAstBaseTransformer visitor);
 
     @Override
     public int hashCode() {

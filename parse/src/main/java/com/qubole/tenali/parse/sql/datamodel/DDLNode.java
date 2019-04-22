@@ -2,7 +2,8 @@ package com.qubole.tenali.parse.sql.datamodel;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qubole.tenali.parse.sql.TenaliAstBaseVisitor;
+import com.qubole.tenali.parse.TenaliAstBaseTransformer;
+
 
 public class DDLNode extends TenaliAstNode {
     public String ddlToken;
@@ -27,7 +28,12 @@ public class DDLNode extends TenaliAstNode {
     }
 
     @Override
-    public Object accept(TenaliAstBaseVisitor visitor) {
-        return visitor.visit(this);
+    public Object accept(TenaliAstBaseTransformer visitor) {
+        System.out.println(visitor);
+        if(selectNode != null) {
+            return selectNode.accept(visitor);
+        }
+
+        return this;
     }
 }

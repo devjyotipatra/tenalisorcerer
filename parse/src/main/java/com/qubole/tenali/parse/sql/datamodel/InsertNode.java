@@ -3,7 +3,7 @@ package com.qubole.tenali.parse.sql.datamodel;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qubole.tenali.parse.sql.TenaliAstBaseVisitor;
+import com.qubole.tenali.parse.TenaliAstBaseTransformer;
 
 
 public class InsertNode extends TenaliAstNode {
@@ -32,12 +32,11 @@ public class InsertNode extends TenaliAstNode {
 
 
     @Override
-    public Object accept(TenaliAstBaseVisitor visitor) {
+    public Object accept(TenaliAstBaseTransformer visitor) {
         if(from != null) {
-            return visitor.visit(from);
+            return from.accept(visitor);
         }
-
-        return from;
+        return null;
     }
 
     @Override

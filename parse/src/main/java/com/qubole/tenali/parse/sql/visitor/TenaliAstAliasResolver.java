@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.qubole.tenali.parse.catalog.CatalogColumn;
 import com.qubole.tenali.parse.catalog.CatalogTable;
 import com.qubole.tenali.parse.catalog.CatalogResolver;
+import com.qubole.tenali.parse.TenaliAstBaseTransformer;
 import com.qubole.tenali.parse.sql.datamodel.*;
 import com.qubole.tenali.parse.sql.datamodel.SelectNode.SelectBuilder;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -15,8 +16,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
+import static com.qubole.tenali.parse.util.TenaliAliasResolverUtils.resolveColumns;
 
-public class TenaliAstAliasResolver extends SqlBaseTransformer<TenaliAstNode> {
+
+public class TenaliAstAliasResolver extends TenaliAstBaseTransformer<TenaliAstNode> {
 
     private static final Logger LOG = LoggerFactory.getLogger(TenaliAstAliasResolver.class);
 
@@ -39,21 +42,10 @@ public class TenaliAstAliasResolver extends SqlBaseTransformer<TenaliAstNode> {
         try {
             if(root instanceof DDLNode) {
                 DDLNode ddl = (DDLNode) root;
-                String ddlToken = ddl.ddlToken;
-                IdentifierNode tableNode = ddl.tableNode;
 
-                if(tableNode != null && ddl.selectNode != null) {
-                    if(ddl.selectNode instanceof SelectNode) {
-                        SelectNode selectNode = (SelectNode) visitSelectNode(
-                                scope, ddl.selectNode);
-
-                        return new DDLNode(ddlToken, selectNode, tableNode);
-
-                    } else if(ddl.selectNode instanceof OperatorNode) {
-                        return root;
-                    }
-                }
-
+                return new DDLNode(ddl.ddlToken,
+                        (TenaliAstNode) ddl.accept(this),
+                        ddl.tableNode);
             } else if(root instanceof InsertNode) {
                 TenaliAstNode select = visitSelectNode(scope, ((InsertNode) root).from);
 

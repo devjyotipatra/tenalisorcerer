@@ -1,7 +1,7 @@
 package com.qubole.tenali.parse.sql.datamodel;
 
 
-import com.qubole.tenali.parse.sql.TenaliAstBaseVisitor;
+import com.qubole.tenali.parse.TenaliAstBaseTransformer;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -62,8 +62,13 @@ public class TenaliAstNodeList extends TenaliAstNode implements Iterable<TenaliA
     public TenaliAstNode get(int i) {return list.get(i);}
 
     @Override
-    public Object accept(TenaliAstBaseVisitor visitor) {
-        return visitor.visit(this);
+    public Object accept(TenaliAstBaseTransformer visitor) {
+        Object[] arr = new Object[size()];
+        for(int i=0; i<size(); i++) {
+            arr[i] = list.get(i).accept(visitor);
+        }
+
+        return arr;
     }
 
     public int size() {

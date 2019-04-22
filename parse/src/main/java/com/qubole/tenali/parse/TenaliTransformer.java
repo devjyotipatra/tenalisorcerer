@@ -2,9 +2,11 @@ package com.qubole.tenali.parse;
 
 
 public abstract class TenaliTransformer<S, T> implements TenaliBaseVisitor<S, T> {
-    private final Class<S> type;
+    public String defaultDb = "default";
 
-    protected TenaliTransformer(Class<S> type) {
+    private final Class<?> type;
+
+    protected TenaliTransformer(Class<?> type) {
         this.type = type;
     }
 

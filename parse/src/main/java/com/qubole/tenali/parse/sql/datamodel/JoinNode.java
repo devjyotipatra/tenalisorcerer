@@ -2,7 +2,7 @@ package com.qubole.tenali.parse.sql.datamodel;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qubole.tenali.parse.sql.TenaliAstBaseVisitor;
+import com.qubole.tenali.parse.TenaliAstBaseTransformer;
 
 public class JoinNode extends TenaliAstNode {
     public final String joinType;
@@ -22,10 +22,10 @@ public class JoinNode extends TenaliAstNode {
     }
 
     @Override
-    public Object accept(TenaliAstBaseVisitor visitor) {
+    public Object accept(TenaliAstBaseTransformer visitor) {
         Object[] arr = new Object[2];
-        arr[0] = visitor.visit(this.leftNode);
-        arr[1] = visitor.visit(this.rightNode);
+        arr[0] = leftNode.accept(visitor);
+        arr[1] = rightNode.accept(visitor);
         return arr;
     }
 

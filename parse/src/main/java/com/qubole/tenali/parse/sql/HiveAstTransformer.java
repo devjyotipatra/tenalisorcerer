@@ -1,5 +1,6 @@
 package com.qubole.tenali.parse.sql;
 
+import com.qubole.tenali.parse.SqlAstBaseTransformer;
 import com.qubole.tenali.parse.TenaliBaseVisitor;
 import com.qubole.tenali.parse.config.CommandContext;
 import com.qubole.tenali.parse.config.QueryType;
@@ -12,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 
-public class HiveAstTransformer extends TenaliBaseVisitor<ASTNode, TenaliAstNode> {
+public class HiveAstTransformer extends SqlAstBaseTransformer<ASTNode> {
 
     private static final Logger LOG = LoggerFactory.getLogger(HiveAstTransformer.class);
 
@@ -22,12 +23,14 @@ public class HiveAstTransformer extends TenaliBaseVisitor<ASTNode, TenaliAstNode
         super(ASTNode.class);
     }
 
+
+    @Override
     public TenaliAstNode transform(ASTNode ast, CommandContext ctx) {
         this.ctx = ctx;
 
         if (isDDLQuery(ast.getToken().getType())
                 && !isSupportedDDL(ast.getToken().getType())) {
-            return new DDLNode(ast.toString(), null, null);
+            return new MetaNode(ast.toString());
         }
 
         LOG.info("Hive AST => " + ast.dump());

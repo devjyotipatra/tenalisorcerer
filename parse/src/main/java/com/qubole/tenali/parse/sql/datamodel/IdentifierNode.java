@@ -2,7 +2,8 @@ package com.qubole.tenali.parse.sql.datamodel;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qubole.tenali.parse.sql.TenaliAstBaseVisitor;
+import com.qubole.tenali.parse.TenaliAstBaseTransformer;
+
 
 public class IdentifierNode extends TenaliAstNode {
     public String name;
@@ -13,7 +14,7 @@ public class IdentifierNode extends TenaliAstNode {
 
 
     @Override
-    public Object accept(TenaliAstBaseVisitor visitor) {
+    public Object accept(TenaliAstBaseTransformer visitor) {
         return visitor.visit(this);
     }
 

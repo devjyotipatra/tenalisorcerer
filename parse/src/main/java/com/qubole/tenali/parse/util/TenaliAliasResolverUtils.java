@@ -1,51 +1,20 @@
-package com.qubole.tenali.parse.sql.visitor;
+package com.qubole.tenali.parse.util;
 
-import com.qubole.tenali.parse.TenaliTransformer;
-import com.qubole.tenali.parse.config.CommandContext;
-import com.qubole.tenali.parse.config.QueryType;
 import com.qubole.tenali.parse.sql.datamodel.*;
+import com.qubole.tenali.parse.sql.visitor.FunctionResolver;
+import com.qubole.tenali.parse.sql.visitor.OperatorResolver;
 import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-public abstract class SqlBaseTransformer<T> extends TenaliTransformer<TenaliAstNode, T> {
-    private static final Logger LOG = LoggerFactory.getLogger(SqlBaseTransformer.class);
+public class TenaliAliasResolverUtils {
 
-    protected String defaultDb = "default";
-
-    protected CommandContext ctx;
-
-    public SqlBaseTransformer() {
-        super(TenaliAstNode.class);
-    }
-
-    @Override
-    public T transform(TenaliAstNode ast, CommandContext ctx) {
-        T root = null;
-        this.ctx = ctx;
-
-        QueryType queryType = ctx.getQueryType();
-
-        if(queryType == QueryType.SELECT
-                || queryType == QueryType.CTE
-                || queryType == QueryType.CTAS
-                || queryType == QueryType.INSERT_OVERWRITE
-                || queryType == QueryType.CREATE_TABLE
-                || queryType == QueryType.DROP_TABLE
-                || queryType == QueryType.ALTER_TABLE) {
-            root = visit(ast);
-        }
-
-        return root;
-
-    }
-
-    public abstract T visit(TenaliAstNode node);
+    private static final Logger LOG = LoggerFactory.getLogger(TenaliAliasResolverUtils.class);
 
 
-    protected TenaliAstNodeList resolveColumns(final TenaliAstNode column,
+    public static TenaliAstNodeList resolveColumns(TenaliAstNode column,
                                                List<Triple<String, String, List<String>>> catalog,
                                                Map<String, Object> columnAliasMap) {
         TenaliAstNodeList columns = new TenaliAstNodeList();
@@ -57,7 +26,7 @@ public abstract class SqlBaseTransformer<T> extends TenaliTransformer<TenaliAstN
     }
 
 
-    protected TenaliAstNodeList resolveColumns(final TenaliAstNodeList columns,
+    public static TenaliAstNodeList resolveColumns(TenaliAstNodeList columns,
                                                List<Triple<String, String, List<String>>> catalog,
                                                Map<String, Object> columnAliasMap) {
         TenaliAstNodeList normalizedColumns = new TenaliAstNodeList();
@@ -157,7 +126,7 @@ public abstract class SqlBaseTransformer<T> extends TenaliTransformer<TenaliAstN
     }
 
 
-    private void addColumnAlias(String alias, String tableAlias, String name,
+    private static void addColumnAlias(String alias, String tableAlias, String name,
                                 Object resolvedColumn,
                                 Map<String, Object> columnAliasMap) {
         Object aliasResolvedColumn = resolvedColumn != null ? resolvedColumn : name;
@@ -172,7 +141,7 @@ public abstract class SqlBaseTransformer<T> extends TenaliTransformer<TenaliAstN
     }
 
 
-    private Map<String, String> getColumnMap(String tableName, List<String> columnNames) {
+    private static Map<String, String> getColumnMap(String tableName, List<String> columnNames) {
         Map<String, String> tableColumns = new HashMap();
         for(String column : columnNames) {
             if(column.contains(".")) {
@@ -189,7 +158,7 @@ public abstract class SqlBaseTransformer<T> extends TenaliTransformer<TenaliAstN
     }
 
 
-    private String getColumnName(TenaliAstNode column) {
+    private static String getColumnName(TenaliAstNode column) {
         String name = null;
 
         if(column instanceof IdentifierNode) {
@@ -207,6 +176,5 @@ public abstract class SqlBaseTransformer<T> extends TenaliTransformer<TenaliAstN
 
         return name;
     }
-
 
 }

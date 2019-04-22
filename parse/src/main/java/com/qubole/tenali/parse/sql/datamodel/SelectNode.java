@@ -1,15 +1,11 @@
 package com.qubole.tenali.parse.sql.datamodel;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qubole.tenali.parse.sql.TenaliAstBaseVisitor;
-import com.qubole.tenali.parse.util.exception.NotImplementedException;
+import com.qubole.tenali.parse.TenaliAstBaseTransformer;
 
-import java.security.SecureRandom;
 import java.util.List;
-import java.util.Random;
 
 
 public class SelectNode extends TenaliAstNode {
@@ -70,7 +66,7 @@ public class SelectNode extends TenaliAstNode {
     }*/
 
     @Override
-    public Object accept(TenaliAstBaseVisitor visitor) {
+    public Object accept(TenaliAstBaseTransformer visitor) {
         return visitor.visit(this);
     }
 
