@@ -12,9 +12,22 @@ public class HiveAstTransformationTest {
     private String getTransformedString(Object ast) throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
         String res = objectMapper.writeValueAsString(ast);
-        //System.out.println(res);
+        System.out.println(res);
         return res;
     }
+
+    @Test
+    public void testSetStmt() throws Exception {
+        String command = "set   a = b";
+
+        String result = "{\"type\":\"set\",\"key\":\"a\",\"value\":\"b\"}";
+        CommandContext ctx = SqlCommandTestHelper.parseHive(command);
+        CommandContext cctx = ctx.getChild(0);
+
+        Object ast = cctx.getQueryContext().getTenaliAst();
+        assertEquals(result, getTransformedString(ast));
+    }
+
 
     @Test
     public void testSimpleLateralView() throws Exception {
@@ -37,7 +50,7 @@ public class HiveAstTransformationTest {
                 "                        as n where n.submit_time in ( '2019-02-20' ) and n.account_id IN (7845,4020) ) as sub lateral view\n" +
                 "                        usageUDTFfromHiveTables(sub.query,sub.q_ast, sub.account_id) usagetable as tbl, col, usg;";
 
-        String result = "{\"type\":\"InsertNode\",\"table\":{\"type\":\"identifier\",\"name\":\"TENALIV2.USAGEMAP\"},\"from\":{\"type\":\"select\",\"from\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"select\",\"from\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"USAGEUDTFFROMHIVETABLES\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.QUERY\"},{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.Q_AST\"},{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.ACCOUNT_ID\"}]}}]},\"columns\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"col\"},{\"type\":\"identifier\",\"name\":\"usg\"},{\"type\":\"identifier\",\"name\":\"tbl\"}]}},{\"type\":\"select\",\"where\":{\"type\":\"operator\",\"operator\":\"AND\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"IN\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.SUBMIT_TIME\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},{\"type\":\"function\",\"functionName\":\"IN\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.ACCOUNT_ID\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}}]}},\"from\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY\"}]},\"columns\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.QUERY\"},{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.QUERY_HISTS_ID\"},{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.Q_AST\"},{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.ACCOUNT_ID\"},{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.SUBMIT_TIME\"},{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.SOURCE\"}]}}]},\"columns\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.QUERY\"},{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.QUERY_HISTS_ID\"},{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.ACCOUNT_ID\"},{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.SUBMIT_TIME\"},{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.SOURCE\"},{\"type\":\"identifier\",\"name\":\"USAGETABLE.USG\"},{\"type\":\"identifier\",\"name\":\"USAGETABLE.COL\"},{\"type\":\"identifier\",\"name\":\"USAGETABLE.TBL\"}]}},\"dynamicPartitions\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"submit_time\"},{\"type\":\"identifier\",\"name\":\"source\"}]}}";
+        String result = "{\"type\":\"insert\",\"table\":{\"type\":\"identifier\",\"name\":\"TENALIV2.USAGEMAP\"},\"from\":{\"type\":\"select\",\"from\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"select\",\"from\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"USAGEUDTFFROMHIVETABLES\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.QUERY\"},{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.Q_AST\"},{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.ACCOUNT_ID\"}]}}]},\"columns\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"col\"},{\"type\":\"identifier\",\"name\":\"usg\"},{\"type\":\"identifier\",\"name\":\"tbl\"}]}},{\"type\":\"select\",\"where\":{\"type\":\"operator\",\"operator\":\"AND\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"IN\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.SUBMIT_TIME\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},{\"type\":\"function\",\"functionName\":\"IN\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.ACCOUNT_ID\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}}]}},\"from\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY\"}]},\"columns\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.QUERY\"},{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.QUERY_HISTS_ID\"},{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.Q_AST\"},{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.ACCOUNT_ID\"},{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.SUBMIT_TIME\"},{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.SOURCE\"}]}}]},\"columns\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.QUERY\"},{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.QUERY_HISTS_ID\"},{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.ACCOUNT_ID\"},{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.SUBMIT_TIME\"},{\"type\":\"identifier\",\"name\":\"TENALIV2.GALAXY.SOURCE\"},{\"type\":\"identifier\",\"name\":\"USAGETABLE.USG\"},{\"type\":\"identifier\",\"name\":\"USAGETABLE.COL\"},{\"type\":\"identifier\",\"name\":\"USAGETABLE.TBL\"}]}},\"dynamicPartitions\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"submit_time\"},{\"type\":\"identifier\",\"name\":\"source\"}]}}";
         CommandContext ctx = SqlCommandTestHelper.parseHive(command);
         CommandContext cctx = ctx.getChild(0);
 
@@ -241,7 +254,7 @@ public class HiveAstTransformationTest {
         String command = "use mydefault;\u0006drop table if exists tmp_klynch_ebay_conversions_1550485623;\u0006drop table if exists tmp_klynch_ebay_conversions_1550485742;\u0006drop table if exists tmp_klynch_ebay_conversions_1550485862;\u0006drop table if exists gap_gdx_unique_staging_21404_1550506236;\u0006drop table if exists gap_gdx_unique_staging_22881_1550507276;\u0006drop table if exists gap_gdx_unique_staging_24201_1550508248;\u0006drop table if exists gap_gdx_unique_staging_25288_1550509187" ;
 
 
-        String result = "{\"type\":\"MetaNode\",\"statement\":\"mydefault\"}";
+        String result = "{\"type\":\"meta\",\"statement\":\"mydefault\"}";
         CommandContext ctx = SqlCommandTestHelper.parseHive(command);
         CommandContext cctx = ctx.getChild(0);
 
