@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.qubole.tenali.parse.catalog.CatalogColumn;
 import com.qubole.tenali.parse.catalog.CatalogTable;
 import com.qubole.tenali.parse.catalog.CatalogResolver;
-import com.qubole.tenali.parse.TenaliAstBaseTransformer;
+import com.qubole.tenali.parse.sql.TenaliAstBaseTransformer;
 import com.qubole.tenali.parse.sql.datamodel.*;
 import com.qubole.tenali.parse.sql.datamodel.SelectNode.SelectBuilder;
 import org.apache.commons.lang3.tuple.ImmutablePair;

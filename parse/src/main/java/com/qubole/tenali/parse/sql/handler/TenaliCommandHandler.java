@@ -1,19 +1,22 @@
-package com.qubole.tenali.parse;
+package com.qubole.tenali.parse.sql.handler;
 
 import com.google.common.collect.ImmutableList;
+import com.qubole.tenali.parse.TenaliLexer;
+import com.qubole.tenali.parse.TenaliParser;
+import com.qubole.tenali.parse.TenaliTransformer;
 import com.qubole.tenali.parse.config.CommandContext;
 import com.qubole.tenali.parse.config.CommandType;
 import com.qubole.tenali.parse.lexer.DummyLexer;
 
 public abstract class TenaliCommandHandler {
 
-    CommandType commandType;
+    protected CommandType commandType;
 
-    TenaliLexer lexer;
+    protected TenaliLexer lexer;
 
-    TenaliParser parser;
+    protected TenaliParser parser;
 
-    ImmutableList.Builder<TenaliTransformer> transformerBuilder = new ImmutableList.Builder();
+    protected ImmutableList.Builder<TenaliTransformer> transformerBuilder = new ImmutableList.Builder();
 
     public TenaliCommandHandler(CommandType commandType) {
         this.commandType = commandType;

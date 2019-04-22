@@ -1,5 +1,6 @@
-package com.qubole.tenali.parse;
+package com.qubole.tenali.parse.sql;
 
+import com.qubole.tenali.parse.TenaliTransformer;
 import com.qubole.tenali.parse.config.CommandContext;
 import com.qubole.tenali.parse.sql.datamodel.*;
 

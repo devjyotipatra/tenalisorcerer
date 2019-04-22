@@ -1,7 +1,5 @@
 package com.qubole.tenali.parse.sql;
 
-import com.qubole.tenali.parse.SqlAstBaseTransformer;
-import com.qubole.tenali.parse.TenaliBaseVisitor;
 import com.qubole.tenali.parse.config.CommandContext;
 import com.qubole.tenali.parse.config.QueryType;
 import com.qubole.tenali.parse.sql.datamodel.*;

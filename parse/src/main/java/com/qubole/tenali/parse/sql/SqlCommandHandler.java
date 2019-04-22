@@ -1,7 +1,8 @@
-package com.qubole.tenali.parse;
+package com.qubole.tenali.parse.sql;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
+import com.qubole.tenali.parse.TenaliTransformer;
 import com.qubole.tenali.parse.config.CommandType;
 import com.qubole.tenali.parse.config.CommandContext;
 import com.qubole.tenali.parse.config.QueryContext;
@@ -11,6 +12,7 @@ import com.qubole.tenali.parse.sql.datamodel.ErrorNode;
 import com.qubole.tenali.parse.sql.datamodel.MetaNode;
 import com.qubole.tenali.parse.sql.datamodel.SetNode;
 import com.qubole.tenali.parse.sql.datamodel.TenaliAstNode;
+import com.qubole.tenali.parse.sql.handler.TenaliCommandHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +64,6 @@ public final class SqlCommandHandler extends TenaliCommandHandler {
 
                         ObjectMapper objectMapper = new ObjectMapper();
                         String res = objectMapper.writeValueAsString(ast);
-                        System.out.println(res);
                     }
                 }
 

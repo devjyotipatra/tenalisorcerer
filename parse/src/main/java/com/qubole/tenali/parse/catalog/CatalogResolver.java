@@ -2,7 +2,7 @@ package com.qubole.tenali.parse.catalog;
 
 import com.qubole.tenali.parse.sql.datamodel.IdentifierNode;
 import com.qubole.tenali.parse.sql.datamodel.TenaliAstNode;
-import com.qubole.tenali.parse.TenaliAstBaseTransformer;
+import com.qubole.tenali.parse.sql.TenaliAstBaseTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

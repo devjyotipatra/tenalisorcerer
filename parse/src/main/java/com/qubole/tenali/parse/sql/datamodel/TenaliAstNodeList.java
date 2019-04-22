@@ -1,7 +1,7 @@
 package com.qubole.tenali.parse.sql.datamodel;
 
 
-import com.qubole.tenali.parse.TenaliAstBaseTransformer;
+import com.qubole.tenali.parse.sql.TenaliAstBaseTransformer;
 
 import java.util.ArrayList;
 import java.util.Iterator;

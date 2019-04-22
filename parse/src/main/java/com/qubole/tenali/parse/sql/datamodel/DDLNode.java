@@ -2,7 +2,7 @@ package com.qubole.tenali.parse.sql.datamodel;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qubole.tenali.parse.TenaliAstBaseTransformer;
+import com.qubole.tenali.parse.sql.TenaliAstBaseTransformer;
 
 
 public class DDLNode extends TenaliAstNode {

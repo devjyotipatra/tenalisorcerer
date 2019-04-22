@@ -2,7 +2,6 @@ package com.qubole.tenali.parse.sql;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.qubole.tenali.parse.SqlAstBaseTransformer;
 import com.qubole.tenali.parse.config.CommandContext;
 import com.qubole.tenali.parse.sql.datamodel.*;
 import org.apache.calcite.sql.*;
