@@ -57,13 +57,14 @@ public final class SqlCommandHandler extends TenaliCommandHandler {
 
                 Object ast = context.getParseAst();
 
-                if (!(ast instanceof MetaNode || ast instanceof SetNode)) {
+                if (!(rootCtx.isDDLQuery() || (ast instanceof MetaNode))) {
                     for (TenaliTransformer transformer : transformers) {
                         Class clazz = Class.forName(transformer.getType().getCanonicalName());
                         ast = transformer.transform(clazz.cast(ast), rootCtx);
 
-                        //ObjectMapper objectMapper = new ObjectMapper();
-                        //String res = objectMapper.writeValueAsString(ast);
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        String res = objectMapper.writeValueAsString(ast);
+                        System.out.println(res);
                     }
                 }
 

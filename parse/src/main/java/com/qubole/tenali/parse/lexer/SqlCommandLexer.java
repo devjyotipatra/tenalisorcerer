@@ -22,6 +22,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
+import java.util.Set;
 
 import static antlr4.QDSCommandLexer.*;
 
@@ -40,6 +42,12 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
      */
 
     private static final Logger LOG = LoggerFactory.getLogger(SqlCommandLexer.class);
+
+    static final Set<String> UNSUPPORTED_FUNCTIONS = new HashSet<>();
+    static {
+        UNSUPPORTED_FUNCTIONS.add("current_date()");
+        UNSUPPORTED_FUNCTIONS.add("current_timestamp()");
+    }
 
     CommandType commandType = CommandType.UNKNOWN;
 
@@ -162,7 +170,8 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
         for(String query : commandTokens) {
             try {
                 query = query.replaceAll("\u0006", "\n")
-                            .replaceAll("`", "").trim();
+                            .replaceAll("`", "")
+                            .replaceAll("current_date\\(\\)", "current_date").trim();
 
                 if(query.length() > 0) {
                     InputStream antlrInputStream =

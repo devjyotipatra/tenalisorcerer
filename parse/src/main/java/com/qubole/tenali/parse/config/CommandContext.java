@@ -20,10 +20,6 @@ public class CommandContext {
 
     boolean isRootNode = false;
 
-    boolean isDDLQuery;
-
-    boolean isSupportedDDLQuery;
-
 
     public CommandContext() {  }
 
@@ -138,20 +134,13 @@ public class CommandContext {
 
 
 
-    public void setIsDDLQuery() {
-        isDDLQuery = true;
-    }
-
-    public void setIsSupportedDDLQuery() {
-        isSupportedDDLQuery = true;
-    }
-
-    public boolean getIsDDLQuery() {
-        return isDDLQuery;
-    }
-
-    public boolean getIsSupportedDDLQuery() {
-        return isSupportedDDLQuery;
+    public boolean isDDLQuery() {
+        return (queryType == QueryType.ADD_JAR
+                || queryType == QueryType.ALTER_TABLE
+                || queryType == QueryType.CREATE_FUNCTION
+                || queryType == QueryType.SET
+                || queryType == QueryType.UNKNOWN
+        );
     }
 
 

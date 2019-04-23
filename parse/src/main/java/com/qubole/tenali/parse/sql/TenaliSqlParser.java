@@ -14,13 +14,13 @@ public abstract class TenaliSqlParser implements TenaliParser {
 
     public MetaNode parseUseStmt(String sql) {
         String[] tokens = sql.split("[\\s]+");
-        return new MetaNode(tokens[1]);
+        return new MetaNode("USE", tokens[1]);
     }
 
 
     public SetNode parseSetStmt(String sql) {
         SetNode node = null;
-        Matcher m = setPattern.matcher(sql);
+        Matcher m = setPattern.matcher(sql.toLowerCase());
 
         if(m.find()) {
             node = new SetNode(m.group(1), m.group(2));

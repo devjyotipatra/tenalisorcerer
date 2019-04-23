@@ -16,6 +16,208 @@ public class HiveAstTransformationTest {
         return res;
     }
 
+
+    @Test
+    public void testMisc1() throws Exception {
+        String command = "\n" +
+                "\n" +
+                "ALTER TABLE x__prd_dbstream.stream_nextdoor__web_group\n" +
+                "ADD IF NOT EXISTS PARTITION(arrivaltime = '2019020822',\n" +
+                "                            region='us');\n" +
+                "\n" +
+                "INSERT OVERWRITE TABLE x__prd_dbstream.stream_nextdoor__web_group\n" +
+                "PARTITION (\n" +
+                "    arrivaltime='2019020822',\n" +
+                "    region='us'\n" +
+                ")\n" +
+                "  SELECT\n" +
+                "    DISTINCT stream_with_dups.*\n" +
+                "  FROM (\n" +
+                "  SELECT\n" +
+                "  \n" +
+                "        cast(get_json_object(cols, '$.photo.new.v') as string) as photo,\n" +
+                "        cast(get_json_object(cols, '$.status.new.v') as int) as status,\n" +
+                "        cast(get_json_object(cols, '$.country.new.v') as string) as country,\n" +
+                "        cast(get_json_object(cols, '$.name.new.v') as string) as name,\n" +
+                "        from_unixtime(unix_timestamp(get_json_object(cols, '$.audit_cr_ts.new.v'))) as audit_cr_ts,\n" +
+                "        cast(get_json_object(cols, '$.about.new.v') as string) as about,\n" +
+                "        cast(COALESCE(get_json_object(cols, '$.id.new.v'), get_json_object(cols, '$.id.old.v')) as bigint) as id,\n" +
+                "        cast(get_json_object(cols, '$.geometry_id.new.v') as bigint) as geometry_id,\n" +
+                "        from_unixtime(unix_timestamp(get_json_object(cols, '$.audit_upd_ts.new.v'))) as audit_upd_ts,\n" +
+                "        from_unixtime(unix_timestamp(get_json_object(cols, '$.modification_date.new.v'))) as modification_date,\n" +
+                "        cast(get_json_object(cols, '$.group_type.new.v') as int) as group_type,\n" +
+                "        from_unixtime(unix_timestamp(get_json_object(cols, '$.creation_date.new.v'))) as creation_date,\n" +
+                "        cast(get_json_object(cols, '$.announcement_post_id.new.v') as bigint) as announcement_post_id,\n" +
+                "        cast(get_json_object(cols, '$.audit_version_num.new.v') as bigint) as audit_version_num,\n" +
+                "        cast(get_json_object(cols, '$.post_email.new.v') as string) as post_email,\n" +
+                "        cast(get_json_object(cols, '$.created_by_id.new.v') as bigint) as created_by_id,\n" +
+                "    cast(regexp_replace(regexp_replace(tx_time, 'T', ' '), 'Z', '') as timestamp) as x__last_updated_ts,\n" +
+                "    operation as x__operation,\n" +
+                "    lsn as x__lsn\n" +
+                "  FROM x__prd_dbstream.nextdoor__us\n" +
+                "  WHERE fq_tablename = 'public.web_group'\n" +
+                "    AND year_part = '2019'\n" +
+                "    AND month_part = '02'\n" +
+                "    AND day_part = '08'\n" +
+                "    AND hour_part = '22'\n" +
+                "  ) stream_with_dups\n" +
+                ";";
+
+        CommandContext ctx = SqlCommandTestHelper.parseHive(command);
+        CommandContext cctx = ctx.getChild(1);
+
+        Object ast = cctx.getQueryContext().getTenaliAst();
+        getTransformedString(ast);
+    }
+
+
+    @Test
+    public void testMisc() throws Exception {
+        String command = "USE core;\n; SELECT 'row_count', count(1)\n" +
+                "FROM prd_nextdoor_stage.web_emailsubscription\n" +
+                "WHERE region = 'us';" +
+                "INSERT OVERWRITE TABLE prd_nextdoor.city_subagencymetadata_hist\n" +
+                "                PARTITION (snapshot='20190305220000', region='eu')\n" +
+                "                SELECT\n" +
+                "                    `designated_recipient`,\n" +
+                "\t`group_id`,\n" +
+                "\t`id`\n" +
+                "                FROM prd_nextdoor_stage.city_subagencymetadata\n" +
+                "                WHERE region = 'eu'\n" +
+                "            ;" +
+                " SELECT count(*) FROM default.event_hive_query_logged WHERE ds = date_sub(current_date(), 2) AND environment= 'production' AND cluster='hive_prod_adhoc';" +
+                "INSERT OVERWRITE TABLE rollup_cmp_orc_tmp_instance3 PARTITION(logdate='2019-03-03', hour='03')\n" +
+                "SELECT\n" +
+                " f.event_time_id,\n" +
+                " f.account_id,\n" +
+                "  f.advertiser_id,\n" +
+                "  sum(f.impressions),\n" +
+                "  sum(f.clicks),\n" +
+                "  f.attribute_map,\n" +
+                "\tf.conversion_objective as conversion_objective,\n" +
+                "\tcoalesce(sum(case\n" +
+                "\t\twhen amo_metrics.conversion_model = 'last' then amo_metrics.ct_value\n" +
+                "\t\telse 0 end\n" +
+                "\t),0),\n" +
+                "\tcoalesce(sum(case\n" +
+                "\t\twhen amo_metrics.conversion_model = 'last' then amo_metrics.vt_value\n" +
+                "\t\telse 0 end\n" +
+                "\t),0),\n" +
+                "\tcoalesce(sum(case\n" +
+                "\t\twhen amo_metrics.conversion_model = 'first' then amo_metrics.ct_value\n" +
+                "\t\telse 0 end\n" +
+                "\t),0),\n" +
+                "\tcoalesce(sum(case\n" +
+                "\t\twhen amo_metrics.conversion_model = 'first' then amo_metrics.vt_value\n" +
+                "\t\telse 0 end\n" +
+                "\t),0),\n" +
+                "\tcoalesce(sum(case\n" +
+                "\t\twhen amo_metrics.conversion_model = 'even' then amo_metrics.ct_value\n" +
+                "\t\telse 0 end\n" +
+                "\t),0),\n" +
+                "\tcoalesce(sum(case\n" +
+                "\t\twhen amo_metrics.conversion_model = 'even' then amo_metrics.vt_value\n" +
+                "\t\telse 0 end\n" +
+                "\t),0),\n" +
+                "\tcoalesce(sum(case\n" +
+                "\t\twhen amo_metrics.conversion_model = 'less' then amo_metrics.ct_value\n" +
+                "\t\telse 0 end\n" +
+                "\t),0),\n" +
+                "\tcoalesce(sum(case\n" +
+                "\t\twhen amo_metrics.conversion_model = 'less' then amo_metrics.vt_value\n" +
+                "\t\telse 0 end\n" +
+                "\t),0),\n" +
+                "\tcoalesce(sum(case\n" +
+                "\t\twhen amo_metrics.conversion_model = 'more' then amo_metrics.ct_value\n" +
+                "\t\telse 0 end\n" +
+                "\t),0),\n" +
+                "\tcoalesce(sum(case\n" +
+                "\t\twhen amo_metrics.conversion_model = 'more' then amo_metrics.vt_value\n" +
+                "\t\telse 0 end\n" +
+                "\t),0),\n" +
+                "\tcoalesce(sum(case\n" +
+                "\t\twhen amo_metrics.conversion_model = 'u_shape' then amo_metrics.ct_value\n" +
+                "\t\telse 0 end\n" +
+                "\t),0),\n" +
+                "\tcoalesce(sum(case\n" +
+                "\t\twhen amo_metrics.conversion_model = 'u_shape' then amo_metrics.vt_value\n" +
+                "\t\telse 0 end\n" +
+                "\t),0),\n" +
+                "\tcoalesce(sum(case\n" +
+                "\t\twhen amo_metrics.conversion_model = 'social_only' then amo_metrics.ct_value\n" +
+                "\t\telse 0 end\n" +
+                "\t),0),\n" +
+                "\tcoalesce(sum(case\n" +
+                "\t\twhen amo_metrics.conversion_model = 'social_only' then amo_metrics.vt_value\n" +
+                "\t\telse 0 end\n" +
+                "\t),0),\n" +
+                "\tcoalesce(sum(case\n" +
+                "\t\twhen amo_metrics.conversion_model = 'display_only' then amo_metrics.ct_value\n" +
+                "\t\telse 0 end\n" +
+                "\t),0),\n" +
+                "\tcoalesce(sum(case\n" +
+                "\t\twhen amo_metrics.conversion_model = 'display_only' then amo_metrics.vt_value\n" +
+                "\t\telse 0 end\n" +
+                "\t),0),\n" +
+                "\tf.creative_id\n" +
+                "FROM core.cmp_event_log f LATERAL VIEW OUTER explode(conversion_metric) exploded_table as amo_metrics\n" +
+                "WHERE f.logdate='2019-03-03'\n" +
+                "  AND f.hour='03'\n" +
+                "GROUP BY\n" +
+                " f.event_time_id,\n" +
+                " f.account_id,\n" +
+                "  f.advertiser_id,\n" +
+                "  f.experience_id,\n" +
+                "  f.ad_theme_id,\n" +
+                "  f.ad_theme_creative_id,\n" +
+                "  f.dsp_id,\n" +
+                "  f.is_default,\n" +
+                "  f.dsp_buy_id,\n" +
+                "  f.dsp_site_id,\n" +
+                "  f.dsp_page_id,\n" +
+                "  f.dsp_ad_id,\n" +
+                "  f.dsp_creative_id,\n" +
+                "  f.data_pass_parameters,\n" +
+                "  f.segment_id,\n" +
+                "  f.segment_value_parameters,\n" +
+                "  f.matched_audience_segment_id,\n" +
+                "  f.audience_segment_id,\n" +
+                "  f.publisher_url,\n" +
+                "  f.referer_url,\n" +
+                "  f.click_x,\n" +
+                "  f.click_y,\n" +
+                "  f.click_time,\n" +
+                "  f.landing_page_url,\n" +
+                "  f.country_code,\n" +
+                "  f.region_code,\n" +
+                "  f.city_name,\n" +
+                "  f.city_id,\n" +
+                "  f.zip_code,\n" +
+                "  f.metro_id,\n" +
+                "  f.dma,\n" +
+                "  f.device_type,\n" +
+                "  f.device_os,\n" +
+                "  f.device_browser,\n" +
+                "  f.ad_width,\n" +
+                "  f.ad_height,\n" +
+                "  f.targeting_branch_id,\n" +
+                "  f.creative_selection_logic_id,\n" +
+                "  f.derived_creative_id,\n" +
+                "  f.parent_creative_id,\n" +
+                "  f.attribute_map,\n" +
+                "f.conversion_objective,\n" +
+                "f.creative_id;\n" ;
+
+
+        CommandContext ctx = SqlCommandTestHelper.parseHive(command);
+        CommandContext cctx = ctx.getChild(1);
+
+        Object ast = cctx.getQueryContext().getTenaliAst();
+        getTransformedString(ast);
+    }
+
+
+
     @Test
     public void testSetStmt() throws Exception {
         String command = "set   a = b";
@@ -174,7 +376,7 @@ public class HiveAstTransformationTest {
                     "group by  to_date(qh.created_at) " ;
 
 
-            String result = "{\"type\":\"select\",\"where\":{\"type\":\"operator\",\"operator\":\"AND\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"operator\",\"operator\":\"AND\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"operator\",\"operator\":\"AND\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"operator\",\"operator\":\">=\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"TO_DATE\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"QUERY_HISTS.CREATED_AT\"}]}},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},{\"type\":\"operator\",\"operator\":\"=\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"COMMAND_TYPE\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}}]}},{\"type\":\"operator\",\"operator\":\"LIKE\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"QLOG\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}}]}},{\"type\":\"operator\",\"operator\":\"LIKE\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"CUSTOMER_NAME\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}}]}},\"groupBy\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"TO_DATE\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"QUERY_HISTS.CREATED_AT\"}]}}]},\"from\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"join\",\"joinType\":\"INNER\",\"leftNode\":{\"type\":\"join\",\"joinType\":\"INNER\",\"leftNode\":{\"type\":\"identifier\",\"name\":\"QUERY_HISTS\"},\"rightNode\":{\"type\":\"identifier\",\"name\":\"USER_INFO\"},\"joinCondition\":{\"type\":\"operator\",\"operator\":\"=\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"QUERY_HISTS.QBOL_USER_ID\"},{\"type\":\"identifier\",\"name\":\"USER_INFO.QU_ID\"}]}}},\"rightNode\":{\"type\":\"identifier\",\"name\":\"CANONICAL_ACCOUNTS\"},\"joinCondition\":{\"type\":\"operator\",\"operator\":\"=\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"CANONICAL_ACCOUNTS.ID\"},{\"type\":\"identifier\",\"name\":\"USER_INFO.A_ID\"}]}}}]},\"columns\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"TO_DATE\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"QUERY_HISTS.CREATED_AT\"}]}},{\"type\":\"function\",\"functionName\":\"COUNT\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"QUERY_HISTS.ID\"}]}}]}}";
+            String result = "{\"type\":\"select\",\"where\":{\"type\":\"operator\",\"operator\":\"AND\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"operator\",\"operator\":\"AND\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"operator\",\"operator\":\"AND\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"operator\",\"operator\":\">=\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"TO_DATE\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"DEFAULT.QUERY_HISTS.CREATED_AT\"}]}},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},{\"type\":\"operator\",\"operator\":\"=\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"DEFAULT.QUERY_HISTS.COMMAND_TYPE\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}}]}},{\"type\":\"operator\",\"operator\":\"LIKE\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"DEFAULT.QUERY_HISTS.QLOG\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}}]}},{\"type\":\"operator\",\"operator\":\"LIKE\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"CUSTOMER_NAME\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}}]}},\"groupBy\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"TO_DATE\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"DEFAULT.QUERY_HISTS.CREATED_AT\"}]}}]},\"from\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"join\",\"joinType\":\"INNER\",\"leftNode\":{\"type\":\"join\",\"joinType\":\"INNER\",\"leftNode\":{\"type\":\"identifier\",\"name\":\"DEFAULT.QUERY_HISTS\"},\"rightNode\":{\"type\":\"identifier\",\"name\":\"USER_INFO\"},\"joinCondition\":{\"type\":\"operator\",\"operator\":\"=\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"DEFAULT.QUERY_HISTS.QBOL_USER_ID\"},{\"type\":\"identifier\",\"name\":\"USER_INFO.QU_ID\"}]}}},\"rightNode\":{\"type\":\"identifier\",\"name\":\"CANONICAL_ACCOUNTS\"},\"joinCondition\":{\"type\":\"operator\",\"operator\":\"=\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"CANONICAL_ACCOUNTS.ID\"},{\"type\":\"identifier\",\"name\":\"USER_INFO.A_ID\"}]}}}]},\"columns\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"TO_DATE\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"DEFAULT.QUERY_HISTS.CREATED_AT\"}]}},{\"type\":\"function\",\"functionName\":\"COUNT\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"DEFAULT.QUERY_HISTS.ID\"}]}}]}}";
             CommandContext ctx = SqlCommandTestHelper.parseHive(command);
             CommandContext cctx = ctx.getChild(0);
 
@@ -227,6 +429,8 @@ public class HiveAstTransformationTest {
     }
 
 
+
+
     @Test
     public void testComplexJoin2() throws Exception {
         String command = "SELECT matched_events.dt, 'api' AS environment, matched_events.account_id, COALESCE(total_events, 0) AS total_events, total_queries,  matched_queries " +
@@ -251,10 +455,25 @@ public class HiveAstTransformationTest {
 
     @Test
     public void testDropTable() throws Exception {
-        String command = "use mydefault;\u0006drop table tmp_klynch_ebay_conversions_1550485623;\u0006drop table if exists tmp_klynch_ebay_conversions_1550485742;" ;
+        String command = "use mydefault;\u0006drop table tmp_klynch_ebay_conversions_1550485623;\u0006drop table if exists tmp_klynch_ebay_conversions_1550485742; drop table if exists study.referencemaster_sushi_google_20171030_091435;" ;
 
 
         String result = "{\"type\":\"ddl\",\"ddlToken\":\"DROP_TABLE\",\"selectNode\":null,\"tableNode\":{\"type\":\"identifier\",\"name\":\"MYDEFAULT.TMP_KLYNCH_EBAY_CONVERSIONS_1550485623\"}}";
+        CommandContext ctx = SqlCommandTestHelper.parseHive(command);
+        CommandContext cctx = ctx.getChild(1);
+
+        Object ast = cctx.getQueryContext().getTenaliAst();
+        assertEquals(result, getTransformedString(ast));
+    }
+
+
+    @Test
+    public void testCreateTable() throws Exception {
+        String command = "drop table if exists study.referencemaster_sushi_google_20171030_091435;\n" +
+                "CREATE EXTERNAL TABLE IF NOT EXISTS study.referencemaster_sushi_google_20171030_091435 (HHID BIGINT,num_inds BIGINT,kbm_num_inds BIGINT,age_i INT,age_max INT,age_min INT,number_of_children INT,home_value INT,hh_income INT,children_ind STRING,hh_income_ind STRING,home_value_ind STRING,age_ind STRING,children_ages_0_2_flg INT,children_ages_3_5_flg INT,children_ages_6_10_flg INT,children_ages_11_15_flg INT,children_ages_16_18_flg INT,presence_of_child_flg INT,ages_18_19_flg INT,ages_20_29_flg INT,ages_30_39_flg INT,ages_40_49_flg INT,ages_50_59_flg INT,ages_60_64_flg INT,ages_65_plus_flg INT,state STRING,dma_code INT,female_present INT,male_present INT,hoh_ethnic_code STRING,afr_american_flg INT,hispanic_flg INT,asian_flg INT,european_flg INT,nat_american_flg INT,mid_eastern_flg INT,other_ethnic_flg INT,dsi_flg INT,tgt_flg INT,rad_flg INT,gfk_flg INT,cvs_flg INT,bjs_flg INT,sw_flg INT,dg_flg INT,bv_flg INT,ab_flg INT,swbyod_flg INT,marsh_flg INT,pricechopper_flg INT,brookshire_flg INT,weis_flg INT,spartan_flg INT,winndixie_flg INT,dagostino_flg INT,bashas_flg INT,martins_flg INT,lowes_flg INT,exclusion_flg INT,valid_demo_flg INT) ROW FORMAT DELIMITED FIELDS TERMINATED BY '124' ESCAPED BY '\\\\' STORED AS TEXTFILE LOCATION 's3://p-measurement/reference-master/sushi_universe_2019-03-04_09-57-52'" ;
+
+
+        String result = "{\"type\":\"ddl\",\"ddlToken\":\"TOK_CREATETABLE\",\"selectNode\":null,\"tableNode\":{\"type\":\"identifier\",\"name\":\"STUDY.REFERENCEMASTER_SUSHI_GOOGLE_20171030_091435\"}}";
         CommandContext ctx = SqlCommandTestHelper.parseHive(command);
         CommandContext cctx = ctx.getChild(1);
 

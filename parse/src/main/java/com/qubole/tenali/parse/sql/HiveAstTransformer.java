@@ -1,6 +1,7 @@
 package com.qubole.tenali.parse.sql;
 
 import com.qubole.tenali.parse.config.CommandContext;
+import com.qubole.tenali.parse.config.QueryContext;
 import com.qubole.tenali.parse.config.QueryType;
 import com.qubole.tenali.parse.sql.datamodel.*;
 import org.apache.hadoop.hive.ql.lib.Node;
@@ -26,10 +27,10 @@ public class HiveAstTransformer extends SqlAstBaseTransformer<ASTNode> {
     public TenaliAstNode transform(ASTNode ast, CommandContext ctx) {
         this.ctx = ctx;
 
-        if (isDDLQuery(ast.getToken().getType())
+        /*if (isDDLQuery(ast.getToken().getType())
                 && !isSupportedDDL(ast.getToken().getType())) {
-            return new MetaNode(ast.toString());
-        }
+            return new MetaNode("MISC", ast.toString());
+        }*/
 
         LOG.info("Hive AST => " + ast.dump());
 
@@ -96,6 +97,7 @@ public class HiveAstTransformer extends SqlAstBaseTransformer<ASTNode> {
                     node = parseDrop(root);
                     break;
                 case HiveParser.TOK_LATERAL_VIEW:
+                case HiveParser.TOK_LATERAL_VIEW_OUTER:
                     node = parseLateralView(root);
                     break;
                 case HiveParser.TOK_ALTERTABLE:

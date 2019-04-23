@@ -178,8 +178,16 @@
                                     <include>org.antlr</include>
                                     <include>org.apache.calcite</include>
                                     <include>com.qubole.tenali</include>
+                                    <include>org.apache.hive</include>
                                 </includes>
                             </artifactSet>
+
+                            <relocations>
+                                <relocation>
+                                    <pattern>org.apache.hive.</pattern>
+                                    <shadedPattern>tenali.apache.hive.</shadedPattern>
+                                </relocation>
+                            </relocations>
 
                            <!--<relocations>
                                 <relocation>

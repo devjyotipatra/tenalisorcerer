@@ -31,10 +31,13 @@ public class HiveSqlParser extends TenaliSqlParser {
             parseObj.setParseAst(node);
         } else if(queryType == QueryType.SET) {
             parseObj.setParseAst(parseSetStmt(sql));
-        } else if(queryType == QueryType.ALTER_TABLE
-                || queryType == QueryType.ADD_JAR) {
+        } else if(queryType == QueryType.ALTER_TABLE) {
             //ToDo --
-            parseObj.setParseAst(new MetaNode(sql));
+            parseObj.setParseAst(new MetaNode("ALTER", sql));
+        } else if(queryType == QueryType.ADD_JAR) {
+            parseObj.setParseAst(new MetaNode("ADDJAR", sql));
+        } else if(queryType == QueryType.UNKNOWN) {
+            parseObj.setParseAst(new MetaNode("MISC", sql));
         } else {
             try {
                 ASTNode root = parseDriver.parse(sql);

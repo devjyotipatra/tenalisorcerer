@@ -7,11 +7,15 @@ import com.qubole.tenali.parse.sql.TenaliAstBaseTransformer;
 
 public class MetaNode extends TenaliAstNode {
 
+    public String metaType;
+
     public String statement;
 
     @JsonCreator
-    public MetaNode(@JsonProperty("statement") String statement) {
+    public MetaNode(@JsonProperty("meta_type") String type,
+                    @JsonProperty("statement") String statement) {
         super();
+        this.metaType = type;
         this.statement = statement;
 
     }

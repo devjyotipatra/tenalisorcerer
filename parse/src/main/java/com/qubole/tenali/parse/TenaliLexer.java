@@ -4,9 +4,9 @@ import com.qubole.tenali.parse.config.CommandContext;
 import com.qubole.tenali.parse.config.CommandType;
 
 public interface TenaliLexer<T> {
-    public CommandContext getRootContext();
+    CommandContext getRootContext();
 
-    public void extract(String command);
+    void extract(String command);
 
-    public CommandType getCommandType();
+    CommandType getCommandType();
 }
