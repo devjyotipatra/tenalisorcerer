@@ -184,8 +184,8 @@
 
                             <relocations>
                                 <relocation>
-                                    <pattern>org.apache.hive.</pattern>
-                                    <shadedPattern>tenali.apache.hive.</shadedPattern>
+                                    <pattern>org.apache.hadoop.hive.</pattern>
+                                    <shadedPattern>tenali.apache.hadoop.hive.</shadedPattern>
                                 </relocation>
                             </relocations>
 
