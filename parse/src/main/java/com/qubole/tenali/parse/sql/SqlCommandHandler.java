@@ -1,6 +1,5 @@
 package com.qubole.tenali.parse.sql;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.qubole.tenali.parse.TenaliTransformer;
 import com.qubole.tenali.parse.config.CommandType;
@@ -10,7 +9,6 @@ import com.qubole.tenali.parse.config.QueryType;
 import com.qubole.tenali.parse.exception.TenaliSQLParseException;
 import com.qubole.tenali.parse.sql.datamodel.ErrorNode;
 import com.qubole.tenali.parse.sql.datamodel.MetaNode;
-import com.qubole.tenali.parse.sql.datamodel.SetNode;
 import com.qubole.tenali.parse.sql.datamodel.TenaliAstNode;
 import com.qubole.tenali.parse.sql.handler.TenaliCommandHandler;
 import org.slf4j.Logger;
@@ -42,29 +40,37 @@ public final class SqlCommandHandler extends TenaliCommandHandler {
             return rootCtx;
         }
 
+
         CommandContext commandContext = rootCtx;
         prepareParser(parser);
 
         while (rootCtx != null) {
             QueryType queryType = rootCtx.getQueryType();
-            try {
-                QueryContext context = parser.parse(queryType, rootCtx.getStmt());
-                rootCtx.setQueryContext(context);
 
-                if (rootCtx.hasParent() && rootCtx.getParent().getQueryContext() != null) {
-                    context.setDefaultDB(rootCtx.getParent().getQueryContext().getDefaultDB());
+            try {
+                QueryContext context = rootCtx.getQueryContext();
+                if(context == null) {
+                    context = parser.parse(queryType, rootCtx.getStmt());
+                    rootCtx.setQueryContext(context);
+
+                    if (rootCtx.hasParent()) {
+                        context.setDefaultDB(rootCtx.getParent().getQueryContext().getDefaultDB());
+                    }
                 }
 
                 Object ast = context.getParseAst();
 
-                if (!(rootCtx.isDDLQuery() || (ast instanceof MetaNode))) {
+                if (!(rootCtx.isDDLQuery()
+                        || (ast instanceof MetaNode)
+                        || (ast instanceof ErrorNode))) {
+
                     for (TenaliTransformer transformer : transformers) {
                         Class clazz = Class.forName(transformer.getType().getCanonicalName());
                         ast = transformer.transform(clazz.cast(ast), rootCtx);
 
-                        ObjectMapper objectMapper = new ObjectMapper();
-                        String res = objectMapper.writeValueAsString(ast);
-                        System.out.println(res);
+                        //ObjectMapper objectMapper = new ObjectMapper();
+                        //String res = objectMapper.writeValueAsString(ast);
+                        //LOG.info(res);
                     }
                 }
 
@@ -79,9 +85,6 @@ public final class SqlCommandHandler extends TenaliCommandHandler {
             } catch (TenaliSQLParseException ep) {
                 LOG.error("Parsing Error:  " + ep.getMessage());
                 rootCtx.setQueryContext(new QueryContext(new ErrorNode("ParseException, " + ep.getMessage())));
-            } catch (Exception ee) {
-                rootCtx.setQueryContext(new QueryContext(new ErrorNode("ParseException, " + ee.getMessage())));
-                LOG.error("Runtime Error:  " + ee.getMessage());
             }
 
             rootCtx = rootCtx.getChild();

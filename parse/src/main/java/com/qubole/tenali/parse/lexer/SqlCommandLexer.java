@@ -159,8 +159,12 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
 
     @Override
     public CommandContext aggregateResult(CommandContext ctx, CommandContext result) {
+        if (ctx == null) {
+            ctx = result;
+            return ctx;
+        }
+
         ctx.appendNewContext(result);
-        currentContext = result;
         return result;
     }
 
@@ -179,6 +183,7 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
                             .replaceAll("`", "")
                             .replaceAll("current_date\\(\\)", "current_date").trim();
 
+
                 if(query.length() > 0) {
                     InputStream antlrInputStream =
                             new ByteArrayInputStream(query.getBytes(StandardCharsets.UTF_8));
@@ -194,26 +199,24 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
                     ParseTree tree = parser.parse();
                     CommandContext ctx = visit(tree);
 
-                    if (ctx != null && ctx.getQueryType() != QueryType.UNKNOWN) {
-                        if (root == null) {
-                            root = ctx;
-                            root.setAsRootNode();
-                            currentContext = root;
-                        } else {
-                            aggregateResult(currentContext, ctx);
-                        }
+                    if (ctx != null) {
+                        currentContext = aggregateResult(currentContext, ctx);
                     }
                 }
 
             } catch (CommandParseError e) {
                 QueryContext qCtx = new QueryContext(new MetaNode("UNKNOWN", query));
                 qCtx.setErrorMessage(e.getMessage());
-                aggregateResult(currentContext, new CommandContext(QueryType.UNKNOWN, qCtx));
+
+                currentContext = aggregateResult(currentContext, new CommandContext(QueryType.UNKNOWN, qCtx));
             } catch (IOException ie) {
                 QueryContext qCtx = new QueryContext(new ErrorNode(query));
-                aggregateResult(currentContext, new CommandContext(QueryType.UNKNOWN, qCtx));
+                currentContext = aggregateResult(currentContext, new CommandContext(QueryType.UNKNOWN, qCtx));
+            }
 
-                throw new SQLSyntaxError(ie);
+            if (root == null) {
+                root = currentContext;
+                root.setAsRootNode();
             }
         }
     }
