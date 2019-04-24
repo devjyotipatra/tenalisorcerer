@@ -16,5 +16,6 @@ public enum QueryType  {
     CTAS,
     CTE,
     CREATE_VIEW,
+    CREATE_DATABASE,
     UNKNOWN
 }

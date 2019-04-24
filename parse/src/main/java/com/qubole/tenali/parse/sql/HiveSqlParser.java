@@ -19,6 +19,13 @@ public class HiveSqlParser extends TenaliSqlParser {
     public HiveSqlParser() {}
 
     public void prepare() {
+        //conf = new HiveConf();
+        //conf.setBoolVar(HiveConf.ConfVars.HIVE_SUPPORT_SQL11_RESERVED_KEYWORDS, false);
+        /*String scratchDir = HiveConf.getVar(conf, HiveConf.ConfVars.SCRATCHDIR);
+        conf.set("_hive.hdfs.session.path", scratchDir);
+        conf.set("_hive.local.session.path", HiveConf.getVar(conf, HiveConf.ConfVars.LOCALSCRATCHDIR)
+                + "/" + System.getProperty("user.name") + "/" + "000");*/
+
         parseDriver = new ParseDriver();
     }
 
@@ -26,18 +33,15 @@ public class HiveSqlParser extends TenaliSqlParser {
         QueryContext parseObj = new QueryContext();
 
         if(queryType == QueryType.USE) {
-            MetaNode node = parseUseStmt(sql);
+            MetaNode node = (MetaNode) parseDdlStatement(sql, queryType);
             parseObj.setDefaultDB(node.statement);
             parseObj.setParseAst(node);
-        } else if(queryType == QueryType.SET) {
-            parseObj.setParseAst(parseSetStmt(sql));
-        } else if(queryType == QueryType.ALTER_TABLE) {
-            //ToDo --
-            parseObj.setParseAst(new MetaNode("ALTER", sql));
-        } else if(queryType == QueryType.ADD_JAR) {
-            parseObj.setParseAst(new MetaNode("ADDJAR", sql));
-        } else if(queryType == QueryType.UNKNOWN) {
-            parseObj.setParseAst(new MetaNode("MISC", sql));
+        } else if(queryType == QueryType.SET
+                || queryType == QueryType.ALTER_TABLE
+                || queryType == QueryType.ADD_JAR
+                || queryType == QueryType.CREATE_DATABASE
+                || queryType == QueryType.UNKNOWN) {
+            parseObj.setParseAst(parseDdlStatement(sql, queryType));
         } else {
             try {
                 ASTNode root = parseDriver.parse(sql);

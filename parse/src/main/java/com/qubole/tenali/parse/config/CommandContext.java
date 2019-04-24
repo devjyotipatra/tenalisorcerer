@@ -139,6 +139,7 @@ public class CommandContext {
                 || queryType == QueryType.ALTER_TABLE
                 || queryType == QueryType.CREATE_FUNCTION
                 || queryType == QueryType.SET
+                || queryType == QueryType.CREATE_DATABASE
                 || queryType == QueryType.UNKNOWN
         );
     }

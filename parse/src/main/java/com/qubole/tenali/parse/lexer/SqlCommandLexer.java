@@ -120,6 +120,9 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
                 //cctx.setIsTemporaryFunctionUsed(true);
                 //cctx.addTemporaryFunction(getFunction(stmt));
                 break;
+            case Q_CREATE_DATABASE:
+                qctx.setQueryType(QueryType.CREATE_DATABASE);
+                break;
             case Q_SET:
                 qctx.setQueryType(QueryType.SET);
                 break;

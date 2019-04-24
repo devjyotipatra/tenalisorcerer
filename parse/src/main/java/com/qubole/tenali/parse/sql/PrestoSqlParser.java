@@ -30,7 +30,7 @@ public class PrestoSqlParser extends TenaliSqlParser {
 
         try {
             if (queryType == QueryType.USE) {
-                MetaNode node = parseUseStmt(sql);
+                MetaNode node = (MetaNode) parseDdlStatement(sql, queryType);
                 parseObj.setDefaultDB(node.statement);
                 parseObj.setParseAst(node);
             } else {

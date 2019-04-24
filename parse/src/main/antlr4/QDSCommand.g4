@@ -24,7 +24,8 @@ sql_stmt
   |  Q_ALTER_TABLE
   |  Q_CREATE_TABLE
   |  Q_CREATE_EXTERNAL_TABLE
-  |  Q_CREATE_VIEW)
+  |  Q_CREATE_VIEW
+  |  Q_CREATE_DATABASE)
   ;
 
 
@@ -78,6 +79,11 @@ Q_CREATE_TABLE
  ;
 
 
+Q_CREATE_DATABASE
+ :  C R E A T E  SPACES  D A T A B A S E  SPACES  TEXT+
+ ;
+
+
 Q_CREATE_EXTERNAL_TABLE
   :  C R E A T E  SPACES  E X T E R N A L  SPACES  T A B L E  SPACES  TEXT+
   ;
@@ -102,7 +108,7 @@ Q_SEMI
 
 
 SIMPLE_COMMENT
-    : '--' ~[\r\n]* '\r'? '\n'? -> channel(HIDDEN)
+    : '--' ~[\r\n]* '\r'* '\n'* -> channel(HIDDEN)
     ;
 
 BRACKETED_COMMENT
