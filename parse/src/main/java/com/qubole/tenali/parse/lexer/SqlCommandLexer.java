@@ -5,11 +5,14 @@ import antlr4.QDSCommandLexer;
 import antlr4.QDSCommandParser;
 import com.qubole.tenali.parse.TenaliLexer;
 import com.qubole.tenali.parse.config.CommandType;
+import com.qubole.tenali.parse.config.QueryContext;
 import com.qubole.tenali.parse.config.QueryType;
 import com.qubole.tenali.parse.exception.CommandErrorListener;
 import com.qubole.tenali.parse.exception.CommandParseError;
 import com.qubole.tenali.parse.config.CommandContext;
 import com.qubole.tenali.parse.exception.SQLSyntaxError;
+import com.qubole.tenali.parse.sql.datamodel.ErrorNode;
+import com.qubole.tenali.parse.sql.datamodel.MetaNode;
 import jline.internal.Log;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -197,14 +200,19 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
                             root.setAsRootNode();
                             currentContext = root;
                         } else {
-                            this.aggregateResult(currentContext, ctx);
+                            aggregateResult(currentContext, ctx);
                         }
                     }
                 }
 
             } catch (CommandParseError e) {
-                throw new SQLSyntaxError(e);
+                QueryContext qCtx = new QueryContext(new MetaNode("UNKNOWN", query));
+                qCtx.setErrorMessage(e.getMessage());
+                aggregateResult(currentContext, new CommandContext(QueryType.UNKNOWN, qCtx));
             } catch (IOException ie) {
+                QueryContext qCtx = new QueryContext(new ErrorNode(query));
+                aggregateResult(currentContext, new CommandContext(QueryType.UNKNOWN, qCtx));
+
                 throw new SQLSyntaxError(ie);
             }
         }
