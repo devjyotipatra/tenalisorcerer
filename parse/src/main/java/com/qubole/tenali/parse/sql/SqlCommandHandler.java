@@ -74,7 +74,9 @@ public final class SqlCommandHandler extends TenaliCommandHandler {
                     }
                 }
 
-                context.setTenaliAst((TenaliAstNode) ast);
+                if(ast instanceof TenaliAstNode) {
+                    context.setTenaliAst((TenaliAstNode) ast);
+                }
 
             } catch (ClassNotFoundException ex) {
                 LOG.error(String.format("Transformation Error: Class not found for ",

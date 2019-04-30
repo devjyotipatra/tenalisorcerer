@@ -18,7 +18,7 @@ public class LiteralNode extends TenaliAstNode {
 
     @Override
     public String toString() {
-        return value.toString();
+        return value;
     }
 
 }

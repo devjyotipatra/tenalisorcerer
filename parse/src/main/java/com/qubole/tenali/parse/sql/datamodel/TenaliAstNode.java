@@ -30,17 +30,13 @@ public abstract class TenaliAstNode implements Cloneable {
 
     @Override
     public int hashCode() {
-        return toString().hashCode();
+        return this.toString().hashCode();
     }
 
     @Override
     public boolean equals(Object arg0) {
         TenaliAstNode obj=(TenaliAstNode) arg0;
-
-        if(this.toString().equals(obj.toString())) {
-            return true;
-        }
-        return false;
+        return (hashCode() == obj.hashCode());
     }
 
 

@@ -373,7 +373,7 @@ public class HiveAstTransformer extends SqlAstBaseTransformer<ASTNode> {
                     node.getChild(0).toString();
 
             tableName = tableName.toUpperCase();
-            
+
             if(node.getChildren().size() == 2) {
                 schemaName = node.getChild(0).toString();
             } else if(!ctx.getQueryContext().getDefaultDB().equals("default")) {

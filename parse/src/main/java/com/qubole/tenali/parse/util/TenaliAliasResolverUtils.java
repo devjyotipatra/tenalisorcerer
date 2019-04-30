@@ -31,7 +31,7 @@ public class TenaliAliasResolverUtils {
                                                Map<String, Object> columnAliasMap) {
         TenaliAstNodeList normalizedColumns = new TenaliAstNodeList();
 
-        LOG.debug("ENTERING RESOLVE COLUMNS ..  " + catalog);
+        //LOG.debug("ENTERING RESOLVE COLUMNS ..  " + catalog);
         Set<TenaliAstNode> resolvedColumns = new HashSet();
         Set<TenaliAstNode> unResolvedColumns = new HashSet();
 

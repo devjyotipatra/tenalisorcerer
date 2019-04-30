@@ -19,4 +19,9 @@ public class ErrorNode extends TenaliAstNode {
     public Object accept(TenaliAstBaseTransformer visitor) {
         return error;
     }
+
+    @Override
+    public String toString() {
+        return error;
+    }
 }

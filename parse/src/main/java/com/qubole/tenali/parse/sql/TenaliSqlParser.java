@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 
 public abstract class TenaliSqlParser implements TenaliParser {
 
-    static final Pattern setPattern = Pattern.compile("set\\s+([\\.\\d\\w-_]+)\\s*=\\s*([\\.\\w\\d-_]+)");
+    static final Pattern setPattern = Pattern.compile("set\\s+([\\.\\d\\w-_]+)\\s*=\\s*([\\.\\w\\d-_\\s]+)");
 
 
     public TenaliAstNode parseDdlStatement(String sql, QueryType queryType) {

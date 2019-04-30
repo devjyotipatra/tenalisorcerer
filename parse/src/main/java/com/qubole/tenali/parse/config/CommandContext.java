@@ -1,6 +1,8 @@
 package com.qubole.tenali.parse.config;
 
 
+import com.qubole.tenali.parse.sql.datamodel.TenaliAstNode;
+
 import java.util.Objects;
 
 /**
@@ -163,8 +165,12 @@ public class CommandContext {
 
     @Override
     public int hashCode() {
-        long parentHashCode = (parent == null) ? -1 : parent.hashCode();
-        return Objects.hash(parentHashCode);
+        CommandContext ctx = this;
+        while(ctx.hasParent()) {
+            ctx = ctx.parent;
+        }
+
+        return Objects.hash(ctx);
     }
 
 

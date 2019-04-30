@@ -39,8 +39,12 @@ public class DDLNode extends TenaliAstNode {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(ddlToken).append(" == ").append(selectNode.toString())
-                .append(" == ").append(tableNode.toString());
+        sb.append(ddlToken).append(" == ");
+        if(selectNode != null) {
+            sb.append(selectNode.toString()).append(" == ");
+        }
+
+        sb.append(tableNode.toString());
 
         return sb.toString();
     }

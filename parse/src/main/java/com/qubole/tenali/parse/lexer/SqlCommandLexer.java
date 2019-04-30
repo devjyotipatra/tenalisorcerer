@@ -108,6 +108,9 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
             case Q_CREATE_EXTERNAL_TABLE:
                 qctx.setQueryType(QueryType.CREATE_TABLE);
                 break;
+            case Q_CREATE_TEMP_TABLE:
+                qctx.setQueryType(QueryType.CREATE_TEMP_TABLE);
+                break;
             case Q_DROP_TABLE:
                 qctx.setQueryType(QueryType.DROP_TABLE);
                 break;
@@ -214,7 +217,7 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
                 currentContext = aggregateResult(currentContext, new CommandContext(QueryType.UNKNOWN, qCtx));
             }
 
-            if (root == null) {
+            if (root == null && currentContext != null) {
                 root = currentContext;
                 root.setAsRootNode();
             }

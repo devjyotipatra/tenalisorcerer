@@ -17,4 +17,9 @@ public class UnsupportedNode extends TenaliAstNode {
     public Object accept(TenaliAstBaseTransformer visitor) {
         return unsupported;
     }
+
+    @Override
+    public String toString() {
+        return unsupported;
+    }
 }

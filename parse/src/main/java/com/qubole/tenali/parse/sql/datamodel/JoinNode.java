@@ -29,6 +29,17 @@ public class JoinNode extends TenaliAstNode {
         return arr;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(leftNode.toString()).append("==")
+                .append(joinType).append("==")
+                .append(rightNode.toString()).append("==")
+                .append(joinCondition.toString());
+
+        return sb.toString();
+    }
+
     public static class  JoinBuilder implements Builder<TenaliAstNode> {
         String joinType;
         TenaliAstNode leftNode;

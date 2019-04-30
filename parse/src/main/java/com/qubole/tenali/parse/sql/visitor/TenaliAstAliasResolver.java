@@ -97,7 +97,7 @@ public class TenaliAstAliasResolver extends TenaliAstBaseTransformer<TenaliAstNo
         // FROM
         for (TenaliAstNode ast : sNode.from) {
             catalog.addAll(visitFromNode(catalog, scope, null, ast));
-            LOG.info("CATALOG  =>  " + catalog);
+            //LOG.info("CATALOG  =>  " + catalog);
         }
 
         catalogStack.push(catalog);
@@ -198,7 +198,7 @@ public class TenaliAstAliasResolver extends TenaliAstBaseTransformer<TenaliAstNo
                 builder.setLeftNode(subQueryStack.get(scope).pop());
             }
 
-            LOG.debug("Join  catalog = " + catalog);
+           // LOG.debug("Join  catalog = " + catalog);
 
             builder.setJoinType(joinType);
             builder.setJoinCondition(resolveWhereCondition(condition, catalog));
