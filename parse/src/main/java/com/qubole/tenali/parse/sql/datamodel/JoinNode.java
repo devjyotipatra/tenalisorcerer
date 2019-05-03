@@ -24,8 +24,10 @@ public class JoinNode extends TenaliAstNode {
     @Override
     public Object accept(TenaliAstBaseTransformer visitor) {
         Object[] arr = new Object[2];
-        arr[0] = leftNode.accept(visitor);
-        arr[1] = rightNode.accept(visitor);
+        //arr[0] = leftNode.accept(visitor);
+        //arr[1] = rightNode.accept(visitor);
+        arr[0] = visitor.visit(leftNode);
+        arr[1] = visitor.visit(rightNode);
         return arr;
     }
 

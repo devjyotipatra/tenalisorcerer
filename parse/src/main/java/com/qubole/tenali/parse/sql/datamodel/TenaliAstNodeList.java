@@ -65,7 +65,7 @@ public class TenaliAstNodeList extends TenaliAstNode implements Iterable<TenaliA
     public Object accept(TenaliAstBaseTransformer visitor) {
         Object[] arr = new Object[size()];
         for(int i=0; i<size(); i++) {
-            arr[i] = list.get(i).accept(visitor);
+            arr[i] = visitor.visit(list.get(i));
         }
 
         return arr;

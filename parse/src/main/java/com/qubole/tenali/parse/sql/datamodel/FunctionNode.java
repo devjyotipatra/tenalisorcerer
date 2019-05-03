@@ -20,7 +20,7 @@ public class FunctionNode extends TenaliAstNode {
 
     @Override
     public Object accept(TenaliAstBaseTransformer visitor) {
-        return visitor.visit(this);
+        return visitor.visit(arguments);
     }
 
     @Override

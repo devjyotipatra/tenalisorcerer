@@ -21,7 +21,7 @@ public class AsNode extends TenaliAstNode {
 
     @Override
     public Object accept(TenaliAstBaseTransformer visitor) {
-        return value.accept(visitor);
+        return visitor.visit(value);
     }
 
     @Override
