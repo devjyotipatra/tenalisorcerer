@@ -9,12 +9,15 @@ import com.qubole.tenali.parse.lexer.HiveCommandLexer;
 import com.qubole.tenali.parse.lexer.PrestoCommandLexer;
 import com.qubole.tenali.parse.lexer.SqlCommandLexer;
 import com.qubole.tenali.parse.config.CommandType;
+import com.qubole.tenali.parse.sql.visitor.TableExtractorVisitor;
 import com.qubole.tenali.parse.sql.visitor.TenaliAstAliasResolver;
 import com.qubole.tenali.parse.sql.datamodel.TenaliAstNode;
 import com.qubole.tenali.parse.util.CachingMetastore;
 import org.apache.calcite.sql.SqlNode;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by devjyotip on 5/10/18.
@@ -25,8 +28,8 @@ public class SqlCommandTestHelper {
         Catalog catalog = null;
         try {
             catalog = catalog = new CachingMetastore(5911, "api.qubole.com",
-                    "EnhW9CcvppxUXUPUesWxKnjxC5nSF5zcWR8szsQGTZe96VQNwWq13z1VqkU2W6qb",
-                    "mojave-redis.9qcbtf.0001.use1.cache.amazonaws.com");
+                    "xxx",
+                    "mojave-redis.9qcbtf.0001.use1.cache.amazonaws.com", true);
             return transformHiveAst(command, catalog);
         } catch(Exception ex) {
             ex.printStackTrace();
@@ -38,7 +41,7 @@ public class SqlCommandTestHelper {
     public static CommandContext transformHiveAst(String command, int accountId, String env,
                                           String authToken, String cachingServerUrl) throws IOException {
         try {
-            Catalog catalog = new CachingMetastore(accountId, env, authToken, cachingServerUrl);
+            Catalog catalog = new CachingMetastore(accountId, env, authToken, cachingServerUrl, true);
             return transformHiveAst(command, catalog);
         } catch(Exception ex) {
             ex.printStackTrace();
@@ -67,8 +70,8 @@ public class SqlCommandTestHelper {
         CommandContext ctx = null;
         try {
             Catalog catalog = new CachingMetastore(5911, "api.qubole.com",
-                    "xxxxx",
-                    "mojave-redis.9qcbtf.0001.use1.cache.amazonaws.com");
+                    "xxx",
+                    "mojave-redis.9qcbtf.0001.use1.cache.amazonaws.com", true);
             ctx =  new SqlCommandHandler(CommandType.HIVE)
                     .setLexer(new HiveCommandLexer())
                     .setParser(new HiveSqlParser())
@@ -113,5 +116,20 @@ public class SqlCommandTestHelper {
                 .build(command);
 
         return ctx.getStmt();
+    }
+
+    public static List<List<String>> getTables(String command) {
+        List<List<String>> tables  = new ArrayList();
+        CommandContext ctx = transformHiveAst(command);
+
+        while(ctx != null) {
+            TenaliAstNode root = ctx.getQueryContext().getTenaliAst();
+            TableExtractorVisitor transformer = new TableExtractorVisitor();
+            tables.add(transformer.visit(root));
+
+            ctx = ctx.getChild();
+        }
+
+        return tables;
     }
 }

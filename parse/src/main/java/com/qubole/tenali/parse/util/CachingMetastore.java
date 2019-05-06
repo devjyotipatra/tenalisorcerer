@@ -21,22 +21,26 @@ public class CachingMetastore implements Catalog {
     //missingCache ttl: 1 day
     int MISSINGTTL_MINS = 1440;
 
-    static IMetaStoreClient metastoreClient;
+    IMetaStoreClient metastoreClient;
 
-    public CachingMetastore(int accountId, String env, String authToken, String cachingServer) throws Exception {
+    public CachingMetastore(int accountId, String env, String authToken, String cachingServer, boolean local) throws Exception {
         APIMetastoreClient apiMetastoreClient = new APIMetastoreClient(accountId, env, authToken);
-                //new APIMetastoreClient(accountId, env, authToken);
 
-        /*metastoreClient = new CachingMetastoreClient(
-                //cachingServer,
-                cachingServer,
-                String.valueOf(accountId),
-                TTL_MINS,
-                apiMetastoreClient,
-                MISSINGTTL_MINS,
-                true);*/
+        if(!local) {
+            metastoreClient = new CachingMetastoreClient(
+                    cachingServer,
+                    String.valueOf(accountId),
+                    TTL_MINS,
+                    apiMetastoreClient,
+                    MISSINGTTL_MINS,
+                    true);
+        } else {
+            metastoreClient = apiMetastoreClient;
+        }
+    }
 
-        metastoreClient = apiMetastoreClient;
+    public CachingMetastore(IMetaStoreClient metastoreClient) {
+        this.metastoreClient = metastoreClient;
     }
 
 

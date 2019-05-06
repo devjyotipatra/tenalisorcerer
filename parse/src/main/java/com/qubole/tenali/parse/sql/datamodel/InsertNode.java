@@ -33,10 +33,7 @@ public class InsertNode extends TenaliAstNode {
 
     @Override
     public Object accept(TenaliAstBaseTransformer visitor) {
-        if(from != null) {
-            return visitor.visit(from);
-        }
-        return null;
+        return visitor.visit(this);
     }
 
     @Override

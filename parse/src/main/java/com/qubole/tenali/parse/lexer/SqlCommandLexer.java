@@ -211,10 +211,10 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
                 QueryContext qCtx = new QueryContext(new MetaNode("UNKNOWN", query));
                 qCtx.setErrorMessage(e.getMessage());
 
-                currentContext = aggregateResult(currentContext, new CommandContext(QueryType.UNKNOWN, qCtx));
+                currentContext = aggregateResult(currentContext, new CommandContext(QueryType.UNKNOWN, query, qCtx));
             } catch (IOException ie) {
                 QueryContext qCtx = new QueryContext(new ErrorNode(query));
-                currentContext = aggregateResult(currentContext, new CommandContext(QueryType.UNKNOWN, qCtx));
+                currentContext = aggregateResult(currentContext, new CommandContext(QueryType.UNKNOWN, query, qCtx));
             }
 
             if (root == null && currentContext != null) {

@@ -408,13 +408,16 @@ public class HiveAstTransformer extends SqlAstBaseTransformer<ASTNode> {
             if (child instanceof ASTNode) {
                 switch (((ASTNode) child).getToken().getType()) {
                     case HiveParser.TOK_DISTRIBUTEBY:
+                    case HiveParser.TOK_CLUSTERBY:
+                    case HiveParser.TOK_SORTBY:
+                        String keyword = ((ASTNode) child).getToken().getText();
                         ASTNode key = (ASTNode) ((ASTNode) child).getChild(0);
 
                         TenaliAstNodeList operands = new TenaliAstNodeList();
                         operands.add(new IdentifierNode(getTableOrCol(key)));
 
                         keywords = new TenaliAstNodeList();
-                        keywords.add(new OperatorNode("DISTRIBUTED_BY", operands));
+                        keywords.add(new OperatorNode(keyword, operands));
                         break;
                     case HiveParser.TOK_DESTINATION:
                         ASTNode destination = (ASTNode) ((ASTNode) (child)).getChild(0);

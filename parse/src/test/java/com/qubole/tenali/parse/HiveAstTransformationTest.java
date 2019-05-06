@@ -12,59 +12,96 @@ public class HiveAstTransformationTest {
     private String getTransformedString(Object ast) throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
         String res = objectMapper.writeValueAsString(ast);
-        System.out.println(res);
+        System.out.println("RES => " + res);
         return res;
+    }
+
+    @Test
+    public void testShow() throws Exception {
+        String command = "show partitions core.fact_rides";
+
+        CommandContext ctx = SqlCommandTestHelper.parseHive(command);
+        CommandContext cctx = ctx.getChild(0);
+
+        Object ast = cctx.getQueryContext().getTenaliAst();
+        getTransformedString(ast);
+    }
+
+
+    @Test
+    public void testCTEComplex() throws Exception {
+        String command = "WITH events AS (\n" +
+                "SELECT event_id                               AS event_key,\n" +
+                "       driver_lyft_id                         AS driver_key,\n" +
+                "       ride_id                                AS ride_key,\n" +
+                "       NULL                                   AS offense_lat,\n" +
+                "       NULL                                   AS offense_lng,\n" +
+                "       FROM_JSON('{}', 'map<string,string>')             AS offense_extra,\n" +
+                "       occurred_at                            AS occurred_at,\n" +
+                "       'contact_post_pickup'            AS offense_name,\n" +
+                "       DATE_FORMAT(occurred_at, 'yyyy-MM-dd') AS ds\n" +
+                "  FROM default.event_drivermonitor_offense_issued_contact_post_pickup\n" +
+                " WHERE ds BETWEEN '2019-05-02' AND '2019-05-03'\n" +
+                "), events_merged AS (\n" +
+                " SELECT *\n" +
+                "   FROM events\n" +
+                "  UNION ALL\n" +
+                " SELECT *\n" +
+                "   FROM base.drivermonitor_offenses\n" +
+                "  WHERE ds IN (SELECT DISTINCT ds FROM events)\n" +
+                "    AND offense_name = 'contact_post_pickup'\n" +
+                "), events_deduped AS (\n" +
+                " SELECT sub.*\n" +
+                "   FROM (\n" +
+                " SELECT *,\n" +
+                "        ROW_NUMBER() OVER (PARTITION BY event_key ORDER BY occurred_at DESC) AS rank\n" +
+                "   FROM events_merged\n" +
+                "        ) sub\n" +
+                "  WHERE sub.rank = 1\n" +
+                ")\n" +
+                "\n" +
+                " INSERT OVERWRITE TABLE base.drivermonitor_offenses PARTITION(offense_name='contact_post_pickup', ds)\n" +
+                " SELECT event_key,\n" +
+                "        driver_key,\n" +
+                "        ride_key,\n" +
+                "        offense_lat,\n" +
+                "        offense_lng,\n" +
+                "        offense_extra,\n" +
+                "        occurred_at,\n" +
+                "        ds\n" +
+                "   FROM events_deduped\n" +
+                "  WHERE ds BETWEEN '2018-01-01' AND '2019-05-03'";
+
+        CommandContext ctx = SqlCommandTestHelper.parseHive(command);
+        CommandContext cctx = ctx.getChild(0);
+
+        while(ctx != null) {
+            System.out.println(ctx.getStmt());
+            ctx = ctx.getChild();
+        }
+
+        Object ast = cctx.getQueryContext().getTenaliAst();
+        getTransformedString(ast);
     }
 
 
     @Test
     public void testMisc1() throws Exception {
-        String command = "\n" +
-                "\n" +
-                "ALTER TABLE x__prd_dbstream.stream_nextdoor__web_group\n" +
-                "ADD IF NOT EXISTS PARTITION(arrivaltime = '2019020822',\n" +
-                "                            region='us');\n" +
-                "\n" +
-                "INSERT OVERWRITE TABLE x__prd_dbstream.stream_nextdoor__web_group\n" +
-                "PARTITION (\n" +
-                "    arrivaltime='2019020822',\n" +
-                "    region='us'\n" +
-                ")\n" +
-                "  SELECT\n" +
-                "    DISTINCT stream_with_dups.*\n" +
-                "  FROM (\n" +
-                "  SELECT\n" +
-                "  \n" +
-                "        cast(get_json_object(cols, '$.photo.new.v') as string) as photo,\n" +
-                "        cast(get_json_object(cols, '$.status.new.v') as int) as status,\n" +
-                "        cast(get_json_object(cols, '$.country.new.v') as string) as country,\n" +
-                "        cast(get_json_object(cols, '$.name.new.v') as string) as name,\n" +
-                "        from_unixtime(unix_timestamp(get_json_object(cols, '$.audit_cr_ts.new.v'))) as audit_cr_ts,\n" +
-                "        cast(get_json_object(cols, '$.about.new.v') as string) as about,\n" +
-                "        cast(COALESCE(get_json_object(cols, '$.id.new.v'), get_json_object(cols, '$.id.old.v')) as bigint) as id,\n" +
-                "        cast(get_json_object(cols, '$.geometry_id.new.v') as bigint) as geometry_id,\n" +
-                "        from_unixtime(unix_timestamp(get_json_object(cols, '$.audit_upd_ts.new.v'))) as audit_upd_ts,\n" +
-                "        from_unixtime(unix_timestamp(get_json_object(cols, '$.modification_date.new.v'))) as modification_date,\n" +
-                "        cast(get_json_object(cols, '$.group_type.new.v') as int) as group_type,\n" +
-                "        from_unixtime(unix_timestamp(get_json_object(cols, '$.creation_date.new.v'))) as creation_date,\n" +
-                "        cast(get_json_object(cols, '$.announcement_post_id.new.v') as bigint) as announcement_post_id,\n" +
-                "        cast(get_json_object(cols, '$.audit_version_num.new.v') as bigint) as audit_version_num,\n" +
-                "        cast(get_json_object(cols, '$.post_email.new.v') as string) as post_email,\n" +
-                "        cast(get_json_object(cols, '$.created_by_id.new.v') as bigint) as created_by_id,\n" +
-                "    cast(regexp_replace(regexp_replace(tx_time, 'T', ' '), 'Z', '') as timestamp) as x__last_updated_ts,\n" +
-                "    operation as x__operation,\n" +
-                "    lsn as x__lsn\n" +
-                "  FROM x__prd_dbstream.nextdoor__us\n" +
-                "  WHERE fq_tablename = 'public.web_group'\n" +
-                "    AND year_part = '2019'\n" +
-                "    AND month_part = '02'\n" +
-                "    AND day_part = '08'\n" +
-                "    AND hour_part = '22'\n" +
-                "  ) stream_with_dups\n" +
-                ";";
+        String command = "CREATE DATABASE IF NOT EXISTS audModeling;USE audModeling;DROP TABLE IF EXISTS auddef_counts_1024495;CREATE EXTERNAL TABLE IF NOT EXISTS auddef_counts_1024495 (id String, segment int, score decimal(15,15), source_flag int) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LOCATION 's3://dlx-prod-audience/post_processing/114592/working/40614/MaxCount/51697'";
 
         CommandContext ctx = SqlCommandTestHelper.parseHive(command);
-        CommandContext cctx = ctx.getChild(1);
+        CommandContext cctx = ctx.getChild(0);
+
+        Object ast = cctx.getQueryContext().getTenaliAst();
+        getTransformedString(ast);
+    }
+
+    @Test
+    public void testMisc2() throws Exception {
+        String command = "    ;\u0006\u0006    CREATE TEMPORARY TABLE 1802415aafd948d5b18f42dbc8e9303e_tmp AS SELECT count(execution_id) as numTestRuns\u0006        FROM mbtest.test_runs AS test_runs\u0006        WHERE test_runs.ran_at >= '2019-03-01';\u0006    CREATE EXTERNAL TABLE 1802415aafd948d5b18f42dbc8e9303e LIKE 1802415aafd948d5b18f42dbc8e9303e_tmp STORED AS PARQUET;\u0006    ALTER TABLE 1802415aafd948d5b18f42dbc8e9303e SET LOCATION 's3://lyft-modelbuilder/57/production/2ece7fa338154f8290b65b1b19efa25b/';\u0006\u0006    INSERT OVERWRITE TABLE 1802415aafd948d5b18f42dbc8e9303e\u0006        SELECT\u0006            numTestRuns as numTestRuns\u0006        FROM 1802415aafd948d5b18f42dbc8e9303e_tmp;\u0006    DROP TABLE 1802415aafd948d5b18f42dbc8e9303e;\u0006    \"\n";
+
+        CommandContext ctx = SqlCommandTestHelper.parseHive(command);
+        CommandContext cctx = ctx.getChild(0);
 
         Object ast = cctx.getQueryContext().getTenaliAst();
         getTransformedString(ast);
@@ -73,144 +110,12 @@ public class HiveAstTransformationTest {
 
     @Test
     public void testMisc() throws Exception {
-        String command = "USE core;\n; SELECT 'row_count', count(1)\n" +
-                "FROM prd_nextdoor_stage.web_emailsubscription\n" +
-                "WHERE region = 'us';" +
-                "INSERT OVERWRITE TABLE prd_nextdoor.city_subagencymetadata_hist\n" +
-                "                PARTITION (snapshot='20190305220000', region='eu')\n" +
-                "                SELECT\n" +
-                "                    `designated_recipient`,\n" +
-                "\t`group_id`,\n" +
-                "\t`id`\n" +
-                "                FROM prd_nextdoor_stage.city_subagencymetadata\n" +
-                "                WHERE region = 'eu'\n" +
-                "            ;" +
-                " SELECT count(*) FROM default.event_hive_query_logged WHERE ds = date_sub(current_date(), 2) AND environment= 'production' AND cluster='hive_prod_adhoc';" +
-                "INSERT OVERWRITE TABLE rollup_cmp_orc_tmp_instance3 PARTITION(logdate='2019-03-03', hour='03')\n" +
-                "SELECT\n" +
-                " f.event_time_id,\n" +
-                " f.account_id,\n" +
-                "  f.advertiser_id,\n" +
-                "  sum(f.impressions),\n" +
-                "  sum(f.clicks),\n" +
-                "  f.attribute_map,\n" +
-                "\tf.conversion_objective as conversion_objective,\n" +
-                "\tcoalesce(sum(case\n" +
-                "\t\twhen amo_metrics.conversion_model = 'last' then amo_metrics.ct_value\n" +
-                "\t\telse 0 end\n" +
-                "\t),0),\n" +
-                "\tcoalesce(sum(case\n" +
-                "\t\twhen amo_metrics.conversion_model = 'last' then amo_metrics.vt_value\n" +
-                "\t\telse 0 end\n" +
-                "\t),0),\n" +
-                "\tcoalesce(sum(case\n" +
-                "\t\twhen amo_metrics.conversion_model = 'first' then amo_metrics.ct_value\n" +
-                "\t\telse 0 end\n" +
-                "\t),0),\n" +
-                "\tcoalesce(sum(case\n" +
-                "\t\twhen amo_metrics.conversion_model = 'first' then amo_metrics.vt_value\n" +
-                "\t\telse 0 end\n" +
-                "\t),0),\n" +
-                "\tcoalesce(sum(case\n" +
-                "\t\twhen amo_metrics.conversion_model = 'even' then amo_metrics.ct_value\n" +
-                "\t\telse 0 end\n" +
-                "\t),0),\n" +
-                "\tcoalesce(sum(case\n" +
-                "\t\twhen amo_metrics.conversion_model = 'even' then amo_metrics.vt_value\n" +
-                "\t\telse 0 end\n" +
-                "\t),0),\n" +
-                "\tcoalesce(sum(case\n" +
-                "\t\twhen amo_metrics.conversion_model = 'less' then amo_metrics.ct_value\n" +
-                "\t\telse 0 end\n" +
-                "\t),0),\n" +
-                "\tcoalesce(sum(case\n" +
-                "\t\twhen amo_metrics.conversion_model = 'less' then amo_metrics.vt_value\n" +
-                "\t\telse 0 end\n" +
-                "\t),0),\n" +
-                "\tcoalesce(sum(case\n" +
-                "\t\twhen amo_metrics.conversion_model = 'more' then amo_metrics.ct_value\n" +
-                "\t\telse 0 end\n" +
-                "\t),0),\n" +
-                "\tcoalesce(sum(case\n" +
-                "\t\twhen amo_metrics.conversion_model = 'more' then amo_metrics.vt_value\n" +
-                "\t\telse 0 end\n" +
-                "\t),0),\n" +
-                "\tcoalesce(sum(case\n" +
-                "\t\twhen amo_metrics.conversion_model = 'u_shape' then amo_metrics.ct_value\n" +
-                "\t\telse 0 end\n" +
-                "\t),0),\n" +
-                "\tcoalesce(sum(case\n" +
-                "\t\twhen amo_metrics.conversion_model = 'u_shape' then amo_metrics.vt_value\n" +
-                "\t\telse 0 end\n" +
-                "\t),0),\n" +
-                "\tcoalesce(sum(case\n" +
-                "\t\twhen amo_metrics.conversion_model = 'social_only' then amo_metrics.ct_value\n" +
-                "\t\telse 0 end\n" +
-                "\t),0),\n" +
-                "\tcoalesce(sum(case\n" +
-                "\t\twhen amo_metrics.conversion_model = 'social_only' then amo_metrics.vt_value\n" +
-                "\t\telse 0 end\n" +
-                "\t),0),\n" +
-                "\tcoalesce(sum(case\n" +
-                "\t\twhen amo_metrics.conversion_model = 'display_only' then amo_metrics.ct_value\n" +
-                "\t\telse 0 end\n" +
-                "\t),0),\n" +
-                "\tcoalesce(sum(case\n" +
-                "\t\twhen amo_metrics.conversion_model = 'display_only' then amo_metrics.vt_value\n" +
-                "\t\telse 0 end\n" +
-                "\t),0),\n" +
-                "\tf.creative_id\n" +
-                "FROM core.cmp_event_log f LATERAL VIEW OUTER explode(conversion_metric) exploded_table as amo_metrics\n" +
-                "WHERE f.logdate='2019-03-03'\n" +
-                "  AND f.hour='03'\n" +
-                "GROUP BY\n" +
-                " f.event_time_id,\n" +
-                " f.account_id,\n" +
-                "  f.advertiser_id,\n" +
-                "  f.experience_id,\n" +
-                "  f.ad_theme_id,\n" +
-                "  f.ad_theme_creative_id,\n" +
-                "  f.dsp_id,\n" +
-                "  f.is_default,\n" +
-                "  f.dsp_buy_id,\n" +
-                "  f.dsp_site_id,\n" +
-                "  f.dsp_page_id,\n" +
-                "  f.dsp_ad_id,\n" +
-                "  f.dsp_creative_id,\n" +
-                "  f.data_pass_parameters,\n" +
-                "  f.segment_id,\n" +
-                "  f.segment_value_parameters,\n" +
-                "  f.matched_audience_segment_id,\n" +
-                "  f.audience_segment_id,\n" +
-                "  f.publisher_url,\n" +
-                "  f.referer_url,\n" +
-                "  f.click_x,\n" +
-                "  f.click_y,\n" +
-                "  f.click_time,\n" +
-                "  f.landing_page_url,\n" +
-                "  f.country_code,\n" +
-                "  f.region_code,\n" +
-                "  f.city_name,\n" +
-                "  f.city_id,\n" +
-                "  f.zip_code,\n" +
-                "  f.metro_id,\n" +
-                "  f.dma,\n" +
-                "  f.device_type,\n" +
-                "  f.device_os,\n" +
-                "  f.device_browser,\n" +
-                "  f.ad_width,\n" +
-                "  f.ad_height,\n" +
-                "  f.targeting_branch_id,\n" +
-                "  f.creative_selection_logic_id,\n" +
-                "  f.derived_creative_id,\n" +
-                "  f.parent_creative_id,\n" +
-                "  f.attribute_map,\n" +
-                "f.conversion_objective,\n" +
-                "f.creative_id;\n" ;
+        String command = "insert overwrite table community_metrics.rate_of_change_history partition(dt=\"2019-03-01\")\u0006values (\u0006\"2019-03-01T18:14:30\",\u0006\"PT1440M\",\u0006\"mmf\",\u0006\"session\",\u0006\"distance\",\u00061.54718549646e+11,\u0006\"sum\",\u0006\"session\",\u0006\"distance\",\u00062853553.46298,\u0006\"mean\",\u0006\"PT1M\",\u0006\"2019-01-01T00:00:00\",\u0006\"2019-03-01T18:14:30\"\u0006)" ;
+
 
 
         CommandContext ctx = SqlCommandTestHelper.parseHive(command);
-        CommandContext cctx = ctx.getChild(1);
+        CommandContext cctx = ctx.getChild(0);
 
         Object ast = cctx.getQueryContext().getTenaliAst();
         getTransformedString(ast);
@@ -233,11 +138,15 @@ public class HiveAstTransformationTest {
 
     @Test
     public void testSimpleLateralView() throws Exception {
-        String command = "select name, myq from table1 lateral view explode(qual, gual) q as myq1, myq2";
+        String command = "describe table;;set role admin;set   a = b; select name, myq from table1 lateral view explode(qual, gual) q as myq1, myq2;" +
+                "select s2.acc_id, tag1, s1.id from " +
+                "(select tab1.account_id acc_id, tab1.tag tag1, tab2.id from rstore.query_hists tab1 join rstore.cluster_nodes  tab2 on tab1.account_id=tab2.account_id where tab2.account_id>0) s1 " +
+                "join " +
+                "(select id, account_id as acc_id, created_at, deleted_at from rstore.clusters where id>100) s2 on s1.acc_id=s2.acc_id";
 
         String result = "{\"type\":\"select\",\"from\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"select\",\"from\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"EXPLODE\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"QUAL\"},{\"type\":\"identifier\",\"name\":\"GUAL\"}]}}]},\"columns\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"myq2\"},{\"type\":\"identifier\",\"name\":\"myq1\"}]}},{\"type\":\"identifier\",\"name\":\"TABLE1\"}]},\"columns\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"MYQ\"},{\"type\":\"identifier\",\"name\":\"NAME\"}]}}";
         CommandContext ctx = SqlCommandTestHelper.parseHive(command);
-        CommandContext cctx = ctx.getChild(0);
+        CommandContext cctx = ctx.getChild(3);
 
         Object ast = cctx.getQueryContext().getTenaliAst();
         assertEquals(result, getTransformedString(ast));
@@ -319,7 +228,7 @@ public class HiveAstTransformationTest {
                 "WHERE loc_frac_by_date.frac_of_location > 7 DISTRIBUTE BY dt limit 100";
 
 
-        String result = "{\"type\":\"select\",\"where\":{\"type\":\"operator\",\"operator\":\">\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"operator\",\"operator\":\"/\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"operator\",\"operator\":\"*\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"operator\",\"operator\":\"COUNT\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"*\"}]}},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},{\"type\":\"operator\",\"operator\":\"COUNT\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"*\"}]}}]}},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},\"from\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"join\",\"joinType\":\"INNER\",\"leftNode\":{\"type\":\"identifier\",\"name\":\"DB_USERS\"},\"rightNode\":{\"type\":\"select\",\"from\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"join\",\"joinType\":\"INNER\",\"leftNode\":{\"type\":\"select\",\"where\":{\"type\":\"operator\",\"operator\":\"AND\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"operator\",\"operator\":\"AND\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"operator\",\"operator\":\">=\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"TO_DATE\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"CREATED_AT\"}]}},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},{\"type\":\"operator\",\"operator\":\"<=\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"TO_DATE\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"CREATED_AT\"}]}},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}}]}},{\"type\":\"operator\",\"operator\":\">\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"LENGTH\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"GET_JSON\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"JSON\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}}]}},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}}]}},\"groupBy\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"GET_JSON\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"JSON\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},{\"type\":\"function\",\"functionName\":\"TO_DATE\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"CREATED_AT\"}]}}]},\"from\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"DB_USERS\"}]},\"columns\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"GET_JSON\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"JSON\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},{\"type\":\"function\",\"functionName\":\"TO_DATE\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"CREATED_AT\"}]}},{\"type\":\"operator\",\"operator\":\"COUNT\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"*\"}]}}]}},\"rightNode\":{\"type\":\"select\",\"where\":{\"type\":\"operator\",\"operator\":\">\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"LENGTH\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"GET_JSON\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"JSON\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}}]}},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},\"groupBy\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"GET_JSON\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"JSON\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}}]},\"from\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"DB_USERS\"}]},\"columns\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"GET_JSON\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"JSON\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},{\"type\":\"operator\",\"operator\":\"COUNT\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"*\"}]}}]}},\"joinCondition\":{\"type\":\"operator\",\"operator\":\"=\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"GET_JSON\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"JSON\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},{\"type\":\"function\",\"functionName\":\"GET_JSON\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"JSON\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}}]}}}]},\"columns\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"GET_JSON\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"JSON\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},{\"type\":\"function\",\"functionName\":\"TO_DATE\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"CREATED_AT\"}]}},{\"type\":\"operator\",\"operator\":\"/\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"operator\",\"operator\":\"*\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"operator\",\"operator\":\"COUNT\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"*\"}]}},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},{\"type\":\"operator\",\"operator\":\"COUNT\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"*\"}]}}]}},{\"type\":\"operator\",\"operator\":\"COUNT\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"*\"}]}},{\"type\":\"operator\",\"operator\":\"COUNT\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"*\"}]}}]}},\"joinCondition\":{\"type\":\"operator\",\"operator\":\"AND\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"operator\",\"operator\":\"=\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"GET_JSON\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"DB_USERS.JSON\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},{\"type\":\"function\",\"functionName\":\"GET_JSON\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"JSON\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}}]}},{\"type\":\"operator\",\"operator\":\"=\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"TO_DATE\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"DB_USERS.CREATED_AT\"}]}},{\"type\":\"function\",\"functionName\":\"TO_DATE\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"CREATED_AT\"}]}}]}}]}}}]},\"columns\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"GET_JSON\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"DB_USERS.JSON\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},{\"type\":\"function\",\"functionName\":\"TO_DATE\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"CREATED_AT\"}]}},{\"type\":\"identifier\",\"name\":\"ID\"}]},\"keywords\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"operator\",\"operator\":\"DISTRIBUTED_BY\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"DT\"}]}}]}}";
+        String result = "{\"type\":\"select\",\"where\":{\"type\":\"operator\",\"operator\":\">\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"operator\",\"operator\":\"/\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"operator\",\"operator\":\"*\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"operator\",\"operator\":\"COUNT\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"*\"}]}},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},{\"type\":\"operator\",\"operator\":\"COUNT\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"*\"}]}}]}},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},\"from\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"join\",\"joinType\":\"INNER\",\"leftNode\":{\"type\":\"identifier\",\"name\":\"DB_USERS\"},\"rightNode\":{\"type\":\"select\",\"from\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"join\",\"joinType\":\"INNER\",\"leftNode\":{\"type\":\"select\",\"where\":{\"type\":\"operator\",\"operator\":\"AND\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"operator\",\"operator\":\"AND\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"operator\",\"operator\":\">=\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"TO_DATE\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"CREATED_AT\"}]}},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},{\"type\":\"operator\",\"operator\":\"<=\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"TO_DATE\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"CREATED_AT\"}]}},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}}]}},{\"type\":\"operator\",\"operator\":\">\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"LENGTH\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"GET_JSON\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"JSON\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}}]}},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}}]}},\"groupBy\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"GET_JSON\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"JSON\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},{\"type\":\"function\",\"functionName\":\"TO_DATE\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"CREATED_AT\"}]}}]},\"from\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"DB_USERS\"}]},\"columns\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"GET_JSON\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"JSON\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},{\"type\":\"function\",\"functionName\":\"TO_DATE\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"CREATED_AT\"}]}},{\"type\":\"operator\",\"operator\":\"COUNT\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"*\"}]}}]}},\"rightNode\":{\"type\":\"select\",\"where\":{\"type\":\"operator\",\"operator\":\">\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"LENGTH\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"GET_JSON\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"JSON\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}}]}},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},\"groupBy\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"GET_JSON\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"JSON\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}}]},\"from\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"DB_USERS\"}]},\"columns\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"GET_JSON\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"JSON\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},{\"type\":\"operator\",\"operator\":\"COUNT\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"*\"}]}}]}},\"joinCondition\":{\"type\":\"operator\",\"operator\":\"=\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"GET_JSON\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"JSON\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},{\"type\":\"function\",\"functionName\":\"GET_JSON\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"JSON\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}}]}}}]},\"columns\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"GET_JSON\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"JSON\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},{\"type\":\"function\",\"functionName\":\"TO_DATE\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"CREATED_AT\"}]}},{\"type\":\"operator\",\"operator\":\"/\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"operator\",\"operator\":\"*\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"operator\",\"operator\":\"COUNT\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"*\"}]}},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},{\"type\":\"operator\",\"operator\":\"COUNT\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"*\"}]}}]}},{\"type\":\"operator\",\"operator\":\"COUNT\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"*\"}]}},{\"type\":\"operator\",\"operator\":\"COUNT\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"*\"}]}}]}},\"joinCondition\":{\"type\":\"operator\",\"operator\":\"AND\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"operator\",\"operator\":\"=\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"GET_JSON\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"DB_USERS.JSON\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},{\"type\":\"function\",\"functionName\":\"GET_JSON\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"JSON\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}}]}},{\"type\":\"operator\",\"operator\":\"=\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"TO_DATE\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"DB_USERS.CREATED_AT\"}]}},{\"type\":\"function\",\"functionName\":\"TO_DATE\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"CREATED_AT\"}]}}]}}]}}}]},\"columns\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"function\",\"functionName\":\"GET_JSON\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"DB_USERS.JSON\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},{\"type\":\"function\",\"functionName\":\"TO_DATE\",\"arguments\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"CREATED_AT\"}]}},{\"type\":\"identifier\",\"name\":\"ID\"}]},\"keywords\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"operator\",\"operator\":\"TOK_DISTRIBUTEBY\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"DT\"}]}}]}}";
         CommandContext ctx = SqlCommandTestHelper.parseHive(command);
         CommandContext cctx = ctx.getChild(0);
 

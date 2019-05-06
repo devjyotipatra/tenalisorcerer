@@ -34,6 +34,13 @@ public class CommandContext {
         setQueryContext(qCtx);
     }
 
+    public CommandContext(QueryType type, String stmt, QueryContext qCtx) {
+        setQueryType(type);
+        setStmt(stmt);
+        setQueryContext(qCtx);
+    }
+
+
 
     public boolean hasParent() {
         return parent != null;

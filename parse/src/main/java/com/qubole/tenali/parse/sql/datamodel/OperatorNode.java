@@ -19,7 +19,7 @@ public class OperatorNode extends TenaliAstNode {
 
     @Override
     public Object accept(TenaliAstBaseTransformer visitor) {
-        return visitor.visit(operands);
+        return visitor.visit(this);
     }
 
     @Override

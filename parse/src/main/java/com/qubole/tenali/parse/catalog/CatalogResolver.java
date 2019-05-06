@@ -15,7 +15,7 @@ public class CatalogResolver<T extends Catalog> extends TenaliAstBaseTransformer
 
     final T catalog;
 
-    public CatalogResolver(T catalog) throws Exception{
+    public CatalogResolver(T catalog) {
         assert(catalog != null);
         this.catalog = catalog;
     }

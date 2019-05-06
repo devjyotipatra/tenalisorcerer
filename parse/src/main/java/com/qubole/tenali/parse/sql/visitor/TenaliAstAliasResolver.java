@@ -43,9 +43,15 @@ public class TenaliAstAliasResolver extends TenaliAstBaseTransformer<TenaliAstNo
             if(root instanceof DDLNode) {
                 DDLNode ddl = (DDLNode) root;
 
-                return new DDLNode(ddl.ddlToken,
-                        (TenaliAstNode) ddl.accept(this),
-                        ddl.tableNode);
+                if(ddl.selectNode != null) {
+                    return new DDLNode(ddl.ddlToken,
+                            (TenaliAstNode) ddl.selectNode.accept(this),
+                            ddl.tableNode);
+                } else {
+                    return new DDLNode(ddl.ddlToken,
+                            null,
+                            ddl.tableNode);
+                }
             } else if(root instanceof InsertNode) {
                 TenaliAstNode select = visitSelectNode(scope, ((InsertNode) root).from);
 
@@ -102,7 +108,7 @@ public class TenaliAstAliasResolver extends TenaliAstBaseTransformer<TenaliAstNo
 
         catalogStack.push(catalog);
 
-        while (!subQueryStack.get(scope).empty()) {
+        while (subQueryStack.size()>0 && !subQueryStack.get(scope).empty()) {
             TenaliAstNode node = subQueryStack.get(scope).pop();
             selectBuilder.getFrom().add(node);
         }

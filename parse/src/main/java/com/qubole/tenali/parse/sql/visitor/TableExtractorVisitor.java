@@ -25,32 +25,39 @@ public class TableExtractorVisitor extends TenaliAstBaseTransformer<List<String>
         return tables;
     }
 
+    private void addTable(List<String> tables1, List<String> tables2) {
+        if(tables2 != null) {
+            tables1.addAll(tables2);
+        }
+    }
+
 
     public List<String> visit(TenaliAstNode root) {
         List<String> tables = new ArrayList();
 
         try {
             if (root instanceof SelectNode) {
-                List<String> tab = visitSelectNode(root);
-                if(tab != null) {
-                    tables.addAll(tab);
-                }
+                addTable(tables, visitSelectNode(root));
             } else if (root instanceof IdentifierNode) {
                 tables.add(((IdentifierNode) root).name);
             } else if(root instanceof DDLNode) {
                 DDLNode ddl = (DDLNode) root;
                 tables.add(ddl.tableNode.name);
-                tables.addAll((List<String>) ddl.accept(this));
+
+                if(ddl.selectNode != null) {
+                    addTable(tables, visitSelectNode(((DDLNode) root).selectNode));
+                }
             } else if (root instanceof JoinNode) {
                 JoinNode join = (JoinNode) root;
-                tables.addAll((List<String>) join.leftNode.accept(this));
-                tables.addAll((List<String>) join.rightNode.accept(this));
-            } else  {
-                Object obj = root.accept(this);
-                if(obj instanceof List) {
-                    tables.addAll((List<String>) obj);
-                } else {
-                    tables.add((String) obj);
+                Object[] obj = (Object []) join.accept(this);
+                if(obj.length == 2) {
+                    addTable(tables, (List<String>) obj[0]);
+                    addTable(tables, (List<String>) obj[1]);
+                }
+            } else  if (root instanceof TenaliAstNodeList) {
+                TenaliAstNodeList ast = (TenaliAstNodeList) root;
+                for(int i=0; i<ast.size(); i++ ) {
+                    addTable(tables, (List<String>) ast.accept(this));
                 }
             }
         } catch(Exception ex) {

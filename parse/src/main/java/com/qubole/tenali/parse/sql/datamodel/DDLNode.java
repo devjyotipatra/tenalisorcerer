@@ -29,11 +29,7 @@ public class DDLNode extends TenaliAstNode {
 
     @Override
     public Object accept(TenaliAstBaseTransformer visitor) {
-        if(selectNode != null) {
-            return visitor.visit(selectNode);
-        }
-
-        return null;
+        return visitor.visit(this);
     }
 
     @Override

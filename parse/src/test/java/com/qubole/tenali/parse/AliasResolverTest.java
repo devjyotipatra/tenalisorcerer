@@ -20,7 +20,8 @@ public class AliasResolverTest {
 
     @Test
     public void testSimpleJoinQuery() throws Exception {
-        String command = "use rstore; select tab2.account_id, tab1.tag, tab2.id, user_loc from query_hists tab1 join cluster_nodes  tab2 on tab1.account_id=tab2.account_id where tab2.account_id>0";
+        String command = "use rstore; select tab2.account_id, tab1.tag, tab2.id, user_loc from query_hists tab1 join cluster_nodes  tab2 on tab1.account_id=tab2.account_id where tab2.account_id>0;" +
+                "select s2.acc_id, tag1, s1.id from (select tab1.account_id acc_id, tab1.tag tag1, tab2.id from rstore.query_hists tab1 join rstore.cluster_nodes  tab2 on tab1.account_id=tab2.account_id where tab2.account_id>0) s1 ";
 
         String result = "{\"type\":\"select\",\"where\":{\"type\":\"operator\",\"operator\":\">\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"RSTORE.CLUSTER_NODES.ACCOUNT_ID\"},{\"type\":\"literal\",\"value\":\"TENALI_LITERAL\"}]}},\"from\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"join\",\"joinType\":\"INNER\",\"leftNode\":{\"type\":\"identifier\",\"name\":\"RSTORE.QUERY_HISTS\"},\"rightNode\":{\"type\":\"identifier\",\"name\":\"RSTORE.CLUSTER_NODES\"},\"joinCondition\":{\"type\":\"operator\",\"operator\":\"=\",\"operands\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"RSTORE.QUERY_HISTS.ACCOUNT_ID\"},{\"type\":\"identifier\",\"name\":\"RSTORE.CLUSTER_NODES.ACCOUNT_ID\"}]}}}]},\"columns\":{\"type\":\"list\",\"operandlist\":[{\"type\":\"identifier\",\"name\":\"RSTORE.QUERY_HISTS.TAG\"},{\"type\":\"identifier\",\"name\":\"RSTORE.QUERY_HISTS.USER_LOC\"},{\"type\":\"identifier\",\"name\":\"RSTORE.CLUSTER_NODES.ACCOUNT_ID\"},{\"type\":\"identifier\",\"name\":\"RSTORE.CLUSTER_NODES.ID\"}]}}";
         CommandContext ctx = SqlCommandTestHelper.parseHive(command);
