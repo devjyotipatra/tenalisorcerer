@@ -113,8 +113,9 @@ Q_SEMI
  ;
 
 
+
 SIMPLE_COMMENT
-    : '--' ~[\r\n]* '\r'* '\n'* -> channel(HIDDEN)
+    : ('--' | '//') ~['\n']+ '\r'? '\n'+ SPACES? -> channel(HIDDEN)
     ;
 
 BRACKETED_COMMENT
@@ -125,7 +126,6 @@ BRACKETED_COMMENT
 SPACES
  : [ \t\r\n]+
  ;
-
 
 
 fragment A : [aA];

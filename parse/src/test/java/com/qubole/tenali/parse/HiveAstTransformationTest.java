@@ -243,9 +243,7 @@ public class HiveAstTransformationTest {
 
     @Test
     public void testMisc() throws Exception {
-        String command = "insert overwrite table community_metrics.rate_of_change_history partition(dt=\"2019-03-01\")\u0006values (\u0006\"2019-03-01T18:14:30\",\u0006\"PT1440M\",\u0006\"mmf\",\u0006\"session\",\u0006\"distance\",\u00061.54718549646e+11,\u0006\"sum\",\u0006\"session\",\u0006\"distance\",\u00062853553.46298,\u0006\"mean\",\u0006\"PT1M\",\u0006\"2019-01-01T00:00:00\",\u0006\"2019-03-01T18:14:30\"\u0006)" ;
-
-
+        String command = "-- ness_user_replay_data.from_hive owner edward\nINSERT OVERWRITE DIRECTORY 's3://prd-dwhlatest-text.datalake.nextdoor.com/tmp__bridge/prd/1days/ness_user_replay_data/20190506T000000/'\\nROW FORMAT DELIMITED\\nFIELDS TERMINATED BY '\\\\001'\\n\\n            SELECT\\n  cast(get_json_object(val, '$.profile_id') AS bigint)             AS profile_id\\n, cast(get_json_object(val, '$.email_limit') AS int)               AS email_limit\\n, cast(get_json_object(val, '$.push_limit') AS int)                AS push_limit\\n, cast(get_json_object(val, '$.epoch') AS bigint)                  AS epoch\\n, cast(get_json_object(val, '$.timestamp') AS bigint)              AS ts\\nFROM prd_json.events e\\nWHERE e.event_type = 'NESS_USER_REPLAY_DATA'\\nAND e.ds = '2019-05-06'";
 
         CommandContext ctx = SqlCommandTestHelper.parseHive(command);
         CommandContext cctx = ctx.getChild(0);
@@ -429,7 +427,7 @@ public class HiveAstTransformationTest {
 
     @Test
     public void testCTE() throws Exception {
-        String command = "--" +
+        String command =
                 "-- Comment here \nWITH Sales_CTE \n" +
                 "AS  \n" +
                 "-- Define the CTE query  \n" +

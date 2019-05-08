@@ -181,11 +181,11 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
         String[] commandTokens = command.split(";");
         for(String query : commandTokens) {
             try {
-                query = query.replaceAll("\u0006", "\n")
+                query = query.replaceAll("\\\\n|\u0006", "\n")
                             .replaceAll("`", "")
                             .replaceAll("current_date\\(\\)", "current_date").trim();
 
-
+                System.out.println(query);
                 if(query.length() > 0) {
                     InputStream antlrInputStream =
                             new ByteArrayInputStream(query.getBytes(StandardCharsets.UTF_8));
@@ -207,11 +207,13 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
                 }
 
             } catch (CommandParseError e) {
+                LOG.error("CommandParseError:  Error Lexing  " + query);
                 QueryContext qCtx = new QueryContext(new MetaNode("UNKNOWN", query));
                 qCtx.setErrorMessage(e.getMessage());
 
                 currentContext = aggregateResult(currentContext, new CommandContext(QueryType.UNKNOWN, query, qCtx));
             } catch (IOException ie) {
+                LOG.error("IOException:  Error Lexing  " + query);
                 QueryContext qCtx = new QueryContext(new ErrorNode(query));
                 currentContext = aggregateResult(currentContext, new CommandContext(QueryType.UNKNOWN, query, qCtx));
             }
