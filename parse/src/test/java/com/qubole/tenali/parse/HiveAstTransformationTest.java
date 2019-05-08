@@ -29,6 +29,139 @@ public class HiveAstTransformationTest {
 
 
     @Test
+    public void testCTEWithAlias() throws Exception {
+        String command = "WITH CTE_Local AS\n\n\n" +
+                "    (\n" +
+                "        SELECT\n" +
+                "            a.requestid,\n" +
+                "            a.hotelid AS ExpediaID,\n" +
+                "         to_date(a.trxlogtimestamp) as Shopdate,\n" +
+                "            ROW_NUMBER() OVER (PARTITION BY a.requestid, a.inventoryproviderid ORDER BY\n" +
+                "                CASE WHEN (a.baseprice= 0 or a.availability = 0) THEN 100000000 \n" +
+                "                ELSE a.baseprice\n" +
+                "            END asc) AS RecordOrder,\n" +
+                "            a.tpid,\n" +
+                "            a.inventoryproviderid,\n" +
+                "            a.MarketingChannelID,\n" +
+                "            a.Occupancy,\n" +
+                "            concat(substring(a.checkin, 1, 10), substring(a.checkin, length(a.checkin) - 4)) AS CheckIn,\n" +
+                "            concat(substring(a.checkout, 1, 10), substring(a.checkout, length(a.checkout) - 4)) AS CheckOut,\n" +
+                "            a.LoS,\n" +
+                "            a.RoomTypeID,\n" +
+                "            a.RatePlanID,\n" +
+                "            a.RatePlanType,\n" +
+                "            a.MerchantModel,\n" +
+                "            CASE WHEN (a.BasePrice = 0 or a.Availability = 0) THEN NULL ELSE BasePrice END as BasePrice,\n" +
+                "            CASE WHEN (a.BasePrice = 0 or a.Availability = 0) THEN NULL ELSE PriceCurrency END as PriceCurrency,\n" +
+                "            CASE WHEN (a.BasePrice = 0 or a.Availability = 0) THEN NULL ELSE TaxAndFeesPrice END as TaxAndFeesPrice,\n" +
+                "            CASE WHEN (a.BasePrice = 0 or a.Availability = 0) THEN NULL ELSE NonDispTaxAndFeesPrice END as NonDispTaxAndFeesPrice,\n" +
+                "            CASE WHEN (a.BasePrice = 0 or a.Availability = 0) THEN NULL ELSE BasePrice + TaxAndFeesPrice + NonDispTaxAndFeesPrice END as BasePriceIncludingTax,\n" +
+                "            CASE WHEN (a.BaseCost = 0 or a.Availability = 0) THEN NULL ELSE BaseCost END as BaseCost,\n" +
+                "            CASE WHEN (a.BaseCost = 0 or a.Availability = 0) THEN NULL ELSE CostCurrency END as CostCurrency,\n" +
+                "            CASE WHEN (a.BaseCost = 0 or a.Availability = 0) THEN NULL ELSE TaxAndFeesCost END as TaxAndFeesCost,\n" +
+                "            CASE WHEN (a.BaseCost = 0 or a.Availability = 0) THEN NULL ELSE NonDispTaxAndFeesCost END as NonDispTaxAndFeesCost,\n" +
+                "            CASE WHEN (a.BaseCost = 0 or a.Availability = 0) THEN NULL ELSE BaseCost + TaxAndFeesCost + NonDispTaxAndFeesCost END as BaseCostIncludingTax,\n" +
+                "            CASE WHEN (a.BaseCost = 0 or a.Availability = 0) THEN NULL ELSE a.CurrencyExchangeRate END as CurrencyExchangeRate,\n" +
+                "            a.availability AS Availability,\n" +
+                "            COALESCE(a.unavailablecodelist, 0) as unAvailCode,\n" +
+                "            concat('2019-', a.LogMonth, '-', a.LogDay, ' ', a.LogHour, ':00:00') AS LogDate\n" +
+                "        FROM\n" +
+                "            project_lps_multisource.lpas_analytics_log_2019 a\n" +
+                "        WHERE\n" +
+                "            a.LogMonth = '05'\n" +
+                "        AND\n" +
+                "            a.LogDay = '04'\n" +
+                "        AND\n" +
+                "            a.LogHour >= '00'\n" +
+                "        AND\n" +
+                "            a.LogHour <= '05'\n" +
+                "        AND\n" +
+                "            (inventoryproviderid > 80 OR inventoryproviderid = 24)  -- Third Party or Expedia Merchant\n" +
+                "        AND\n" +
+                "            a.availability IS NOT NULL\n" +
+                "    )\n" +
+                "    SELECT\n" +
+                "        a.RequestID,\n" +
+                "        a.ExpediaID,\n" +
+                "        a.Shopdate,\n" +
+                "        a.TPid,\n" +
+                "        a.InventoryProviderID,\n" +
+                "        a.MarketingChannelID,\n" +
+                "        a.Occupancy,\n" +
+                "        a.CheckIn,\n" +
+                "        a.CheckOut,\n" +
+                "        a.LoS,\n" +
+                "        a.RoomTypeID,\n" +
+                "        a.RatePlanID,\n" +
+                "        a.RatePlanType,\n" +
+                "        a.MerchantModel,\n" +
+                "        a.Availability,\n" +
+                "        a.unAvailCode,\n" +
+                "        a.BasePrice,\n" +
+                "        a.PriceCurrency,\n" +
+                "        a.TaxAndFeesPrice,\n" +
+                "        a.NonDispTaxAndFeesPrice,\n" +
+                "        a.BasePriceIncludingTax,\n" +
+                "        a.BaseCost,\n" +
+                "        a.CostCurrency,\n" +
+                "        a.TaxAndFeesCost,\n" +
+                "        a.NonDispTaxAndFeesCost,\n" +
+                "        a.BaseCostIncludingTax,\n" +
+                "        a.CurrencyExchangeRate,\n" +
+                "        a.LogDate\n" +
+                "    FROM\n" +
+                "        CTE_Local a\n" +
+                "    WHERE\n" +
+                "        RecordOrder = 1 ";
+
+        CommandContext ctx = SqlCommandTestHelper.parseHive(command);
+        CommandContext cctx = ctx.getChild(0);
+
+        Object ast = cctx.getQueryContext().getTenaliAst();
+        getTransformedString(ast);
+    }
+
+
+    @Test
+    public void testCreateTableWithProps() throws Exception {
+        String command = "CREATE EXTERNAL TABLE IF NOT EXISTS city.fact_airport_fees (\n" +
+                "                display_name                    STRING          COMMENT 'line item name configured in regions e.x. ABE Airport - Airport Fee'\n" +
+                "                ,metadata                       STRING          COMMENT 'metadata containing pickup/dropoff designation as well as other info'\n" +
+                "                ,regions_map_layer              STRING          COMMENT 'layer name where salestax fee is configured, this table is filtered to the airport layer'\n" +
+                "                ,amount                         DECIMAL(38,2)   COMMENT 'amount collected in dollars (or currency equivalent unit)'\n" +
+                "                ,currency                       STRING          COMMENT 'currency for amount in dollars i.e. 2 = $2.00'\n" +
+                "                ,ride_id                        BIGINT          COMMENT 'unique ride identifier'\n" +
+                "                ,route_id                       STRING          COMMENT 'unique route identifier for line rides'\n" +
+                "                ,driver_lyft_id                 BIGINT          COMMENT 'unique driver identifier (driver_lyft_id from rides table)'\n" +
+                "                ,passenger_lyft_id              BIGINT          COMMENT 'unique passenger identifier (passenger_lyft_id from rides table)'\n" +
+                "                ,plate                          STRING          COMMENT 'license plate'\n" +
+                "                ,state                          STRING          COMMENT 'state of license plate'\n" +
+                "                ,make                           STRING          COMMENT 'vehicle make'\n" +
+                "                ,model                          STRING          COMMENT 'vehicle model'\n" +
+                "                ,year                           STRING          COMMENT 'vehicle year'\n" +
+                "                ,ride_type                      STRING          COMMENT 'ride type i.e. courier, classic etc'\n" +
+                "                ,ride_type_external             STRING          COMMENT 'external ride type i.e. line, standard etc'\n" +
+                "                ,event_type                     STRING          COMMENT 'PickUp or DropOff - parsed from metadata'\n" +
+                "                ,occurred_at_utc                TIMESTAMP       COMMENT 'UTC of pickup or dropoff determined by metadata'\n" +
+                "                ,occurred_at_local              TIMESTAMP       COMMENT 'Localized pickup or dropoff time determined by metadata'\n" +
+                "                ,lat                            DOUBLE          COMMENT 'Latitude of pickup or dropoff determined by metadata'\n" +
+                "                ,lng                            DOUBLE          COMMENT 'Longitude of pickup or dropoff determined by metadata'\n" +
+                "                ,line_item_ds                   STRING          COMMENT 'ds inherited from core.ride_route_line_items'\n" +
+                "        )\n" +
+                "    PARTITIONED BY(ds STRING COMMENT 'ds inherited from base.rides')\n" +
+                "    STORED AS PARQUET\n" +
+                "    LOCATION 's3://lyftqubole-iad/qubole/t/seeftr/PRODUCTION/city/table_name=fact_airport_fees'\n" +
+                "    TBLPROPERTIES ('PARQUET.COMPRESS'='SNAPPY')  ";
+
+        CommandContext ctx = SqlCommandTestHelper.parseHive(command);
+        CommandContext cctx = ctx.getChild(0);
+
+        Object ast = cctx.getQueryContext().getTenaliAst();
+        getTransformedString(ast);
+    }
+
+
+    @Test
     public void testCTEComplex() throws Exception {
         String command = "WITH events AS (\n" +
                 "SELECT event_id                               AS event_key,\n" +

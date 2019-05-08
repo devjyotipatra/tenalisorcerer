@@ -40,33 +40,33 @@ public final class SqlCommandHandler extends TenaliCommandHandler {
             return rootCtx;
         }
 
-
         CommandContext commandContext = rootCtx;
         prepareParser(parser);
 
-        while (rootCtx != null) {
-            QueryType queryType = rootCtx.getQueryType();
+        CommandContext ctx = rootCtx;
+        while (ctx != null) {
+            QueryType queryType = ctx.getQueryType();
 
             try {
-                QueryContext context = rootCtx.getQueryContext();
+                QueryContext context = ctx.getQueryContext();
                 if(context == null) {
-                    context = parser.parse(queryType, rootCtx.getStmt());
-                    rootCtx.setQueryContext(context);
+                    context = parser.parse(queryType, ctx.getStmt());
+                    ctx.setQueryContext(context);
 
-                    if (rootCtx.hasParent()) {
-                        context.setDefaultDB(rootCtx.getParent().getQueryContext().getDefaultDB());
+                    if (ctx.hasParent()) {
+                        context.setDefaultDB(ctx.getParent().getQueryContext().getDefaultDB());
                     }
                 }
 
                 Object ast = context.getParseAst();
 
-                if (!(rootCtx.isDDLQuery()
+                if (!(ctx.isDDLQuery()
                         || (ast instanceof MetaNode)
                         || (ast instanceof ErrorNode))) {
 
                     for (TenaliTransformer transformer : transformers) {
                         Class clazz = Class.forName(transformer.getType().getCanonicalName());
-                        ast = transformer.transform(clazz.cast(ast), rootCtx);
+                        ast = transformer.transform(clazz.cast(ast), ctx);
 
                         //ObjectMapper objectMapper = new ObjectMapper();
                         //String res = objectMapper.writeValueAsString(ast);
@@ -80,16 +80,20 @@ public final class SqlCommandHandler extends TenaliCommandHandler {
 
             } catch (ClassNotFoundException ex) {
                 LOG.error(String.format("Transformation Error: Class not found for ",
-                        rootCtx.getStmt(), ex.getMessage()));
+                        ctx.getStmt(), ex.getMessage()));
             } catch (ClassCastException ex) {
                 LOG.error("Transformation Error:  " + ex.getMessage());
                 ex.printStackTrace();
             } catch (TenaliSQLParseException ep) {
                 LOG.error("Parsing Error:  " + ep.getMessage());
-                rootCtx.setQueryContext(new QueryContext(new ErrorNode("ParseException, " + ep.getMessage())));
+                ctx.setQueryContext(new QueryContext(new ErrorNode("ParseException, " + ep.getMessage())));
+            } catch (Exception ed) {
+                LOG.error("General Error:  " + ed.getMessage());
+                ed.printStackTrace();
+                ctx.setQueryContext(new QueryContext(new ErrorNode("ParseException, " + ed.getMessage())));
             }
 
-            rootCtx = rootCtx.getChild();
+            ctx = ctx.getChild();
         }
 
         return commandContext;

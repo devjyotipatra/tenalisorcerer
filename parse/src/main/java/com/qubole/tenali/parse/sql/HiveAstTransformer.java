@@ -31,7 +31,7 @@ public class HiveAstTransformer extends SqlAstBaseTransformer<ASTNode> {
             return new MetaNode("MISC", ast.toString());
         }*/
 
-        LOG.info("Hive AST => " + ast.dump());
+        //LOG.info("Hive AST => " + ast.dump());
 
         return parse(ast);
     }

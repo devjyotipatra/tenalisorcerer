@@ -266,13 +266,15 @@ public class TenaliAstAliasResolver extends TenaliAstBaseTransformer<TenaliAstNo
 
 
 
-    private Triple<String, String, List<String>> getCatalog(List<Triple<String, String,
-                                                            List<String>>> catalog,
-                                                            String tableAlias,
-                                                            TenaliAstNode node) {
+    private Triple<String, String, List<String>> getCatalog(
+                                    List<Triple<String, String, List<String>>> catalog,
+                                    String tableAlias,
+                                    TenaliAstNode node) {
         Triple<String, String, List<String>> retVal = null;
+
         if(node instanceof IdentifierNode) {
             String tableName = ((IdentifierNode) node).name;
+
             for(Triple<String, String, List<String>> cat : catalog) {
                 if (cat.getMiddle() != null && cat.getMiddle().equals(tableName)) {
                     return ImmutableTriple.of(tableAlias, tableName, cat.getRight());
@@ -287,7 +289,8 @@ public class TenaliAstAliasResolver extends TenaliAstBaseTransformer<TenaliAstNo
 
 
 
-    private Triple<String, String, List<String>> getCatalog(String alias, String tableName,
+    private Triple<String, String, List<String>> getCatalog(String alias,
+                                                            String tableName,
                                                             TenaliAstNode node) {
         Triple<String, String, List<String>> retVal;
         if (node instanceof TenaliAstNodeList) {

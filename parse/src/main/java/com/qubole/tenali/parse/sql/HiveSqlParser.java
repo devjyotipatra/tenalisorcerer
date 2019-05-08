@@ -14,20 +14,19 @@ import org.slf4j.LoggerFactory;
 public class HiveSqlParser extends TenaliSqlParser {
     private static final Logger LOG = LoggerFactory.getLogger(HiveSqlParser.class);
 
-    static ParseDriver parseDriver;
+    static volatile ParseDriver parseDriver;
 
-    public HiveSqlParser() {}
-
-    public void prepare() {
-        //conf = new HiveConf();
-        //conf.setBoolVar(HiveConf.ConfVars.HIVE_SUPPORT_SQL11_RESERVED_KEYWORDS, false);
-        /*String scratchDir = HiveConf.getVar(conf, HiveConf.ConfVars.SCRATCHDIR);
-        conf.set("_hive.hdfs.session.path", scratchDir);
-        conf.set("_hive.local.session.path", HiveConf.getVar(conf, HiveConf.ConfVars.LOCALSCRATCHDIR)
-                + "/" + System.getProperty("user.name") + "/" + "000");*/
-
-        parseDriver = new ParseDriver();
+    public HiveSqlParser() {
+        if(parseDriver == null) {
+            synchronized (this) {
+                if(parseDriver == null) {
+                    parseDriver = new ParseDriver();
+                }
+            }
+        }
     }
+
+    public void prepare() { }
 
     public QueryContext parse(QueryType queryType, String sql) throws TenaliSQLParseException {
         QueryContext parseObj = new QueryContext();
@@ -50,10 +49,9 @@ public class HiveSqlParser extends TenaliSqlParser {
                     parseObj.setParseAst(root.getChild(0));
                 }
             } catch (Exception e) {
-                String message = String.format("Parse failed for: %s  \n Exception: ", sql, e.getMessage());
-                LOG.error(message);
+                String message = String.format("Parse failed for:   %s  \n Exception: ", sql, e.getMessage());
                 e.printStackTrace();
-                throw new TenaliSQLParseException(e);
+                throw new TenaliSQLParseException(message, e);
             }
         }
 

@@ -186,6 +186,8 @@
                                     <include>org.apache.calcite</include>
                                     <include>com.qubole.tenali</include>
                                     <include>org.apache.hive</include>
+                                    <include>org.apache.commons</include>
+                                    <include>redis.clients</include>
                                 </includes>
                             </artifactSet>
 

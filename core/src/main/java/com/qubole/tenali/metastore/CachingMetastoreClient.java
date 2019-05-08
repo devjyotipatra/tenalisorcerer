@@ -117,8 +117,11 @@ public class CachingMetastoreClient implements IMetaStoreClient {
                                   final IMetaStoreClient sourceClient, int missingCacheTTlMin,
                                   boolean enableMissingCache) throws Exception {
         int cacheTtl = cacheTtlMinutes * 60;
+
+
         redisPool = new JedisPool(new JedisPoolConfig(),
                 redis, 6379, Protocol.DEFAULT_TIMEOUT);
+
 
         String tableCachePrefix = prefix + ".tableCache.";
         String tableNamesCachePrefix = prefix + ".tableNamesCache.";

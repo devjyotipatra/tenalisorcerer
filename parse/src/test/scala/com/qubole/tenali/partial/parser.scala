@@ -4,7 +4,7 @@ import com.qubole.tenali.partial.parser.SQLParser
 import org.specs2.mutable._
 
 object Queries {
-  val q00 = """
+  lazy val q00 = """
 select
   l_returnflag,
   l_linestatus,
@@ -20,7 +20,7 @@ select
   """
 
 
-  val q01 = """
+  lazy val q01 = """
 select
   lineitem.l_returnflag as llr,
   l_linestatus,
@@ -37,7 +37,7 @@ from
 where
   __ANY__"""
 
-  val q1 = """
+  lazy val q1 = """
 select
   l_returnflag,
   l_linestatus,
@@ -56,7 +56,7 @@ where
 group by
   __ANY__"""
 
-  val q2 = """
+  lazy val q2 = """
 select
   s_acctbal,
   s_name,
@@ -104,7 +104,7 @@ order by
 limit 100;
 """
 
-  val q3 = """
+  lazy val q3 = """
 select
   l_orderkey,
   sum(l_extendedprice * (1 - l_discount)) as revenue,
@@ -126,7 +126,7 @@ order by
   __ANY__
 """
 
-  val q4 = """
+  lazy val q4 = """
 select
   o_orderpriority,
   count(*) as order_count
@@ -148,7 +148,7 @@ order by
   o_orderpriority;
 """
 
-  val q5 = """
+  lazy val q5 = """
 select
   n_name,
   sum(l_extendedprice * (1 - l_discount)) as revenue
@@ -160,7 +160,7 @@ on
   and l_suppkey = s_suppkey
 """
 
-  val q6 = """
+  lazy val q6 = """
 select
   sum(l_extendedprice * l_discount) as revenue
 from
@@ -169,7 +169,7 @@ where
   __ANY__
 """
 
-  val q7 = """
+  lazy val q7 = """
 select
   supp_nation,
   cust_nation,
@@ -201,10 +201,11 @@ from
 
 class SQLParserSpec extends Specification {
 
+  lazy val parser = new SQLParser
+
   "SQLParser" should {
 
     "parse query00" in {
-      val parser = new SQLParser
       val r = parser.parse(Queries.q00)
       println(r)
       r should beSome
@@ -212,56 +213,48 @@ class SQLParserSpec extends Specification {
 
 
     "parse query01" in {
-      val parser = new SQLParser
       val r = parser.parse(Queries.q01)
       println(r)
       r should beSome
     }
 
      "parse query1" in {
-       val parser = new SQLParser
        val r = parser.parse(Queries.q1)
        println(r)
        r should beSome
      }
 
      "parse query2" in {
-       val parser = new SQLParser
        val r = parser.parse(Queries.q2)
        println(r)
        r should beSome
      }
 
      "parse query3" in {
-       val parser = new SQLParser
        val r = parser.parse(Queries.q3)
        println(r)
        r should beSome
      }
 
     "parse query4" in {
-       val parser = new SQLParser
        val r = parser.parse(Queries.q4)
        println(r)
        r should beSome
      }
 
      "parse query5" in {
-       val parser = new SQLParser
        val r = parser.parse(Queries.q5)
        println(r)
        r should beSome
      }
 
      "parse query6" in {
-       val parser = new SQLParser
        val r = parser.parse(Queries.q6)
        println(r)
        r should beSome
      }
 
      "parse query7" in {
-       val parser = new SQLParser
        val r = parser.parse(Queries.q7)
        println(r)
        r should beSome

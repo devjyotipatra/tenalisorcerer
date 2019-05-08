@@ -23,17 +23,17 @@ public abstract class TenaliCommandHandler {
     }
 
 
-    protected static void extractQueries(String command) {
+    protected void extractQueries(String command) {
         TenaliLexer lexer = new DummyLexer();
         lexer.extract(command);
     }
 
-    protected static void extractQueries(TenaliLexer lexer, String command) {
+    protected void extractQueries(TenaliLexer lexer, String command) {
         lexer.extract(command);
     }
 
 
-    protected static void prepareParser(TenaliParser parser) {
+    protected void prepareParser(TenaliParser parser) {
         parser.prepare();
     }
 

@@ -13,7 +13,6 @@ import com.qubole.tenali.parse.config.CommandContext;
 import com.qubole.tenali.parse.exception.SQLSyntaxError;
 import com.qubole.tenali.parse.sql.datamodel.ErrorNode;
 import com.qubole.tenali.parse.sql.datamodel.MetaNode;
-import jline.internal.Log;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -85,7 +84,7 @@ public class SqlCommandLexer extends QDSCommandBaseVisitor<CommandContext> imple
         String stmt = ctx.getText();
         qctx.setStmt(stmt);
 
-        Log.info(String.format("lexing now  %s ", stmt));
+        LOG.info(String.format("lexing now  %s ", stmt));
 
         int queryType = ctx.op.getType();
         switch (queryType) {
